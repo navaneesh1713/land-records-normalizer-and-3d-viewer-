@@ -1,0 +1,24 @@
+[
+  {
+    "khasra_number": "999/Z",
+    "survey_number": "SY-001-Z",
+    "owner_name": "Test Person A",
+    "classification": "vacant",
+    "village": "Xzqblorp Unknown",
+    "tehsil": "Bengaluru East",
+    "district": "Bengaluru Urban",
+    "reason": "geocode_insufficient",
+    "best_tier_reached": "C"
+  },
+  {
+    "khasra_number": "000/0",
+    "survey_number": "SY-000-0",
+    "owner_name": "Ghost Record B",
+    "classification": "residential",
+    "village": "Zzzqqqnonexistent",
+    "tehsil": "Nowhere",
+    "district": "Fictional Land",
+    "reason": "geocode_insufficient",
+    "best_tier_reached": "C"
+  }
+]

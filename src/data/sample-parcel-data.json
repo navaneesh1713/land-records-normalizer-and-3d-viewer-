@@ -1,0 +1,757 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "village": "Kadugodi",
+    "tehsil": "Bengaluru East",
+    "district": "Bengaluru Urban",
+    "generated_at": "2026-08-27T05:05:12.570Z",
+    "building_count": 8,
+    "source": "OpenStreetMap (Overpass API)"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5977015,
+              12.9705679
+            ],
+            [
+              77.5978491,
+              12.9705495
+            ],
+            [
+              77.5978404,
+              12.970483
+            ],
+            [
+              77.5976928,
+              12.9705014
+            ],
+            [
+              77.5977015,
+              12.9705679
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-001",
+        "osm_way_id": "1308621809",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 120.2,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-001-F1",
+            "khasra_number": "139/1",
+            "survey_number": "SY-669-1",
+            "owner_name": "Amit Gowda",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-001-F2",
+            "khasra_number": "139/2",
+            "survey_number": "SY-669-2",
+            "owner_name": "Sunita Menon",
+            "classification": "residential",
+            "status": "disputed",
+            "floor_number": 2,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5956238,
+              12.9746411
+            ],
+            [
+              77.5958461,
+              12.9744343
+            ],
+            [
+              77.5958791,
+              12.9744684
+            ],
+            [
+              77.5958903,
+              12.9744581
+            ],
+            [
+              77.5959044,
+              12.9744647
+            ],
+            [
+              77.5959171,
+              12.9744745
+            ],
+            [
+              77.5959256,
+              12.9744864
+            ],
+            [
+              77.5959304,
+              12.9744996
+            ],
+            [
+              77.5959192,
+              12.9745099
+            ],
+            [
+              77.5959415,
+              12.9745329
+            ],
+            [
+              77.5959335,
+              12.9745402
+            ],
+            [
+              77.5960369,
+              12.9746472
+            ],
+            [
+              77.5960448,
+              12.9746399
+            ],
+            [
+              77.5960683,
+              12.9746641
+            ],
+            [
+              77.5960798,
+              12.9746535
+            ],
+            [
+              77.5960936,
+              12.974659
+            ],
+            [
+              77.5961055,
+              12.9746672
+            ],
+            [
+              77.5961126,
+              12.9746784
+            ],
+            [
+              77.5961168,
+              12.9746918
+            ],
+            [
+              77.5961053,
+              12.9747024
+            ],
+            [
+              77.5961377,
+              12.974736
+            ],
+            [
+              77.5960445,
+              12.9748227
+            ],
+            [
+              77.5960699,
+              12.9748487
+            ],
+            [
+              77.5960304,
+              12.9748856
+            ],
+            [
+              77.5960049,
+              12.9748595
+            ],
+            [
+              77.5959166,
+              12.9749417
+            ],
+            [
+              77.5958923,
+              12.9749165
+            ],
+            [
+              77.5958843,
+              12.9749241
+            ],
+            [
+              77.5958381,
+              12.9748763
+            ],
+            [
+              77.5958449,
+              12.97487
+            ],
+            [
+              77.5958136,
+              12.9748376
+            ],
+            [
+              77.5959048,
+              12.9747539
+            ],
+            [
+              77.5958673,
+              12.9747151
+            ],
+            [
+              77.5959057,
+              12.9746799
+            ],
+            [
+              77.5959432,
+              12.9747186
+            ],
+            [
+              77.5960027,
+              12.974664
+            ],
+            [
+              77.5959183,
+              12.9745768
+            ],
+            [
+              77.595731,
+              12.9747487
+            ],
+            [
+              77.5956992,
+              12.9747157
+            ],
+            [
+              77.5956898,
+              12.9747243
+            ],
+            [
+              77.5956451,
+              12.9746781
+            ],
+            [
+              77.5956527,
+              12.974671
+            ],
+            [
+              77.5956238,
+              12.9746411
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-002",
+        "osm_way_id": "52032468",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 1239,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-002-F1",
+            "khasra_number": "217/1",
+            "survey_number": "SY-618-1",
+            "owner_name": "Rajesh Joshi",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-002-F2",
+            "khasra_number": "217/2",
+            "survey_number": "SY-618-2",
+            "owner_name": "Swati Kumar",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 2,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-002-F3",
+            "khasra_number": "217/3",
+            "survey_number": "SY-618-3",
+            "owner_name": "Divya Mukherjee",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 3,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5992553,
+              12.9700184
+            ],
+            [
+              77.5992461,
+              12.9698884
+            ],
+            [
+              77.5991413,
+              12.9698954
+            ],
+            [
+              77.5991504,
+              12.9700254
+            ],
+            [
+              77.5992553,
+              12.9700184
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-003",
+        "osm_way_id": "331543154",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 165,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-003-F1",
+            "khasra_number": "308/1",
+            "survey_number": "SY-836-1",
+            "owner_name": "Naveen Pillai",
+            "classification": "residential",
+            "status": "disputed",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-003-F2",
+            "khasra_number": "308/2",
+            "survey_number": "SY-836-2",
+            "owner_name": "Arvind Kulkarni",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 2,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-003-F3",
+            "khasra_number": "308/3",
+            "survey_number": "SY-836-3",
+            "owner_name": "Ramesh Banerjee",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 3,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5988088,
+              12.9761725
+            ],
+            [
+              77.5990229,
+              12.9758861
+            ],
+            [
+              77.5988233,
+              12.9757444
+            ],
+            [
+              77.5986092,
+              12.9760309
+            ],
+            [
+              77.5988088,
+              12.9761725
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-004",
+        "osm_way_id": "325773313",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 1054.3,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-004-F1",
+            "khasra_number": "175/1",
+            "survey_number": "SY-527-1",
+            "owner_name": "Meera Banerjee",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-004-F2",
+            "khasra_number": "175/2",
+            "survey_number": "SY-527-2",
+            "owner_name": "Rajesh Gupta",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 2,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5972414,
+              12.9699281
+            ],
+            [
+              77.5971477,
+              12.9699391
+            ],
+            [
+              77.597163,
+              12.9700623
+            ],
+            [
+              77.5973766,
+              12.9700371
+            ],
+            [
+              77.5973685,
+              12.9699726
+            ],
+            [
+              77.5972414,
+              12.9699281
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-005",
+        "osm_way_id": "331184029",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 278.6,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-005-F1",
+            "khasra_number": "287/1",
+            "survey_number": "SY-496-1",
+            "owner_name": "Deepa Patel",
+            "classification": "residential",
+            "status": "disputed",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-005-F2",
+            "khasra_number": "287/2",
+            "survey_number": "SY-496-2",
+            "owner_name": "Pooja Reddy",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 2,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-005-F3",
+            "khasra_number": "287/3",
+            "survey_number": "SY-496-3",
+            "owner_name": "Ananya Verma",
+            "classification": "residential",
+            "status": "disputed",
+            "floor_number": 3,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-005-F4",
+            "khasra_number": "287/4",
+            "survey_number": "SY-496-4",
+            "owner_name": "Deepa Iyer",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 4,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5992864,
+              12.9720633
+            ],
+            [
+              77.5993052,
+              12.9721793
+            ],
+            [
+              77.5993241,
+              12.9721764
+            ],
+            [
+              77.5993282,
+              12.9722017
+            ],
+            [
+              77.5994081,
+              12.9721894
+            ],
+            [
+              77.5994139,
+              12.9722253
+            ],
+            [
+              77.599601,
+              12.9721966
+            ],
+            [
+              77.5995774,
+              12.972051
+            ],
+            [
+              77.5994383,
+              12.9720724
+            ],
+            [
+              77.5994157,
+              12.9719324
+            ],
+            [
+              77.5992922,
+              12.9719514
+            ],
+            [
+              77.5993097,
+              12.9720598
+            ],
+            [
+              77.5992864,
+              12.9720633
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-006",
+        "osm_way_id": "332394805",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 686.7,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-006-F1",
+            "khasra_number": "330/1",
+            "survey_number": "SY-859-1",
+            "owner_name": "Pradeep Chatterjee",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-006-F2",
+            "khasra_number": "330/2",
+            "survey_number": "SY-859-2",
+            "owner_name": "Sanjay Mukherjee",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 2,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5966287,
+              12.9701909
+            ],
+            [
+              77.5970807,
+              12.9701261
+            ],
+            [
+              77.597046,
+              12.9698966
+            ],
+            [
+              77.596594,
+              12.9699614
+            ],
+            [
+              77.5966287,
+              12.9701909
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-007",
+        "osm_way_id": "331184032",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 1277,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-007-F1",
+            "khasra_number": "104/1",
+            "survey_number": "SY-793-1",
+            "owner_name": "Amit Verma",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-007-F2",
+            "khasra_number": "104/2",
+            "survey_number": "SY-793-2",
+            "owner_name": "Anjali Rao",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 2,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-007-F3",
+            "khasra_number": "104/3",
+            "survey_number": "SY-793-3",
+            "owner_name": "Kavita Nair",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 3,
+            "is_synthetic": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5994141,
+              12.9718147
+            ],
+            [
+              77.599443,
+              12.9719813
+            ],
+            [
+              77.5995845,
+              12.9719581
+            ],
+            [
+              77.599545,
+              12.9717299
+            ],
+            [
+              77.5993824,
+              12.9717567
+            ],
+            [
+              77.5993931,
+              12.9718182
+            ],
+            [
+              77.5994141,
+              12.9718147
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "building_id": "BUILDING-KA-2026-008",
+        "osm_way_id": "332394776",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 416.1,
+        "units": [
+          {
+            "unit_id": "PARCEL-KA-2026-008-F1",
+            "khasra_number": "244/1",
+            "survey_number": "SY-546-1",
+            "owner_name": "Ananya Pillai",
+            "classification": "residential",
+            "status": "unverified",
+            "floor_number": 1,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-008-F2",
+            "khasra_number": "244/2",
+            "survey_number": "SY-546-2",
+            "owner_name": "Amit Singh",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 2,
+            "is_synthetic": true
+          },
+          {
+            "unit_id": "PARCEL-KA-2026-008-F3",
+            "khasra_number": "244/3",
+            "survey_number": "SY-546-3",
+            "owner_name": "Sanjay Chatterjee",
+            "classification": "residential",
+            "status": "verified",
+            "floor_number": 3,
+            "is_synthetic": true
+          }
+        ]
+      }
+    }
+  ]
+}

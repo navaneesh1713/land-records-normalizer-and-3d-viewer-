@@ -1,0 +1,398 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "village": "Kadugodi",
+    "tehsil": "Devanahalli",
+    "district": "Bengaluru Rural",
+    "generated_at": "2026-08-28T05:57:52.264Z",
+    "plot_count": 6,
+    "source": "OpenStreetMap (Overpass API)"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.7572534,
+              12.9943909
+            ],
+            [
+              77.7572326,
+              12.9942918
+            ],
+            [
+              77.7571681,
+              12.9943047
+            ],
+            [
+              77.7571889,
+              12.9944038
+            ],
+            [
+              77.7572534,
+              12.9943909
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-346454391",
+        "osm_way_id": "346454391",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 80.2,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-346454391-F1-D1",
+                "khasra_number": "139/1A",
+                "survey_number": "SY-669-1A",
+                "owner_name": "Amit Gowda",
+                "classification": "commercial",
+                "status": "verified",
+                "division_index": 1,
+                "division_share": 0.5,
+                "is_synthetic": false
+              },
+              {
+                "unit_id": "PLOT-OSM-346454391-F1-D2",
+                "khasra_number": "139/1A",
+                "survey_number": "SY-669-1B",
+                "owner_name": "Sunita Menon",
+                "classification": "residential",
+                "status": "verified",
+                "division_index": 2,
+                "division_share": 0.5,
+                "is_synthetic": false
+              }
+            ]
+          },
+          {
+            "floor_number": 2,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-346454391-F2-D1",
+                "khasra_number": "139/1A",
+                "survey_number": "SY-669-2",
+                "owner_name": "Rajesh Sharma",
+                "classification": "residential",
+                "status": "disputed",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.757584,
+              12.9958915
+            ],
+            [
+              77.7576799,
+              12.9958573
+            ],
+            [
+              77.7576702,
+              12.9958314
+            ],
+            [
+              77.7576976,
+              12.9958216
+            ],
+            [
+              77.7576868,
+              12.9957929
+            ],
+            [
+              77.7576594,
+              12.9958027
+            ],
+            [
+              77.7576417,
+              12.9957556
+            ],
+            [
+              77.7575458,
+              12.9957898
+            ],
+            [
+              77.757584,
+              12.9958915
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-1310982746",
+        "osm_way_id": "1310982746",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 144,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-1310982746-F1-D1",
+                "khasra_number": "204/1",
+                "survey_number": "SY-882-1",
+                "owner_name": "Pooja Iyer",
+                "classification": "residential",
+                "status": "verified",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.7814318,
+              13.0672235
+            ],
+            [
+              77.7816776,
+              13.0671755
+            ],
+            [
+              77.7816227,
+              13.066909
+            ],
+            [
+              77.7813769,
+              13.0669571
+            ],
+            [
+              77.7814318,
+              13.0672235
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-1427347109",
+        "osm_way_id": "1427347109",
+        "village": "Hoskote",
+        "tehsil": "Hoskote",
+        "district": "Bengaluru Rural",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 820.6,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-1427347109-F1-D1",
+                "khasra_number": "310/1",
+                "survey_number": "SY-990-1",
+                "owner_name": "Ravi Kumar",
+                "classification": "agricultural",
+                "status": "verified",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.7053829,
+              13.247397
+            ],
+            [
+              77.7054674,
+              13.247615
+            ],
+            [
+              77.7055288,
+              13.2475924
+            ],
+            [
+              77.7054443,
+              13.2473744
+            ],
+            [
+              77.7053829,
+              13.247397
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-408880843",
+        "osm_way_id": "408880843",
+        "village": "Devanahalli",
+        "tehsil": "Devanahalli",
+        "district": "Bengaluru Rural",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 184.1,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-408880843-F1-D1",
+                "khasra_number": "44/7",
+                "survey_number": "SY-101-7",
+                "owner_name": "Meera Reddy",
+                "classification": "commercial",
+                "status": "disputed",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.69281028215687,
+              13.289966534696699
+            ],
+            [
+              77.69297770906454,
+              13.289966534696699
+            ],
+            [
+              77.69297770906454,
+              13.290101707240588
+            ],
+            [
+              77.69281028215687,
+              13.290101707240588
+            ],
+            [
+              77.69281028215687,
+              13.289966534696699
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-GEN-32270087",
+        "osm_way_id": null,
+        "village": "Bidaluru",
+        "tehsil": "Devanahalli",
+        "district": "Bengaluru Rural",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 272.3,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-GEN-32270087-F1-D1",
+                "khasra_number": "777/X",
+                "survey_number": "SY-888-X",
+                "owner_name": "Girish Patel",
+                "classification": "vacant",
+                "status": "unverified",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.505039,
+              13.2578856
+            ],
+            [
+              77.5051044,
+              13.2578757
+            ],
+            [
+              77.5050932,
+              13.2578059
+            ],
+            [
+              77.5050278,
+              13.2578158
+            ],
+            [
+              77.505039,
+              13.2578856
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-1194200798",
+        "osm_way_id": "1194200798",
+        "village": "Gollahalli",
+        "tehsil": "Devanahalli",
+        "district": "Bengaluru Rural",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 56.3,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-1194200798-F1-D1",
+                "khasra_number": "888/Y",
+                "survey_number": "SY-999-Y",
+                "owner_name": "Lakshmi Hegde",
+                "classification": "residential",
+                "status": "verified",
+                "division_index": 1,
+                "division_share": 1,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

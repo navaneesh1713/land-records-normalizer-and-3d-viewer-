@@ -1,0 +1,70 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "village": "Kadugodi",
+    "tehsil": "Bengaluru East",
+    "district": "Bengaluru Urban",
+    "generated_at": "2026-08-28T11:00:00.000Z",
+    "plot_count": 6,
+    "source": "OpenStreetMap (Overpass API)"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.7572534,
+              12.9943909
+            ],
+            [
+              77.7572326,
+              12.9942918
+            ],
+            [
+              77.7571681,
+              12.9943047
+            ],
+            [
+              77.7571889,
+              12.9944038
+            ],
+            [
+              77.7572534,
+              12.9943909
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "plot_id": "PLOT-OSM-346454391",
+        "osm_way_id": "346454391",
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "floor_height_m": 3.5,
+        "footprint_area_sqm": 80.2,
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "PLOT-OSM-346454391-F1-D1",
+                "khasra_number": "139/1A",
+                "survey_number": "SY-669-1A",
+                "owner_name": "Amit Gowda",
+                "classification": "commercial",
+                "status": "verified",
+                "division_index": 1,
+                "division_share": 0.5,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

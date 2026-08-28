@@ -1,0 +1,42 @@
+[
+  {
+    "village": "kadugodi",
+    "tehsil": "bengaluru east",
+    "district": "bengaluru urban",
+    "khasra_number": "139/1A",
+    "survey_number": "SY-669-1A",
+    "owner_name": "Amit Gowda",
+    "classification": "commercial area",
+    "status": "verified"
+  },
+  {
+    "village": "kadugodi",
+    "tehsil": "bengaluru east",
+    "district": "bengaluru urban",
+    "khasra_number": "139/1A",
+    "survey_number": "SY-669-1B",
+    "owner_name": "Sunita Menon",
+    "classification": "flat / residence",
+    "status": "verified"
+  },
+  {
+    "village": "hoskote",
+    "tehsil": "hoskote",
+    "district": "bengaluru rural",
+    "khasra_number": "310/1",
+    "survey_number": "SY-990-1",
+    "owner_name": "Ravi Kumar",
+    "classification": "farm harvest",
+    "status": "verified"
+  },
+  {
+    "village": "xzqblorp-unknown-place",
+    "tehsil": "nonexistent",
+    "district": "fake district",
+    "khasra_number": "999/X",
+    "survey_number": "SY-001-X",
+    "owner_name": "Test Person",
+    "classification": "empty land",
+    "status": "unverified"
+  }
+]

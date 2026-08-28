@@ -1,0 +1,191 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TargetLandParcelFeatureCollection",
+  "description": "GeoJSON FeatureCollection representing 3D land parcel buildings with nested floors and divisions.",
+  "type": "object",
+  "required": ["type", "features"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["FeatureCollection"]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "village": { "type": "string" },
+        "tehsil": { "type": "string" },
+        "district": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "building_count": { "type": "integer" },
+        "plot_count": { "type": "integer" },
+        "source": { "type": "string" }
+      }
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/BuildingFeature"
+      }
+    }
+  },
+  "definitions": {
+    "BuildingFeature": {
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Feature"]
+        },
+        "geometry": {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["Polygon"]
+            },
+            "coordinates": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": { "type": "number" },
+                  "minItems": 2
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "required": [
+            "plot_id",
+            "osm_way_id",
+            "village",
+            "tehsil",
+            "district",
+            "floor_height_m",
+            "footprint_area_sqm",
+            "floors"
+          ],
+          "properties": {
+            "plot_id": {
+              "type": "string",
+              "description": "Unique identifier for the building plot"
+            },
+            "osm_way_id": {
+              "type": ["string", "number", "null"],
+              "description": "OpenStreetMap way ID for the building footprint"
+            },
+            "village": {
+              "type": "string",
+              "description": "Revenue village name"
+            },
+            "tehsil": {
+              "type": "string",
+              "description": "Tehsil / Taluk name"
+            },
+            "district": {
+              "type": "string",
+              "description": "District name"
+            },
+            "floor_height_m": {
+              "type": "number",
+              "minimum": 0.5,
+              "description": "Height in meters for each vertical floor slice"
+            },
+            "footprint_area_sqm": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Building ground footprint area in square meters"
+            },
+            "floors": {
+              "type": "array",
+              "description": "Array of floors within this building",
+              "items": {
+                "$ref": "#/definitions/Floor"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Floor": {
+      "type": "object",
+      "required": ["floor_number", "divisions"],
+      "properties": {
+        "floor_number": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed vertical floor level"
+        },
+        "divisions": {
+          "type": "array",
+          "description": "Array of division units sharing this floor level",
+          "items": {
+            "$ref": "#/definitions/Division"
+          }
+        }
+      }
+    },
+    "Division": {
+      "type": "object",
+      "required": [
+        "unit_id",
+        "khasra_number",
+        "survey_number",
+        "owner_name",
+        "classification",
+        "status",
+        "division_index",
+        "division_share",
+        "is_synthetic"
+      ],
+      "properties": {
+        "unit_id": {
+          "type": "string",
+          "description": "Unique record / title unit identifier"
+        },
+        "khasra_number": {
+          "type": "string",
+          "description": "Khasra / Plot sub-number"
+        },
+        "survey_number": {
+          "type": "string",
+          "description": "Cadastral survey number"
+        },
+        "owner_name": {
+          "type": "string",
+          "description": "Name of the recorded owner or titleholder"
+        },
+        "classification": {
+          "type": "string",
+          "enum": ["agricultural", "residential", "commercial", "industrial", "vacant"],
+          "description": "Land / unit zoning classification"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["verified", "disputed", "unverified"],
+          "description": "Title verification status"
+        },
+        "division_index": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "1-indexed order of division on the floor"
+        },
+        "division_share": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of the floor footprint allocated to this division (0 to 1)"
+        },
+        "is_synthetic": {
+          "type": "boolean",
+          "description": "Flag indicating if record is simulated/synthetic"
+        }
+      }
+    }
+  }
+}
