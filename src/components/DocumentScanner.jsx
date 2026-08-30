@@ -15,6 +15,7 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
   const fileInputRef = useRef(null);
 
   // OCR state
+  const [ocrLanguage, setOcrLanguage] = useState('eng');
   const [ocrRunning, setOcrRunning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrStatus, setOcrStatus] = useState('');
@@ -50,8 +51,8 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
     setSourceFileName(file.name);
     const ext = file.name.split('.').pop().toLowerCase();
 
-    // IMAGE → tesseract.js OCR
-    if (['jpg', 'jpeg', 'png', 'webp', 'tiff', 'tif', 'bmp'].includes(ext)) {
+    // IMAGE / PDF → tesseract.js OCR
+    if (['jpg', 'jpeg', 'png', 'webp', 'tiff', 'tif', 'bmp', 'pdf'].includes(ext)) {
       await runOCR(file);
     }
     // CSV
@@ -63,26 +64,26 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
       parseExcel(file);
     }
     // JSON
-    else if (ext === 'json') {
+    else if (ext === 'json' || ext === 'geojson') {
       try {
         const text = await file.text();
         const parsed = JSON.parse(text);
-        const records = Array.isArray(parsed) ? parsed : (parsed.records || parsed.data || [parsed]);
-        setExtractedRecords(records.map((r, i) => ({ _idx: i, ...normalizeRecord(r) })));
+        const records = Array.isArray(parsed) ? parsed : (parsed.records || parsed.features || parsed.data || [parsed]);
+        setExtractedRecords(records.map((r, i) => ({ _idx: i, ...normalizeRecord(r.properties || r) })));
       } catch (e) {
         setError(`JSON parse error: ${e.message}`);
       }
     }
     else {
-      setError(`Unsupported file type: .${ext}. Use images (jpg/png), CSV, Excel (.xlsx), or JSON.`);
+      setError(`Unsupported file type: .${ext}. Supports images (png/jpg/tiff/pdf), CSV, Excel (.xlsx), or JSON/GeoJSON.`);
     }
-  }, []);
+  }, [ocrLanguage]);
 
-  // ─── Real Tesseract.js OCR with Confidence Scoring ───
+  // ─── Real Tesseract.js WebAssembly OCR Engine ───
   const runOCR = async (imageFile) => {
     setOcrRunning(true);
     setOcrProgress(0);
-    setOcrStatus('Initializing WebAssembly OCR engine...');
+    setOcrStatus(`Initializing WebAssembly OCR engine (${ocrLanguage.toUpperCase()})...`);
     setRawOcrText('');
     setExtractedRecords([]);
 
@@ -92,13 +93,13 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
     reader.readAsDataURL(imageFile);
 
     try {
-      const result = await Tesseract.recognize(imageFile, 'eng', {
+      const result = await Tesseract.recognize(imageFile, ocrLanguage, {
         logger: (m) => {
           if (m.status === 'recognizing text') {
             setOcrProgress(Math.round((m.progress || 0) * 100));
-            setOcrStatus('Extracting Cadastral Text Matrix...');
+            setOcrStatus('Extracting live text matrix...');
           } else {
-            setOcrStatus(m.status || 'Processing image...');
+            setOcrStatus(m.status ? m.status.replace(/_/g, ' ') : 'Processing document...');
           }
         },
       });
@@ -115,7 +116,7 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
         _source: 'ocr',
         _fileName: imageFile.name,
         _rawText: fullText,
-        _confidence: extracted._confidence,
+        _confidence: extracted._confidence || overallConfidence || 80,
         _fieldConfidence: extracted._fieldConfidence,
         _uncertainFields: extracted._uncertainFields,
         ...extracted,
@@ -307,12 +308,34 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
 
       {/* Main Content Scrollable Area */}
       <div className="scanner-studio-body">
+        {/* Language & Input Configuration Strip */}
+        <div className="scanner-lang-strip">
+          <div className="lang-strip-left">
+            <span className="lang-label-title">OCR Recognition Language:</span>
+          </div>
+          <select
+            value={ocrLanguage}
+            onChange={(e) => setOcrLanguage(e.target.value)}
+            className="scanner-lang-select"
+            disabled={ocrRunning}
+          >
+            <option value="eng">English (Standard / National)</option>
+            <option value="hin+eng">Hindi + English (UP Bhulekh / MP Land)</option>
+            <option value="kan+eng">Kannada + English (Karnataka Bhoomi RTC)</option>
+            <option value="mar+eng">Marathi + English (Maharashtra 7/12)</option>
+            <option value="tel+eng">Telugu + English (Maa Bhoomi / Dharani)</option>
+            <option value="tam+eng">Tamil + English (Tamil Nadu Patta)</option>
+            <option value="guj+eng">Gujarati + English (AnyRoR Gujarat)</option>
+            <option value="ben+eng">Bengali + English (BanglarBhumi)</option>
+          </select>
+        </div>
+
         {/* Modern Drag & Drop Zone */}
         <div className="scanner-dropzone-wrapper">
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*,.csv,.xlsx,.xls,.json"
+            accept="image/*,.csv,.xlsx,.xls,.json,.geojson,.pdf"
             style={{ display: 'none' }}
             onChange={(e) => {
               if (e.target.files?.[0]) handleFile(e.target.files[0]);
@@ -331,7 +354,7 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
               <strong>Click to upload</strong> or drag and drop document
             </div>
             <div className="dropzone-sub-label">
-              Supports scanned Bhoomi RTC, 7/12, Khatiyan, SVAMITVA Cards, CSV & GeoJSON
+              Supports scanned Bhoomi RTC, 7/12, Khatiyan, SVAMITVA Cards, PDF, CSV & GeoJSON
             </div>
             <div className="dropzone-badges-row">
               <span className="file-tag">PNG</span>
@@ -340,6 +363,7 @@ export default function DocumentScanner({ onRecordsReady, onRouteToQueue, onClos
               <span className="file-tag">TIFF</span>
               <span className="file-tag">CSV</span>
               <span className="file-tag">XLSX</span>
+              <span className="file-tag">JSON</span>
             </div>
           </div>
 
