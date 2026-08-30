@@ -1,10 +1,12 @@
-import React from 'react';
-import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash, FileDown, Loader2, QrCode } from 'lucide-react';
 import { formatArea } from '../utils/geoUtils';
 import { CLASSIFICATION_COLORS } from '../utils/colorUtils';
+import { generatePropertyCardPDF } from '../utils/pdfGenerator';
 
-export default function ParcelSidebar({ unit, onClose }) {
-  const [copiedField, setCopiedField] = React.useState(null);
+export default function ParcelSidebar({ unit, onClose, metadata }) {
+  const [copiedField, setCopiedField] = useState(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   if (!unit) return null;
 
@@ -15,6 +17,17 @@ export default function ParcelSidebar({ unit, onClose }) {
       navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
       setTimeout(() => setCopiedField(null), 1800);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      await generatePropertyCardPDF(unit, metadata);
+    } catch (err) {
+      console.error('[PDF] Download failed:', err);
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -175,6 +188,24 @@ export default function ParcelSidebar({ unit, onClose }) {
             <div className="prop-label">Tehsil</div>
             <div className="prop-value">{unit.tehsil || '—'}</div>
           </div>
+        </div>
+
+        {/* Action: Generate Official Property Card PDF */}
+        <div style={{ marginTop: '16px' }}>
+          <button
+            className="sidebar-pdf-btn"
+            onClick={handleDownloadPDF}
+            disabled={isGeneratingPdf}
+            title="Generate SVAMITVA / RoR Land Title Certificate PDF with QR Code"
+          >
+            {isGeneratingPdf ? (
+              <Loader2 size={15} className="spinner" />
+            ) : (
+              <FileDown size={15} />
+            )}
+            <span>{isGeneratingPdf ? 'Generating Certificate...' : 'Download Property Card (PDF)'}</span>
+            <QrCode size={13} style={{ marginLeft: 'auto', opacity: 0.8 }} />
+          </button>
         </div>
       </div>
     </aside>

@@ -1,0 +1,290 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "scheme": "SVAMITVA (Survey of Villages and Mapping with Improvised Technology in Village Areas)",
+    "survey_method": "Drone-based High Precision Ortho-Rectified Mapping (ORI)",
+    "village": "Kadugodi",
+    "tehsil": "Bengaluru East",
+    "district": "Bengaluru Urban",
+    "state": "Karnataka",
+    "generated_at": "2026-08-28T10:00:00.000Z",
+    "total_parcels": 4,
+    "source": "Government Cadastral GIS & Drone Survey Benchmark"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "plot_id": "SVAMITVA-KA-BLR-0042-01",
+        "osm_way_id": 1042001,
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "footprint_area_sqm": 420.5,
+        "floor_height_m": 3.5,
+        "property_card_no": "KA-SV-2026-009812",
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-01-F1-D1",
+                "survey_number": "Sy. No. 124/1",
+                "khasra_number": "KH-124-1A",
+                "khata_number": "KHT-8842",
+                "owner_name": "Ramesh Kumar Sharma",
+                "guardian_name": "Late Jagannath Sharma",
+                "classification": "commercial",
+                "status": "verified",
+                "carpet_area_sqm": 210.25,
+                "division_index": 1,
+                "division_share": 0.5,
+                "is_synthetic": false
+              },
+              {
+                "unit_id": "KA-BLR-0042-01-F1-D2",
+                "survey_number": "Sy. No. 124/1",
+                "khasra_number": "KH-124-1B",
+                "khata_number": "KHT-8843",
+                "owner_name": "Meera Ramesh Sharma",
+                "guardian_name": "W/o Ramesh Kumar Sharma",
+                "classification": "commercial",
+                "status": "verified",
+                "carpet_area_sqm": 210.25,
+                "division_index": 2,
+                "division_share": 0.5,
+                "is_synthetic": false
+              }
+            ]
+          },
+          {
+            "floor_number": 2,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-01-F2-D1",
+                "survey_number": "Sy. No. 124/1",
+                "khasra_number": "KH-124-2",
+                "khata_number": "KHT-8844",
+                "owner_name": "Arvind Kumar Sharma",
+                "guardian_name": "S/o Ramesh Kumar Sharma",
+                "classification": "residential",
+                "status": "verified",
+                "carpet_area_sqm": 420.5,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          },
+          {
+            "floor_number": 3,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-01-F3-D1",
+                "survey_number": "Sy. No. 124/1",
+                "khasra_number": "KH-124-3",
+                "khata_number": "KHT-8845",
+                "owner_name": "Sneha Arvind Sharma",
+                "guardian_name": "W/o Arvind Kumar Sharma",
+                "classification": "residential",
+                "status": "verified",
+                "carpet_area_sqm": 420.5,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.7572534, 12.9943909],
+            [77.7572326, 12.9942918],
+            [77.7573977, 12.9942647],
+            [77.7574218, 12.9943639],
+            [77.7572534, 12.9943909]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "plot_id": "SVAMITVA-KA-BLR-0042-02",
+        "osm_way_id": 1042002,
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "footprint_area_sqm": 580.0,
+        "floor_height_m": 3.5,
+        "property_card_no": "KA-SV-2026-009813",
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-02-F1-D1",
+                "survey_number": "Sy. No. 125/2A",
+                "khasra_number": "KH-125-1",
+                "khata_number": "KHT-9102",
+                "owner_name": "Suresh Venkatakrishnan & Brothers",
+                "guardian_name": "Late Venkatakrishnan Iyer",
+                "classification": "residential",
+                "status": "verified",
+                "carpet_area_sqm": 580.0,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          },
+          {
+            "floor_number": 2,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-02-F2-D1",
+                "survey_number": "Sy. No. 125/2B",
+                "khasra_number": "KH-125-2",
+                "khata_number": "KHT-9103",
+                "owner_name": "Priya Venkatakrishnan (Disputed Title Claim)",
+                "guardian_name": "D/o Venkatakrishnan Iyer",
+                "classification": "residential",
+                "status": "disputed",
+                "carpet_area_sqm": 580.0,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.75685, 12.99445],
+            [77.75705, 12.99442],
+            [77.75702, 12.99422],
+            [77.75682, 12.99425],
+            [77.75685, 12.99445]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "plot_id": "SVAMITVA-KA-BLR-0042-03",
+        "osm_way_id": 1042003,
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "footprint_area_sqm": 720.0,
+        "floor_height_m": 3.8,
+        "property_card_no": "KA-SV-2026-009814",
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-03-F1-D1",
+                "survey_number": "Sy. No. 126/3",
+                "khasra_number": "KH-126-1",
+                "khata_number": "KHT-7711",
+                "owner_name": "Gram Panchayat Public Welfare Asset",
+                "guardian_name": "Govt of Karnataka",
+                "classification": "vacant",
+                "status": "verified",
+                "carpet_area_sqm": 720.0,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          },
+          {
+            "floor_number": 2,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-03-F2-D1",
+                "survey_number": "Sy. No. 126/3",
+                "khasra_number": "KH-126-2",
+                "khata_number": "KHT-7712",
+                "owner_name": "Primary Health Centre & Community Centre",
+                "guardian_name": "Govt of Karnataka",
+                "classification": "commercial",
+                "status": "verified",
+                "carpet_area_sqm": 720.0,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.75755, 12.99448],
+            [77.75775, 12.99444],
+            [77.75771, 12.99418],
+            [77.75751, 12.99422],
+            [77.75755, 12.99448]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "plot_id": "SVAMITVA-KA-BLR-0042-04",
+        "osm_way_id": 1042004,
+        "village": "Kadugodi",
+        "tehsil": "Bengaluru East",
+        "district": "Bengaluru Urban",
+        "footprint_area_sqm": 350.0,
+        "floor_height_m": 3.5,
+        "property_card_no": "KA-SV-2026-009815",
+        "floors": [
+          {
+            "floor_number": 1,
+            "divisions": [
+              {
+                "unit_id": "KA-BLR-0042-04-F1-D1",
+                "survey_number": "Sy. No. 127/4",
+                "khasra_number": "KH-127-1",
+                "khata_number": "KHT-6520",
+                "owner_name": "Ananya Hegde & Karthik Gowda",
+                "guardian_name": "Joint Titleholders",
+                "classification": "residential",
+                "status": "verified",
+                "carpet_area_sqm": 350.0,
+                "division_index": 1,
+                "division_share": 1.0,
+                "is_synthetic": false
+              }
+            ]
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [77.75715, 12.99405],
+            [77.75735, 12.99402],
+            [77.75732, 12.99385],
+            [77.75712, 12.99388],
+            [77.75715, 12.99405]
+          ]
+        ]
+      }
+    }
+  ]
+}

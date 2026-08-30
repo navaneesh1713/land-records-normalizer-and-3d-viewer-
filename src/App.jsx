@@ -4,18 +4,41 @@ import Header from './components/Header';
 import Legend from './components/Legend';
 import ParcelSidebar from './components/ParcelSidebar';
 import BuildingListPanel from './components/BuildingListPanel';
-import { getParcelData } from './services/dataSource';
+import FloorControlPanel from './components/FloorControlPanel';
+import DocumentScanner from './components/DocumentScanner';
+import ViolationPanel from './components/ViolationPanel';
+import MeasureToolPanel from './components/MeasureToolPanel';
+import TimelineSlider from './components/TimelineSlider';
+import VerificationQueueModal from './components/VerificationQueueModal';
+import AiImprovementLogModal from './components/AiImprovementLogModal';
+import AuditTrailModal from './components/AuditTrailModal';
+import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
+import ApiExplorerModal from './components/ApiExplorerModal';
+import HeroLandingPage from './components/HeroLandingPage';
+import GovAuthModal from './components/GovAuthModal';
+import AppSidebar from './components/AppSidebar';
+import AppTopBar from './components/AppTopBar';
+import { storageService } from './services/storageService';
+import { auditTrailService } from './services/auditTrailService';
+import { getParcelData, PRESET_DATASETS } from './services/dataSource';
 import { calculateFeatureCenter } from './utils/geoUtils';
 import { detectInputShape, runBrowserPipeline } from './utils/pipelineBrowser';
+import { analyzeViolations } from './utils/violationDetector';
+import { TIMELINE_SNAPSHOTS } from './data/mutationTimeline';
 import { FlyToInterpolator } from '@deck.gl/core';
-import { Loader2, AlertCircle, UploadCloud, X, FileText, CheckCircle2, AlertTriangle } from 'lucide-react';
+import {
+  Loader2, AlertCircle, UploadCloud, X, FileText, CheckCircle2,
+  AlertTriangle, ScanLine, ShieldAlert, Ruler, History, HelpCircle,
+  ShieldCheck, BrainCircuit, Lock, BarChart3, Terminal, Layers,
+  Compass, MapPin, Database
+} from 'lucide-react';
 
 export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [fileError, setFileError] = useState(null);
-  const [mapTheme, setMapTheme] = useState('dark');
+  const [mapTheme, setMapTheme] = useState('light');
   const [viewState, setViewState] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [showBuildingList, setShowBuildingList] = useState(true);
@@ -28,6 +51,217 @@ export default function App() {
   const [pipelineStatus, setPipelineStatus] = useState('');
   const [unplacedRecords, setUnplacedRecords] = useState([]);
   const [showUnplaced, setShowUnplaced] = useState(false);
+
+  // 3D Floor Controls state
+  const [explosionFactor, setExplosionFactor] = useState(0);
+  const [floorFilter, setFloorFilter] = useState(null);
+
+  // Preset dataset switcher state
+  const [currentPreset, setCurrentPreset] = useState('svamitva');
+
+  // Document Scanner panel state
+  const [showScanner, setShowScanner] = useState(false);
+
+  // Encroachment & FAR Violation Auditor state
+  const [showViolations, setShowViolations] = useState(false);
+  const [showEncroachmentOverlay, setShowEncroachmentOverlay] = useState(true);
+
+  // Spatial Measurement & Indian Land Unit Calculator state
+  const [showMeasureTool, setShowMeasureTool] = useState(false);
+  const [isMeasuring, setIsMeasuring] = useState(false);
+  const [measurePoints, setMeasurePoints] = useState([]);
+
+  // Cadastral Time-Travel Mutation Timeline state
+  const [showTimeline, setShowTimeline] = useState(false);
+  const [timelineYear, setTimelineYear] = useState(2024);
+
+  // 3D Controls Help Guide state
+  const [showHelp, setShowHelp] = useState(false);
+
+  // Government & SIH Core Workflow States
+  const [showHeroPage, setShowHeroPage] = useState(false);
+  const [activeTab, setActiveTab] = useState('map');
+  const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
+  const [showGovAuth, setShowGovAuth] = useState(false);
+  const [showReviewQueue, setShowReviewQueue] = useState(false);
+  const [showAiLog, setShowAiLog] = useState(false);
+  const [showAuditTrail, setShowAuditTrail] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showApiExplorer, setShowApiExplorer] = useState(false);
+  const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
+
+  const handleSelectTab = useCallback((tabId) => {
+    setActiveTab(tabId);
+    if (tabId === 'hero') {
+      setShowHeroPage(true);
+    } else if (tabId === 'map') {
+      setShowHeroPage(false);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setIsMeasuring(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'review') {
+      setShowHeroPage(false);
+      setShowReviewQueue(true);
+      setShowScanner(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'scanner') {
+      setShowHeroPage(false);
+      setShowScanner(true);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'analytics') {
+      setShowHeroPage(false);
+      setShowAnalytics(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'auditor') {
+      setShowHeroPage(false);
+      setShowViolations(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'audit') {
+      setShowHeroPage(false);
+      setShowAuditTrail(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'ailoop') {
+      setShowHeroPage(false);
+      setShowAiLog(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'timeline') {
+      setShowHeroPage(false);
+      setShowTimeline(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowMeasureTool(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'ruler') {
+      setShowHeroPage(false);
+      setShowMeasureTool(true);
+      setIsMeasuring(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowApiExplorer(false);
+    } else if (tabId === 'api') {
+      setShowHeroPage(false);
+      setShowApiExplorer(true);
+      setShowScanner(false);
+      setShowReviewQueue(false);
+      setShowAnalytics(false);
+      setShowViolations(false);
+      setShowAuditTrail(false);
+      setShowAiLog(false);
+      setShowTimeline(false);
+      setShowMeasureTool(false);
+    }
+  }, []);
+
+  const handleRoleChange = useCallback((newRole) => {
+    setUserRole(newRole);
+    storageService.setActiveRole(newRole);
+    auditTrailService.logAction({
+      action: 'USER_ROLE_SWITCHED',
+      actor: newRole === 'patwari' ? 'Patwari K. Suresh' : newRole === 'officer' ? 'Revenue Officer M. Ananth' : 'District Collector / Admin',
+      role: newRole === 'patwari' ? 'Patwari / Field Verifier' : newRole === 'officer' ? 'Revenue Officer' : 'Administrator',
+      targetId: 'RBAC_SESSION_CONTEXT',
+      details: `Active user context switched to ${newRole.toUpperCase()}`,
+    });
+  }, []);
+
+  const handleApproveQueueRecord = useCallback((verifiedRecord) => {
+    // If the verified record has coordinates or survey match, route through browser pipeline
+    if (verifiedRecord) {
+      handleScannerRecords([verifiedRecord]);
+    }
+  }, []);
+
+  const handleAddMeasurePoint = useCallback((coord) => {
+    setMeasurePoints((prev) => [...prev, coord]);
+  }, []);
+
+  const handleUndoMeasurePoint = useCallback(() => {
+    setMeasurePoints((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleClearMeasurePoints = useCallback(() => {
+    setMeasurePoints([]);
+  }, []);
+
+  const handleToggleMeasuring = useCallback(() => {
+    setIsMeasuring((prev) => !prev);
+  }, []);
+
+  const handleSelectPreset = useCallback((presetKey) => {
+    const preset = PRESET_DATASETS[presetKey];
+    if (preset && preset.data) {
+      setCurrentPreset(presetKey);
+      setData(preset.data);
+      setSelectedUnit(null);
+      const center = calculateFeatureCenter(preset.data.features || []);
+      setViewState((prev) => ({
+        ...(prev || {}),
+        longitude: center.longitude,
+        latitude: center.latitude,
+        zoom: 17.8,
+        pitch: 58,
+        bearing: -25,
+        transitionDuration: 1200,
+      }));
+    }
+  }, []);
 
   // Load building parcel data via isolated dataSource module initially
   useEffect(() => {
@@ -210,6 +444,13 @@ export default function App() {
     }
   }, [centerOnFeatures]);
 
+  // Handle records pushed from the DocumentScanner (OCR / CSV / Excel)
+  const handleScannerRecords = useCallback((records) => {
+    console.log(`[Scanner] Received ${records.length} records from Document Scanner`);
+    setShowScanner(false);
+    runPipelineOnRecords(records, 'Document Scanner');
+  }, [runPipelineOnRecords]);
+
   // Detect input shape and process accordingly
   const processUploadedJson = useCallback((jsonString, fileName = 'Uploaded file') => {
     setFileError(null);
@@ -329,6 +570,37 @@ export default function App() {
     return { totalUnits: total, syntheticCount: synthetic };
   }, [data]);
 
+  // Compute sorted unique floor numbers from all buildings
+  const availableFloors = useMemo(() => {
+    if (!data?.features) return [];
+    const floorSet = new Set();
+    for (const f of data.features) {
+      if (Array.isArray(f.properties?.floors)) {
+        for (const fl of f.properties.floors) {
+          floorSet.add(Number(fl.floor_number) || 1);
+        }
+      } else if (Array.isArray(f.properties?.units)) {
+        for (const u of f.properties.units) {
+          floorSet.add(Number(u.floor_number) || 1);
+        }
+      }
+    }
+    return Array.from(floorSet).sort((a, b) => a - b);
+  }, [data]);
+
+  // Active features (switch to historical timeline snapshot if timeline active and year < 2024)
+  const activeFeatures = useMemo(() => {
+    if (showTimeline && timelineYear < 2024 && TIMELINE_SNAPSHOTS[timelineYear]) {
+      return TIMELINE_SNAPSHOTS[timelineYear].features || [];
+    }
+    return data?.features || [];
+  }, [showTimeline, timelineYear, data]);
+
+  // Real-time Encroachment & FAR Violation Analysis
+  const violationAnalysis = useMemo(() => {
+    return analyzeViolations(activeFeatures);
+  }, [activeFeatures]);
+
   if (loading) {
     return (
       <div className="status-screen">
@@ -389,7 +661,7 @@ export default function App() {
 
   return (
     <div
-      className="app-container"
+      className="eleven-app-root"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -407,35 +679,89 @@ export default function App() {
         </div>
       )}
 
-      {/* Header & Controls */}
-      <Header
-        metadata={data?.metadata}
-        mapTheme={mapTheme}
-        onToggleTheme={handleToggleTheme}
-        onResetCamera={handleResetCamera}
+      {/* ─── ELEVENLABS-STYLE SIDEBAR NAVIGATION ─── */}
+      <AppSidebar
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
+        userRole={userRole}
+        onChangeRole={handleRoleChange}
+        pendingReviewCount={storageService.getReviewQueue().filter(q => q.status === 'PENDING_REVIEW').length}
+        violationCount={violationAnalysis?.summary?.violations || 0}
+        currentPreset={currentPreset}
+        onSelectPreset={handleSelectPreset}
         onFileSelect={handleFileSelect}
-        buildingCount={data?.features?.length || 0}
-        unitCount={totalUnits}
-        stepTitle="Multi-Story Floor Slices Active"
-        showBuildingList={showBuildingList}
-        onToggleBuildingList={() => setShowBuildingList((prev) => !prev)}
+        onToggleHelp={() => setShowHelp(prev => !prev)}
+        onExportDB={() => storageService.exportDatabaseDump()}
+        onToggleHero={() => {
+          setShowHeroPage(true);
+          setActiveTab('hero');
+        }}
+        onOpenAuth={() => setShowGovAuth(true)}
       />
 
-      {/* 3D Navigation Tip */}
-      <div className="instructions-card glass-panel">
-        <div className="instructions-title">3D Multi-Story Navigation</div>
-        <p className="instructions-text">
-          • <strong>Right-Click + Drag</strong> (or <strong>Ctrl + Drag</strong>) to tilt & rotate 3D pitch.<br/>
-          • <strong>Left-Click</strong> directly on any <strong>floor slice</strong> to inspect its title & records.<br/>
-          • <strong>Drag & Drop</strong> any GeoJSON or raw OCR records file onto the screen to load it.
-        </p>
-        {loadedFileName && (
-          <div className="loaded-file-indicator">
-            <CheckCircle2 size={12} color="#34d399" />
-            <span>Loaded: {loadedFileName}</span>
+      {/* ─── MAIN ELEVENLABS DASHBOARD AREA ─── */}
+      <div className="eleven-main-area">
+        {/* Top Header Bar with Breadcrumbs, Search & Profile */}
+        <AppTopBar
+          activeTab={activeTab}
+          metadata={data?.metadata}
+          mapTheme={mapTheme}
+          onChangeTheme={setMapTheme}
+          onResetCamera={handleResetCamera}
+          onToggleHelp={() => setShowHelp(prev => !prev)}
+          onExportDB={() => storageService.exportDatabaseDump()}
+          buildingCount={activeFeatures.length}
+          unitCount={totalUnits}
+          onToggleHero={() => setShowHeroPage(true)}
+          onSearchQuery={(q) => {
+            if (!q) return;
+            const match = data?.features?.find(f =>
+              f.properties?.title_details?.owner_name?.toLowerCase().includes(q.toLowerCase()) ||
+              f.properties?.title_details?.survey_number?.toLowerCase().includes(q.toLowerCase()) ||
+              f.properties?.title_details?.khasra_number?.toLowerCase().includes(q.toLowerCase()) ||
+              f.properties?.plot_id?.toLowerCase().includes(q.toLowerCase())
+            );
+            if (match) {
+              handleSelectBuilding(match.properties.plot_id);
+            }
+          }}
+        />
+
+        {/* Dynamic Studio Workspace Canvas Container */}
+        <div className="eleven-view-container">
+
+      {/* 3D Navigation Guide Modal / Toast */}
+      {showHelp && (
+        <div className="help-guide-modal glass-panel animate-slide-in">
+          <div className="help-guide-header">
+            <div className="help-guide-title">
+              <HelpCircle size={14} color="#ca8a04" />
+              <span>3D Navigation & Controls Guide</span>
+            </div>
+            <button onClick={() => setShowHelp(false)} className="sidebar-close-btn">
+              <X size={14} />
+            </button>
           </div>
-        )}
-      </div>
+          <div className="help-guide-body">
+            <div className="help-item">
+              <span className="help-key">Right-Click + Drag</span>
+              <span className="help-desc">Tilt 3D pitch and rotate camera angle around buildings</span>
+            </div>
+            <div className="help-item">
+              <span className="help-key">Left-Click</span>
+              <span className="help-desc">Select any building or floor unit to inspect title & download Property Card PDF</span>
+            </div>
+            <div className="help-item">
+              <span className="help-key">Explosion Slider</span>
+              <span className="help-desc">Separate stacked floors vertically to see multi-story unit partitions</span>
+            </div>
+            <div className="help-item">
+              <span className="help-key">Drag & Drop</span>
+              <span className="help-desc">Drop any GeoJSON or CSV file directly onto the window</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Unplaced Records Badge */}
       {unplacedRecords.length > 0 && (
@@ -506,14 +832,21 @@ export default function App() {
         </div>
       )}
 
-      {/* 3D Mapbox + Deck.GL Canvas (Contract Untouched) */}
+      {/* 3D Mapbox + Deck.GL Canvas */}
       <MapView
-        features={data.features}
+        features={activeFeatures}
         mapTheme={mapTheme}
         viewState={viewState}
         onViewStateChange={({ viewState: nextViewState }) => setViewState(nextViewState)}
         onSelectUnit={handleSelectUnit}
         selectedUnitId={selectedUnit?.unit_id}
+        explosionFactor={explosionFactor}
+        floorFilter={floorFilter}
+        encroachmentGeoJson={violationAnalysis.encroachmentFeatures}
+        showEncroachmentOverlay={showEncroachmentOverlay}
+        isMeasuring={isMeasuring}
+        measurePoints={measurePoints}
+        onAddMeasurePoint={handleAddMeasurePoint}
       />
 
       {/* Legend */}
@@ -521,6 +854,17 @@ export default function App() {
         unitCount={totalUnits}
         syntheticCount={syntheticCount}
       />
+
+      {/* 3D Floor Exploded View & Isolator Controls */}
+      {data?.features && data.features.length > 0 && !showTimeline && !showScanner && !showViolations && (
+        <FloorControlPanel
+          explosionFactor={explosionFactor}
+          onExplosionChange={setExplosionFactor}
+          floorFilter={floorFilter}
+          onFloorFilterChange={setFloorFilter}
+          availableFloors={availableFloors}
+        />
+      )}
 
       {/* Building Directory Side Menu */}
       {showBuildingList && data?.features && data.features.length > 0 && !selectedUnit && (
@@ -536,10 +880,149 @@ export default function App() {
       {selectedUnit && (
         <ParcelSidebar
           unit={selectedUnit}
+          metadata={data?.metadata}
           onClose={handleCloseSidebar}
+        />
+      )}
+
+      {/* Document Scanner / OCR / CSV Importer */}
+      {showScanner && (
+        <DocumentScanner
+          onRecordsReady={handleScannerRecords}
+          onRouteToQueue={() => {
+            setShowScanner(false);
+            setShowReviewQueue(true);
+            setActiveTab('review');
+          }}
+          onClose={() => {
+            setShowScanner(false);
+            setActiveTab('map');
+          }}
+        />
+      )}
+
+      {/* Encroachment & FAR Violation Auditor */}
+      {showViolations && (
+        <ViolationPanel
+          analysisResults={violationAnalysis}
+          onSelectBuilding={handleSelectBuilding}
+          features={data.features}
+          showEncroachmentOverlay={showEncroachmentOverlay}
+          onToggleEncroachmentOverlay={() => setShowEncroachmentOverlay((prev) => !prev)}
+          onClose={() => {
+            setShowViolations(false);
+            setActiveTab('map');
+          }}
+        />
+      )}
+
+      {/* Spatial Measurement & Indian Land Unit Converter */}
+      {showMeasureTool && (
+        <MeasureToolPanel
+          isMeasuring={isMeasuring}
+          onToggleMeasuring={handleToggleMeasuring}
+          measurePoints={measurePoints}
+          onUndoPoint={handleUndoMeasurePoint}
+          onClearPoints={handleClearMeasurePoints}
+          onClose={() => {
+            setShowMeasureTool(false);
+            setIsMeasuring(false);
+            setActiveTab('map');
+          }}
+        />
+      )}
+
+      {/* Cadastral Time-Travel Timeline Scrubber */}
+      {showTimeline && (
+        <TimelineSlider
+          selectedYear={timelineYear}
+          onSelectYear={(yr) => setTimelineYear(yr)}
+          onClose={() => {
+            setShowTimeline(false);
+            setTimelineYear(2024);
+            setActiveTab('map');
+          }}
+        />
+      )}
+
+      {/* ─── NEW CORE SIH GOVTECH MODALS ─── */}
+
+      {/* Point 12: Human-in-the-Loop Verification Review Queue */}
+      {showReviewQueue && (
+        <VerificationQueueModal
+          userRole={userRole}
+          onApproveRecord={handleApproveQueueRecord}
+          onClose={() => setShowReviewQueue(false)}
+        />
+      )}
+
+      {/* Point 13: Continuous AI Learning & Model Improvement Log */}
+      {showAiLog && (
+        <AiImprovementLogModal
+          onClose={() => setShowAiLog(false)}
+        />
+      )}
+
+      {/* Point 15: Secure Document Repository & Immutable Audit Trail */}
+      {showAuditTrail && (
+        <AuditTrailModal
+          onClose={() => setShowAuditTrail(false)}
+        />
+      )}
+
+      {/* Executive Analytics Dashboard */}
+      {showAnalytics && (
+        <AnalyticsDashboardModal
+          onClose={() => setShowAnalytics(false)}
+        />
+      )}
+
+      {/* Point 14: External Integration REST API Explorer */}
+      {showApiExplorer && (
+        <ApiExplorerModal
+          onClose={() => setShowApiExplorer(false)}
+        />
+      )}
+        </div>
+      </div>
+
+      {/* ─── GOVERNMENT ROLE-BASED AUTH MODAL ─── */}
+      {showGovAuth && (
+        <GovAuthModal
+          currentRole={userRole}
+          onSelectRole={(newRole) => {
+            handleRoleChange(newRole);
+            setShowGovAuth(false);
+          }}
+          onClose={() => setShowGovAuth(false)}
+        />
+      )}
+
+      {/* ─── HERO LANDING OVERVIEW PAGE (PIN DESIGN) ─── */}
+      {showHeroPage && (
+        <HeroLandingPage
+          onLaunchApp={() => {
+            setShowHeroPage(false);
+            setActiveTab('map');
+          }}
+          onOpenScanner={() => {
+            setShowHeroPage(false);
+            setShowScanner(true);
+            setActiveTab('scanner');
+          }}
+          onOpenAnalytics={() => {
+            setShowHeroPage(false);
+            setShowAnalytics(true);
+            setActiveTab('analytics');
+          }}
+          userRole={userRole}
+          onChangeRole={handleRoleChange}
         />
       )}
     </div>
   );
 }
+
+
+
 

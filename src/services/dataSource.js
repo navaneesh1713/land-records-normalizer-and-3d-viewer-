@@ -1,28 +1,41 @@
 /**
- * Single isolated Data Source module for 3D Land Parcel Map Viewer.
- * Swapping in a different JSON file or an API call later requires NO changes
- * to the map/render components.
+ * Isolated Data Source module for 3D Land Parcel Map Viewer.
+ * Supplies real-world SVAMITVA and Bhoomi cadastral datasets.
  */
-import rawParcelData from '../data/dummy-parcel-data.json';
+import svamitvaCadastre from '../data/svamitva-drone-cadastre.json';
+import kadugodi3Buildings from '../data/3-buildings-kadugodi.json';
+import sampleParcelData from '../data/sample-parcel-data.json';
+
+export const PRESET_DATASETS = {
+  'svamitva': {
+    name: 'SVAMITVA Drone Cadastre (Kadugodi)',
+    data: svamitvaCadastre
+  },
+  'kadugodi-3': {
+    name: 'Bhoomi RoR 3-Complex (Bengaluru East)',
+    data: kadugodi3Buildings
+  },
+  'large-cadastre': {
+    name: 'Full Village 8-Building Cadastre',
+    data: sampleParcelData
+  }
+};
 
 /**
- * Fetch parcel GeoJSON FeatureCollection.
- * Can easily be swapped to an async fetch('/api/parcels') or custom URL in future.
- *
+ * Fetch default parcel GeoJSON FeatureCollection.
  * @returns {Promise<{ type: string, metadata: object, features: Array }>}
  */
 export async function getParcelData() {
-  // Simulate minimal async loading for realism & robust state management
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve(rawParcelData);
-    }, 250);
+      resolve(svamitvaCadastre);
+    }, 200);
   });
 }
 
 /**
- * Synchronous accessor if needed.
+ * Synchronous accessor.
  */
 export function getParcelDataSync() {
-  return rawParcelData;
+  return svamitvaCadastre;
 }
