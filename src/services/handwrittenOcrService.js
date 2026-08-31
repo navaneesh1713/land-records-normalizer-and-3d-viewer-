@@ -6,11 +6,7 @@
 const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
 const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
 
-export const AVAILABLE_GEMINI_MODELS = [
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', desc: 'Flagship multimodal vision (Free Tier supported)', recommended: true },
-  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Ultra-fast low-latency vision OCR (Free Tier supported)' },
-  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', desc: 'Deep reasoning (Requires Paid Cloud Billing)' },
-];
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
 
 export function getGeminiApiKey() {
   return (
@@ -26,27 +22,6 @@ export function saveGeminiApiKey(key) {
     localStorage.setItem(LOCAL_STORAGE_KEY, key.trim());
   } else {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-  }
-}
-
-export function getGeminiModel() {
-  const stored = localStorage.getItem(LOCAL_STORAGE_MODEL_KEY);
-  // If stored model was pro preview which has 0 quota on free keys, fallback to flash
-  if (stored === 'gemini-3.1-pro-preview') {
-    return 'gemini-3.6-flash';
-  }
-  return (
-    import.meta.env.VITE_GEMINI_MODEL ||
-    stored ||
-    'gemini-3.6-flash'
-  );
-}
-
-export function saveGeminiModel(model) {
-  if (model) {
-    localStorage.setItem(LOCAL_STORAGE_MODEL_KEY, model.trim());
-  } else {
-    localStorage.removeItem(LOCAL_STORAGE_MODEL_KEY);
   }
 }
 
@@ -125,20 +100,25 @@ First, determine if the image is a valid government land or revenue record. A va
 
 If the document IS valid, carefully examine the image, decipher all handwriting, stamped text, marginal notations, and extract the key land registration entities.
 
+CRITICAL ACCURACY & INTEGRITY RULE:
+- NEVER guess, invent, or hallucinate dummy/random data.
+- If any field is unclear, smudged, torn, faded, illegible, or missing from the document, set its value to null (or empty string "").
+- For any field that is unclear or missing, assign a confidence score below 50, mark it in "uncertain_fields", and describe what is unclear so the human operator can manually fill it in.
+
 You MUST respond ONLY with a single valid JSON object matching this exact schema:
 {
   "is_valid_gov_document": true,
-  "owner_name": "Full legal name of owner / khatedar / pattadar (or null)",
-  "survey_number": "Survey / Sy No / Khasra / Gat No (e.g. 48/2A or 104/1) (or null)",
-  "khasra_number": "Khasra or Plot No if distinct (or null)",
-  "khata_number": "Khata / Khatiyan / Khewat number (or null)",
-  "district": "District name (e.g. Bengaluru Urban, Pune, Varanasi) (or null)",
-  "taluk_tehsil": "Taluk / Tehsil / Sub-district name (or null)",
-  "village": "Village / Mauza name (or null)",
+  "owner_name": "Full legal name of owner / khatedar / pattadar (or null if illegible/missing)",
+  "survey_number": "Survey / Sy No / Khasra / Gat No (or null if illegible/missing)",
+  "khasra_number": "Khasra or Plot No if distinct (or null if illegible/missing)",
+  "khata_number": "Khata / Khatiyan / Khewat number (or null if illegible/missing)",
+  "district": "District name (or null if illegible/missing)",
+  "taluk_tehsil": "Taluk / Tehsil / Sub-district name (or null if illegible/missing)",
+  "village": "Village / Mauza name (or null if illegible/missing)",
   "area_sqm": 1250.5,
-  "classification": "residential | commercial | agricultural | industrial | vacant | institutional",
+  "classification": "residential | commercial | agricultural | industrial | vacant | institutional (or null if unclear)",
   "floor_level": 0,
-  "floor_name": "Ground Floor / Unit 101 / Whole Plot",
+  "floor_name": "Ground Floor / Unit 101 / Whole Plot (or null if unclear)",
   "tax_status": "PAID | PENDING | UNVERIFIED",
   "encumbrance_status": "CLEAR | MORTGAGED | DISPUTED | UNVERIFIED",
   "raw_extracted_text": "Full verbatim transcription of all handwritten and printed text visible on the document",
@@ -156,7 +136,7 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
   "uncertain_fields": [
     {
       "field": "field_name",
-      "reason": "Why this field is uncertain or smudged"
+      "reason": "Why this field is unclear, smudged, or missing"
     }
   ],
   "handwriting_quality": "CLEAR | MODERATE | SEVERELY_SMUDGED | DAMAGED_INK"
@@ -226,35 +206,35 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
         throw new Error('NOT_A_GOV_DOCUMENT: The uploaded image does not appear to be a valid government land or revenue record.');
       }
 
-      // Build structured result matching cadastre pipeline
+      // Build structured result matching cadastre pipeline (NO RANDOM FALLBACKS)
       const fieldConf = parsed.field_confidence || {};
       const uncertainList = parsed.uncertain_fields || [];
 
       return {
-        owner_name: parsed.owner_name || null,
-        survey_number: parsed.survey_number || parsed.khasra_number || '48/2A',
-        khasra_number: parsed.khasra_number || parsed.survey_number || null,
-        khata_number: parsed.khata_number || '712/B',
-        district: parsed.district || 'Bengaluru Urban',
-        tehsil: parsed.taluk_tehsil || 'Bengaluru East',
-        village: parsed.village || 'Kadugodi',
-        classification: (parsed.classification || 'commercial').toLowerCase(),
-        area_sqm: typeof parsed.area_sqm === 'number' ? parsed.area_sqm : (parseFloat(parsed.area_sqm) || 320.5),
+        owner_name: parsed.owner_name || '',
+        survey_number: parsed.survey_number || parsed.khasra_number || '',
+        khasra_number: parsed.khasra_number || '',
+        khata_number: parsed.khata_number || '',
+        district: parsed.district || '',
+        tehsil: parsed.taluk_tehsil || '',
+        village: parsed.village || '',
+        classification: parsed.classification ? String(parsed.classification).toLowerCase() : '',
+        area_sqm: typeof parsed.area_sqm === 'number' ? parsed.area_sqm : (parseFloat(parsed.area_sqm) || ''),
         floor_level: parsed.floor_level ?? 0,
-        floor_name: parsed.floor_name || 'Ground Floor',
-        tax_status: parsed.tax_status || 'PAID (FY 2025-26)',
-        encumbrance_status: parsed.encumbrance_status || 'CLEAR',
+        floor_name: parsed.floor_name || '',
+        tax_status: parsed.tax_status || 'UNVERIFIED',
+        encumbrance_status: parsed.encumbrance_status || 'UNVERIFIED',
         _source: 'gemini_vision_htr',
         _modelUsed: modelName,
         _rawText: parsed.raw_extracted_text || rawText,
-        _confidence: parsed.overall_confidence || 90,
+        _confidence: parsed.overall_confidence || 75,
         _fieldConfidence: Object.fromEntries(
           Object.entries(fieldConf).map(([k, score]) => [
             k,
             {
-              score: Number(score) || 85,
-              isUncertain: Number(score) < 85,
-              reason: Number(score) < 85 ? 'Unclear handwriting / ink smudge' : 'High AI Vision certainty',
+              score: Number(score) || (parsed[k] ? 85 : 40),
+              isUncertain: Number(score) < 75 || !parsed[k],
+              reason: !parsed[k] ? 'Field unclear or missing from scan — please fill manually' : (Number(score) < 75 ? 'Unclear handwriting / low confidence' : 'High AI Vision certainty'),
             },
           ])
         ),

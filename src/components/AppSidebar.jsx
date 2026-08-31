@@ -27,11 +27,10 @@ export default function AppSidebar({
 
   const mainNavItems = [
     { id: 'map', label: '3D Studio', icon: Layers, badge: null },
+    { id: 'database', label: 'Land Database', icon: Database, badge: null },
     { id: 'upload', label: 'Upload & Scan', icon: Upload, badge: null },
-    { id: 'review', label: 'Review Queue', icon: ShieldCheck, badge: pendingReviewCount > 0 ? pendingReviewCount : null, badgeColor: '#f59e0b' },
     { id: 'scanner', label: 'Document Scanner', icon: ScanLine, badge: null },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
-    { id: 'audit', label: 'Audit Trail', icon: Lock, badge: null },
     { id: 'ailoop', label: 'AI Feedback Loop', icon: BrainCircuit, badge: null },
   ];
 
@@ -106,25 +105,6 @@ export default function AppSidebar({
               );
             })}
           </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json,application/json,application/geo+json"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file && onFileSelect) onFileSelect(file);
-              e.target.value = '';
-            }}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="sidebar-upload-btn"
-          >
-            <Upload size={13} />
-            <span>Load Custom GeoJSON</span>
-          </button>
         </div>
       </div>
 

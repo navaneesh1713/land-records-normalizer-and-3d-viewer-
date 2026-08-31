@@ -15,6 +15,8 @@ import AuditTrailView from './components/AuditTrailView';
 import AiFeedbackLoopView from './components/AiFeedbackLoopView';
 import HeroLandingPage from './components/HeroLandingPage';
 import GovAuthModal from './components/GovAuthModal';
+import OfficialFaceAuthModal from './components/OfficialFaceAuthModal';
+import LandDatabaseDashboard from './components/LandDatabaseDashboard';
 import AppSidebar from './components/AppSidebar';
 import AppTopBar from './components/AppTopBar';
 import UploadDashboard from './components/UploadDashboard';
@@ -79,6 +81,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
       if (path.startsWith('/home') || window.location.hash === '#/home') return 'map';
+      if (path.startsWith('/database')) return 'database';
       if (path.startsWith('/upload')) return 'upload';
       if (path.startsWith('/analytics')) return 'analytics';
       if (path.startsWith('/audit')) return 'audit';
@@ -88,6 +91,7 @@ export default function App() {
   });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
+  const [showFaceAuthForDatabase, setShowFaceAuthForDatabase] = useState(false);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
 
@@ -102,13 +106,16 @@ export default function App() {
       setShowMobileScanner(false);
       
       const isHome = path.startsWith('/home') || window.location.hash === '#/home';
+      const isDatabase = path.startsWith('/database');
       const isUpload = path.startsWith('/upload');
       const isAnalytics = path.startsWith('/analytics');
       const isAudit = path.startsWith('/audit');
       const isAiLoop = path.startsWith('/ailoop') || path.startsWith('/ai-learning');
       
       setShowHeroPage(path === '/' || path === '');
-      if (isUpload) {
+      if (isDatabase) {
+        setActiveTab('database');
+      } else if (isUpload) {
         setActiveTab('upload');
       } else if (isAnalytics) {
         setActiveTab('analytics');
@@ -126,7 +133,21 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  const handleFaceAuthVerified = useCallback(() => {
+    setShowFaceAuthForDatabase(false);
+    setActiveTab('database');
+    setShowHeroPage(false);
+    if (window.location.pathname !== '/database') {
+      window.history.pushState({}, '', '/database');
+    }
+  }, []);
+
   const handleSelectTab = useCallback((tabId) => {
+    if (tabId === 'database') {
+      setShowFaceAuthForDatabase(true);
+      return;
+    }
+
     setActiveTab(tabId);
     if (tabId === 'hero') {
       setShowHeroPage(true);
@@ -135,7 +156,9 @@ export default function App() {
       }
     } else {
       setShowHeroPage(false);
-      if (tabId === 'upload') {
+      if (tabId === 'database') {
+        if (window.location.pathname !== '/database') window.history.pushState({}, '', '/database');
+      } else if (tabId === 'upload') {
         if (window.location.pathname !== '/upload') window.history.pushState({}, '', '/upload');
       } else if (tabId === 'analytics') {
         if (window.location.pathname !== '/analytics') window.history.pushState({}, '', '/analytics');
@@ -686,6 +709,20 @@ export default function App() {
         />
 
         {/* ─── DEDICATED FULL-PAGE WORKSPACE VIEWS ─── */}
+        {activeTab === 'database' && (
+          <LandDatabaseDashboard
+            onApplyTo3DMap={(records) => {
+              handleScannerRecords(records);
+              setActiveTab('map');
+            }}
+            onNavigateToUpload={() => handleSelectTab('upload')}
+            onOpenScanner={() => {
+              setShowScanner(true);
+              setActiveTab('scanner');
+            }}
+          />
+        )}
+
         {activeTab === 'upload' && (
           <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 60px)' }}>
             <UploadDashboard 
@@ -711,7 +748,7 @@ export default function App() {
         )}
 
         {/* ─── 3D MAP & EXPLODED STUDIO WORKSPACE CANVAS ─── */}
-        {activeTab !== 'upload' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
+        {activeTab !== 'database' && activeTab !== 'upload' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
           <div className="eleven-view-container">
 
             {/* Unplaced Records Badge */}
@@ -836,6 +873,11 @@ export default function App() {
               <DocumentScanner
                 initialFile={scannerInitialFile}
                 onRecordsReady={handleScannerRecords}
+                onNavigateToUpload={() => {
+                  setShowScanner(false);
+                  setScannerInitialFile(null);
+                  handleSelectTab('upload');
+                }}
                 onRouteToQueue={() => {
                   setShowScanner(false);
                   setScannerInitialFile(null);
@@ -880,6 +922,14 @@ export default function App() {
           onClose={() => setShowGovAuth(false)}
         />
       )}
+
+      {/* ─── BIOMETRIC FACE VERIFICATION GATE FOR LAND DATABASE ─── */}
+      <OfficialFaceAuthModal
+        isOpen={showFaceAuthForDatabase}
+        officialRole={userRole}
+        onClose={() => setShowFaceAuthForDatabase(false)}
+        onVerified={handleFaceAuthVerified}
+      />
 
       {/* ─── HERO LANDING OVERVIEW PAGE (PIN DESIGN) ─── */}
       {showHeroPage && !showMobileScanner && (

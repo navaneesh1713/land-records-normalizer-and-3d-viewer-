@@ -271,16 +271,6 @@ export default function Header({
               <span>DB Sync</span>
             </button>
 
-            {onToggleHero && (
-              <button
-                onClick={onToggleHero}
-                className="btn-control"
-                title="Return to Hero Landing Overview"
-              >
-                <Compass size={13} color="#4f46e5" />
-                <span>Overview</span>
-              </button>
-            )}
 
             {onToggleHelp && (
               <button

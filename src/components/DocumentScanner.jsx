@@ -9,22 +9,25 @@ import {
   extractHandwrittenLandRecord,
   getGeminiApiKey,
   saveGeminiApiKey,
-  getGeminiModel,
-  saveGeminiModel,
-  AVAILABLE_GEMINI_MODELS
 } from '../services/handwrittenOcrService';
 import {
   ScanLine, Upload, FileText, FileSpreadsheet, Image as ImageIcon,
   Loader2, CheckCircle2, AlertCircle, X, Eye, EyeOff, Edit3, Send, Trash2,
   Sparkles, Download, ShieldCheck, AlertTriangle, ArrowRight, Layers, FileCode,
-  Wand2, Check, HelpCircle, RefreshCw, Bot
+  Wand2, Check, HelpCircle, RefreshCw, Bot, Database
 } from 'lucide-react';
 
-export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose }) {
-  const fileInputRef = useRef(null);
+export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose, onNavigateToUpload }) {
+  const handleGoToUpload = () => {
+    if (onNavigateToUpload) {
+      onNavigateToUpload();
+    } else {
+      window.history.pushState({}, '', '/upload');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
 
-  const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
-
+  // Scanner state
   const [ocrRunning, setOcrRunning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrStatus, setOcrStatus] = useState('');
@@ -38,11 +41,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const [error, setError] = useState(null);
   const [queueSuccessMsg, setQueueSuccessMsg] = useState('');
   const [modelInfo, setModelInfo] = useState(null);
-
-  useEffect(() => {
-    const activeModel = getGeminiModel();
-    setSelectedModel(activeModel);
-  }, []);
 
   // ─── Field Normalizer ───
   const normalizeRecord = (raw) => {
@@ -143,16 +141,16 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
     try {
       setOcrProgress(50);
-      const extracted = await extractHandwrittenLandRecord(imageFile, activeKey, selectedModel);
+      const extracted = await extractHandwrittenLandRecord(imageFile, activeKey);
       setOcrProgress(90);
 
       const record = {
         _idx: 0,
         _source: 'gemini_vision_htr',
-        _modelUsed: extracted._modelUsed || selectedModel || 'Gemini 2.5 Flash',
+        _modelUsed: extracted._modelUsed || 'Gemini 3.6 Flash',
         _fileName: imageFile.name,
         _rawText: extracted._rawText || '',
-        _confidence: extracted._confidence || 90,
+        _confidence: extracted._confidence || 75,
         _fieldConfidence: extracted._fieldConfidence || {},
         _uncertainFields: extracted._uncertainFields || [],
         _handwritingQuality: extracted._handwritingQuality || 'CLEAR',
@@ -163,10 +161,10 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
         village: extracted.village || '',
         tehsil: extracted.tehsil || '',
         district: extracted.district || '',
-        classification: extracted.classification || 'residential',
-        area_sqm: extracted.area_sqm || 320.5,
-        floors: '2',
-        height_m: '6.5',
+        classification: extracted.classification || '',
+        area_sqm: extracted.area_sqm || '',
+        floors: extracted.floors || '',
+        height_m: extracted.height_m || '',
       };
 
       setRawOcrText(record._rawText);
@@ -209,7 +207,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     reader.readAsDataURL(imageFile);
 
     await runGeminiVisionOCR(imageFile);
-  }, [selectedModel]);
+  }, []);
 
   // ─── File Selection Handler ───
   const handleFile = useCallback(async (file) => {
@@ -253,11 +251,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     }
   }, [initialFile, handleFile]);
 
-  const handleModelChange = (newModel) => {
-    setSelectedModel(newModel);
-    saveGeminiModel(newModel);
-    setError(null);
-  };
+
 
   const handleLoadSample = async () => {
     try {
@@ -288,50 +282,33 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     if (onRecordsReady) onRecordsReady(extractedRecords);
   };
 
-  const handleRouteToQueue = () => {
+  const handleAddToDatabase = () => {
     if (extractedRecords.length === 0) return;
 
-    extractedRecords.forEach((rec) => {
-      const queueItem = storageService.addReviewItem({
-        sourceFileName: rec._fileName || sourceFileName || 'Scanned Document',
-        rawText: rec._rawText || '',
-        overallConfidence: rec._confidence || 75,
-        fieldConfidence: rec._fieldConfidence || {},
-        uncertainFields: rec._uncertainFields || [],
-        extractedFields: {
-          owner_name: rec.owner_name || '',
-          khasra_number: rec.khasra_number || '',
-          survey_number: rec.survey_number || '',
-          khata_number: rec.khata_number || '',
-          village: rec.village || '',
-          tehsil: rec.tehsil || '',
-          district: rec.district || '',
-          area_acres: rec.area_acres || '',
-          classification: rec.classification || 'Residential',
-          floors: rec.floors || '2',
-          height_m: rec.height_m || '6.5',
-        },
-      });
+    const result = storageService.addRecordsToDatabase(extractedRecords);
 
-      auditTrailService.logAction(
-        'OCR_INGEST_TO_QUEUE',
-        'document',
-        queueItem.id,
-        {
-          fileName: queueItem.sourceFileName,
-          confidence: queueItem.overallConfidence,
-          uncertainFieldsCount: queueItem.uncertainFields.length,
-          engine: rec._source || 'ocr',
-        },
-        'system'
-      );
-    });
+    auditTrailService.logAction(
+      'LAND_DATABASE_INGEST',
+      'document',
+      `BATCH-${Date.now().toString().slice(-4)}`,
+      {
+        fileName: sourceFileName || 'Scanned Document',
+        addedCount: result.addedCount,
+        updatedCount: result.updatedCount,
+        totalParcels: result.totalCount,
+      },
+      'Official'
+    );
 
-    setQueueSuccessMsg(`Successfully routed ${extractedRecords.length} record(s) to Human-in-the-Loop Review Queue.`);
+    if (result.updatedCount > 0 && result.addedCount === 0) {
+      setQueueSuccessMsg(`Updated ${result.updatedCount} existing record(s) in Land Database (Zero duplicates created).`);
+    } else {
+      setQueueSuccessMsg(`Successfully saved ${result.addedCount} record(s) to Land Database! (${result.totalCount} total parcels)`);
+    }
+
     setTimeout(() => {
       setQueueSuccessMsg('');
-      if (onRouteToQueue) onRouteToQueue();
-    }, 1200);
+    }, 2500);
   };
 
   const getConfidenceBadge = (confidence) => {
@@ -378,64 +355,37 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       {/* Main Content Scrollable Area */}
       <div className="scanner-studio-body">
 
-        {/* Gemini Vision AI Model Strip */}
-        <div className="scanner-lang-strip" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.6), rgba(245, 243, 255, 0.6))' }}>
-          <div className="lang-strip-left">
-            <Sparkles size={13} color="#4f46e5" />
-            <span className="lang-label-title" style={{ color: '#4338ca', fontWeight: 600 }}>Gemini Vision Model:</span>
-          </div>
-          <select
-            value={selectedModel}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="scanner-lang-select"
-            disabled={ocrRunning}
-            style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
+
+
+
+        {/* Upload Action Button */}
+        <div style={{ marginBottom: 14 }}>
+          <button
+            onClick={handleGoToUpload}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              width: '100%',
+              padding: '14px 20px',
+              background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 10,
+              cursor: 'pointer',
+              fontSize: 14,
+              fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+              transition: 'all 0.2s ease',
+            }}
           >
-            {AVAILABLE_GEMINI_MODELS.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
-              </option>
-            ))}
-          </select>
+            <Upload size={17} />
+            <span>Upload Document</span>
+          </button>
         </div>
 
-
-        {/* Modern Drag & Drop Zone */}
         <div className="scanner-dropzone-wrapper">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,.csv,.xlsx,.xls,.json,.geojson,.pdf"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              if (e.target.files?.[0]) handleFile(e.target.files[0]);
-              e.target.value = '';
-            }}
-          />
-
-          <div
-            className="scanner-dropzone-box"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className="dropzone-icon-circle">
-              <Upload size={20} color="#4f46e5" />
-            </div>
-            <div className="dropzone-main-label">
-              <strong>Click to upload</strong> or drag and drop document
-            </div>
-            <div className="dropzone-sub-label">
-              Supports handwritten Khatiyan, Jamabandi, Bhoomi RTC, 7/12, SVAMITVA Cards, PDF, CSV & GeoJSON
-            </div>
-            <div className="dropzone-badges-row">
-              <span className="file-tag">PNG</span>
-              <span className="file-tag">JPG</span>
-              <span className="file-tag">PDF</span>
-              <span className="file-tag">TIFF</span>
-              <span className="file-tag">CSV</span>
-              <span className="file-tag">XLSX</span>
-              <span className="file-tag">JSON</span>
-            </div>
-          </div>
 
           {/* Quick 1-Click Sample Card */}
           <div className="scanner-sample-card">
@@ -551,6 +501,28 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
               <span className="records-count-pill">{extractedRecords.length} Record</span>
             </div>
 
+            {extractedRecords.some(r => Object.values(r._fieldConfidence || {}).some(f => f.isUncertain) || !r.owner_name || !r.survey_number) && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(254, 243, 199, 0.9), rgba(253, 230, 138, 0.6))',
+                border: '1px solid #f59e0b',
+                borderRadius: 8,
+                padding: '10px 14px',
+                marginBottom: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                color: '#92400e',
+                fontSize: 12,
+                fontWeight: 500,
+                boxShadow: '0 2px 4px rgba(245, 158, 11, 0.1)'
+              }}>
+                <AlertTriangle size={16} color="#d97706" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Action Required:</strong> Some fields were unclear or missing in the scan. Random data was <em>not</em> hallucinated. Please fill in the highlighted fields below.
+                </span>
+              </div>
+            )}
+
             {extractedRecords.map((rec) => (
               <div key={rec._idx} className="extracted-record-card">
                 <div className="record-top-meta">
@@ -587,12 +559,17 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                     { key: 'floors', label: 'Storeys (Floors)' },
                     { key: 'height_m', label: 'Height (m)' },
                   ].map(({ key, label }) => {
-                    const fieldConf = rec._fieldConfidence?.[key]?.score ?? (rec._confidence || 85);
-                    const isUncertain = rec._fieldConfidence?.[key]?.isUncertain || fieldConf < 75;
-                    const reason = rec._fieldConfidence?.[key]?.reason;
+                    const hasValue = Boolean(rec[key] && String(rec[key]).trim());
+                    const fieldConf = rec._fieldConfidence?.[key]?.score ?? (hasValue ? (rec._confidence || 85) : 35);
+                    const isUncertain = rec._fieldConfidence?.[key]?.isUncertain || !hasValue || fieldConf < 75;
+                    const reason = rec._fieldConfidence?.[key]?.reason || (!hasValue ? 'Unclear / missing from scan — please enter manually' : null);
 
                     return (
-                      <div key={key} className={`record-field-cell ${isUncertain ? 'uncertain' : ''}`}>
+                      <div
+                        key={key}
+                        className={`record-field-cell ${isUncertain ? 'uncertain' : ''}`}
+                        style={!hasValue ? { borderColor: '#f59e0b', background: 'rgba(254, 243, 199, 0.3)' } : {}}
+                      >
                         <div className="field-cell-header">
                           <label className="field-cell-label">{label}</label>
                           {getConfidenceBadge(fieldConf)}
@@ -602,7 +579,8 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                           className="field-cell-input"
                           value={rec[key] || ''}
                           onChange={(e) => updateField(rec._idx, key, e.target.value)}
-                          placeholder={`Enter ${label}...`}
+                          placeholder={!hasValue ? `⚠️ Click to fill in ${label}...` : `Enter ${label}...`}
+                          style={!hasValue ? { borderColor: '#f59e0b', fontStyle: 'italic' } : {}}
                         />
                         {isUncertain && reason && (
                           <div className="field-uncertain-note">
@@ -624,12 +602,26 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       {extractedRecords.length > 0 && (
         <div className="scanner-studio-footer">
           <button
-            onClick={handleRouteToQueue}
-            className="scanner-btn-route-queue"
-            title="Route uncertain records to Human-in-the-Loop verifier"
+            onClick={handleAddToDatabase}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '10px 18px',
+              background: '#4f46e5',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)',
+              transition: 'all 0.2s ease',
+            }}
+            title="Save extracted record to local government database (Zero Duplicates)"
           >
-            <ShieldCheck size={14} />
-            <span>Route to HITL Review</span>
+            <Database size={14} />
+            <span>Add to Database</span>
           </button>
 
           <button

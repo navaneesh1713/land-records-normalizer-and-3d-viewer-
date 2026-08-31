@@ -22,6 +22,7 @@ export default function AppTopBar({
 
   const getBreadcrumbLabel = () => {
     switch (activeTab) {
+      case 'database': return 'Government Land Cadastre Database';
       case 'upload': return 'Document Ingestion Portal';
       case 'map': return '3D Studio';
       case 'review': return 'Review Workstation';
@@ -65,12 +66,7 @@ export default function AppTopBar({
 
       {/* Right: Actions & Profile */}
       <div className="topbar-right-actions">
-        {onToggleHero && (
-          <button onClick={onToggleHero} className="topbar-pill-btn" title="Hero Overview Landing Page">
-            <Compass size={13} color="#4f46e5" />
-            <span>Overview</span>
-          </button>
-        )}
+
 
         {onResetCamera && (
           <button onClick={onResetCamera} className="topbar-icon-btn" title="Reset Camera View">

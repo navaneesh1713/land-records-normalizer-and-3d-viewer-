@@ -5,6 +5,7 @@
 
 const STORAGE_KEYS = {
   VERIFIED_RECORDS: 'sih_cadastre_verified_records',
+  LAND_DATABASE: 'sih_cadastre_land_database',
   REVIEW_QUEUE: 'sih_cadastre_review_queue',
   AUDIT_LOGS: 'sih_cadastre_audit_logs',
   AI_FEEDBACK: 'sih_cadastre_ai_feedback',
@@ -12,109 +13,176 @@ const STORAGE_KEYS = {
   DISTRICT_STATS: 'sih_cadastre_district_stats',
 };
 
-// Default initial mock data for review queue
-export const INITIAL_REVIEW_QUEUE = [
+// Initial Seed Records for the Land Database
+export const INITIAL_LAND_DATABASE = [
   {
-    id: 'DOC-2026-KA-0891',
-    timestamp: '2026-08-30T10:15:00.000Z',
-    documentType: 'Bhoomi RTC / 7-12 Extract',
-    state: 'Karnataka',
-    district: 'Bengaluru Urban',
-    taluk: 'Bengaluru East',
+    id: 'REC-KA-2026-0891',
+    createdAt: '2026-08-30T10:15:00.000Z',
+    sourceType: 'Bhoomi RTC Scan (Gemini Vision AI)',
+    fileName: 'kadugodi_rtc_extract_48_2a.png',
+    owner_name: 'Ramesh Kumar Sharma & Meera Ramesh',
+    survey_number: '48/2A',
+    khasra_number: '104/1',
+    khata_number: '712/B',
     village: 'Kadugodi',
-    sourceText: `GOVERNMENT OF KARNATAKA - REVENUE DEPARTMENT
-RECORD OF RIGHTS, TENANCY AND CROPS (RTC) - FORM NO. 16
-District: Bengaluru Urban | Taluk: Bengaluru East | Hobli: Bidarahalli | Village: Kadugodi
-Survey / Hissa No: 48/2A
-Khata No: 712/B
-Pattadar / Owner Name: Rameeshh Gowwda (S/O Late Venkataswamy)
-Total Extent / Area: 1480.50 Sq.M (15,935 Sq.Ft)
-Land Classification: Non-Agricultural (Commercial Complex - B+G+3)
-Status: Active Tenancy`,
-    fields: {
-      owner_name: { value: 'Rameeshh Gowwda', confidence: 64, isUncertain: true, reason: 'Double consonant OCR artefact detected' },
-      survey_number: { value: '48/2A', confidence: 95, isUncertain: false },
-      khata_number: { value: '712/B', confidence: 91, isUncertain: false },
-      village: { value: 'Kadugodi', confidence: 98, isUncertain: false },
-      tehsil: { value: 'Bengaluru East', confidence: 94, isUncertain: false },
-      district: { value: 'Bengaluru Urban', confidence: 97, isUncertain: false },
-      classification: { value: 'Commercial', confidence: 88, isUncertain: false },
-      area_sqm: { value: 1480.5, confidence: 93, isUncertain: false },
-    },
-    overallConfidence: 77,
-    status: 'PENDING_REVIEW',
-    assignedTo: 'Patwari K. Suresh (EmpID: KA-REV-8492)',
-    flaggedReason: 'Uncertain Owner Name spelling requiring Patwari verification',
-    imageSampleUrl: 'bhoomi_rtc_sample_48_2a.png',
+    tehsil: 'Bengaluru East',
+    district: 'Bengaluru Urban',
+    classification: 'residential',
+    area_sqm: 420.5,
+    floors: '2',
+    height_m: '6.5',
+    tax_status: 'PAID (FY 2025-26)',
+    encumbrance_status: 'CLEAR',
+    confidence: 96,
   },
   {
-    id: 'DOC-2026-UP-4102',
-    timestamp: '2026-08-30T09:40:00.000Z',
-    documentType: 'UP Bhulekh / Khatauni',
-    state: 'Uttar Pradesh',
-    district: 'Varanasi',
-    taluk: 'Pindra',
+    id: 'REC-UP-2026-4102',
+    createdAt: '2026-08-30T09:40:00.000Z',
+    sourceType: 'UP Bhulekh / Khatauni Upload',
+    fileName: 'up_khatauni_scan_184.pdf',
+    owner_name: 'विरेन्द्र प्रताप सिंह व सन्तोष कुमार',
+    survey_number: '184/3',
+    khasra_number: '184/3',
+    khata_number: '00491',
     village: 'Shivpur',
-    sourceText: `उत्तर प्रदेश राजस्व परिषद - खतौनी (अधिकार अभिलेख)
-ग्राम: शिवपुर | परगना: शिवपुर | तहसील: पिण्डरा | जनपद: वाराणसी
-खसरा / गाटा संख्या: 184/3
-खाता संख्या: 00491
-खातेदार का नाम: विरेन्द्र प्रताप सिंह व सन्तोष कुमार (बराबर हिस्सा)
-क्षेत्रफल: 0.2450 हेक्टेयर (2450 वर्ग मीटर)
-भूमि उपयोग: आवासीय (G+2 Floors)
-टिप्पणी: बंधक मुक्त / कोई विवाद नहीं`,
-    fields: {
-      owner_name: { value: 'विरेन्द्र प्रताप सिंह व सन्तोष कुमार', confidence: 91, isUncertain: false },
-      khasra_number: { value: '184/3', confidence: 94, isUncertain: false },
-      khata_number: { value: '00491', confidence: 58, isUncertain: true, reason: 'Leading zeros check needed in registry' },
-      village: { value: 'शिवपुर (Shivpur)', confidence: 96, isUncertain: false },
-      tehsil: { value: 'पिण्डरा (Pindra)', confidence: 92, isUncertain: false },
-      district: { value: 'वाराणसी (Varanasi)', confidence: 98, isUncertain: false },
-      classification: { value: 'Residential', confidence: 89, isUncertain: false },
-      area_sqm: { value: 2450.0, confidence: 94, isUncertain: false },
-    },
-    overallConfidence: 79,
-    status: 'PENDING_REVIEW',
-    assignedTo: 'Patwari R. Sharma (EmpID: UP-REV-3910)',
-    flaggedReason: 'Joint share split validation required for 3D cadastre multi-unit zoning',
-    imageSampleUrl: 'up_khatauni_sample_184.png',
+    tehsil: 'Pindra',
+    district: 'Varanasi',
+    classification: 'residential',
+    area_sqm: 2450.0,
+    floors: '3',
+    height_m: '9.0',
+    tax_status: 'PAID',
+    encumbrance_status: 'CLEAR',
+    confidence: 94,
   },
   {
-    id: 'DOC-2026-MH-9311',
-    timestamp: '2026-08-30T08:20:00.000Z',
-    documentType: 'Maharashtra 7/12 Extract',
-    state: 'Maharashtra',
-    district: 'Pune',
-    taluk: 'Haveli',
+    id: 'REC-MH-2026-9311',
+    createdAt: '2026-08-30T08:20:00.000Z',
+    sourceType: 'Maharashtra 7/12 Extract',
+    fileName: 'wagholi_7_12_extract.jpg',
+    owner_name: 'राजेश मारुती पाटील (Rajesh M. Patil)',
+    survey_number: '302/1B',
+    khasra_number: '302/1B',
+    khata_number: '1045',
     village: 'Wagholi',
-    sourceText: `महाराष्ट्र शासन - महसूल विभाग
-गाव नमुना ७/१२ (अधिकार अभिलेख पत्रक)
-जिल्हा: पुणे | तालुका: हवेली | गाव: वाघोली
-गट क्रमांक: 302/1B
-खाते क्रमांक: 1045
-भोगवटदाराचे नाव: राजेश मारुती पाटील
-एकूण क्षेत्र: 1850 चौ.मी.
-आकार / कर: रु. 14.50
-इतर हक्क: बँक ऑफ महाराष्ट्र कडे तारण`,
-    fields: {
-      owner_name: { value: 'राजेश मारुती पाटील (Rajesh M. Patil)', confidence: 95, isUncertain: false },
-      khasra_number: { value: '302/1B', confidence: 93, isUncertain: false },
-      khata_number: { value: '1045', confidence: 90, isUncertain: false },
-      village: { value: 'वाघोली (Wagholi)', confidence: 96, isUncertain: false },
-      tehsil: { value: 'हवेली (Haveli)', confidence: 94, isUncertain: false },
-      district: { value: 'पुणे (Pune)', confidence: 98, isUncertain: false },
-      classification: { value: 'Institutional', confidence: 52, isUncertain: true, reason: 'Bank encumbrance flagged in other rights column' },
-      area_sqm: { value: 1850.0, confidence: 95, isUncertain: false },
-    },
-    overallConfidence: 76,
-    status: 'PENDING_REVIEW',
-    assignedTo: 'Talathi M. Deshmukh (EmpID: MH-REV-1094)',
-    flaggedReason: 'Mortgage / Encumbrance flag verification on 3D building title',
-    imageSampleUrl: 'mh_712_sample_302.png',
+    tehsil: 'Haveli',
+    district: 'Pune',
+    classification: 'commercial',
+    area_sqm: 1850.0,
+    floors: '4',
+    height_m: '12.5',
+    tax_status: 'PAID',
+    encumbrance_status: 'MORTGAGED',
+    confidence: 95,
   }
 ];
 
 export const storageService = {
+  // ─── Land Database (Local Memory Persistence) ───
+  getDatabaseRecords() {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.LAND_DATABASE);
+      if (data) return JSON.parse(data);
+      localStorage.setItem(STORAGE_KEYS.LAND_DATABASE, JSON.stringify(INITIAL_LAND_DATABASE));
+      return INITIAL_LAND_DATABASE;
+    } catch {
+      return INITIAL_LAND_DATABASE;
+    }
+  },
+
+  saveDatabaseRecords(records) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.LAND_DATABASE, JSON.stringify(records));
+    } catch (e) {
+      console.warn('Failed to persist land database:', e);
+    }
+  },
+
+  /**
+   * Add records with strict deduplication check.
+   * Duplicate identified by matching Survey/Khasra No + Village + District (case-insensitive).
+   */
+  addRecordsToDatabase(newRecords) {
+    const existing = this.getDatabaseRecords();
+    let addedCount = 0;
+    let updatedCount = 0;
+    let duplicateWarnings = [];
+
+    const updatedList = [...existing];
+
+    newRecords.forEach((rec) => {
+      const surveyKey = (rec.survey_number || rec.khasra_number || '').trim().toLowerCase();
+      const villageKey = (rec.village || '').trim().toLowerCase();
+      const districtKey = (rec.district || '').trim().toLowerCase();
+
+      // Find existing match
+      const matchIndex = updatedList.findIndex((item) => {
+        const itemSurvey = (item.survey_number || item.khasra_number || '').trim().toLowerCase();
+        const itemVillage = (item.village || '').trim().toLowerCase();
+        const itemDistrict = (item.district || '').trim().toLowerCase();
+
+        if (surveyKey && itemSurvey && surveyKey === itemSurvey) {
+          if (!villageKey || !itemVillage || villageKey === itemVillage) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      if (matchIndex >= 0) {
+        // Update existing record rather than duplicating
+        updatedList[matchIndex] = {
+          ...updatedList[matchIndex],
+          ...rec,
+          updatedAt: new Date().toISOString(),
+        };
+        updatedCount++;
+        duplicateWarnings.push(`Updated existing record for Survey No. ${rec.survey_number || rec.khasra_number}`);
+      } else {
+        // Add new unique record
+        const newEntry = {
+          id: `REC-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          createdAt: new Date().toISOString(),
+          sourceType: rec._source ? String(rec._source).toUpperCase() : 'AI VISION SCAN',
+          fileName: rec._fileName || 'Scanned Document',
+          owner_name: rec.owner_name || '',
+          survey_number: rec.survey_number || rec.khasra_number || '',
+          khasra_number: rec.khasra_number || '',
+          khata_number: rec.khata_number || '',
+          village: rec.village || '',
+          tehsil: rec.tehsil || '',
+          district: rec.district || '',
+          classification: rec.classification || 'residential',
+          area_sqm: rec.area_sqm || (rec.area_acres ? Number(rec.area_acres) * 4046.86 : 350),
+          floors: rec.floors || '2',
+          height_m: rec.height_m || '6.5',
+          tax_status: rec.tax_status || 'PAID',
+          encumbrance_status: rec.encumbrance_status || 'CLEAR',
+          confidence: rec._confidence || 90,
+          ...rec,
+        };
+        updatedList.unshift(newEntry);
+        addedCount++;
+      }
+    });
+
+    this.saveDatabaseRecords(updatedList);
+    return {
+      addedCount,
+      updatedCount,
+      totalCount: updatedList.length,
+      duplicateWarnings,
+      records: updatedList,
+    };
+  },
+
+  deleteDatabaseRecord(id) {
+    const records = this.getDatabaseRecords();
+    const filtered = records.filter(r => r.id !== id);
+    this.saveDatabaseRecords(filtered);
+    return filtered;
+  },
+
   getReviewQueue() {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.REVIEW_QUEUE);
@@ -173,6 +241,7 @@ export const storageService = {
       version: '2.0.0',
       exportedAt: new Date().toISOString(),
       system: 'SVAMITVA 3D Land Cadastre Normalizer',
+      landDatabase: this.getDatabaseRecords(),
       reviewQueue: this.getReviewQueue(),
       auditLogs: localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS) ? JSON.parse(localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS)) : [],
       aiFeedback: localStorage.getItem(STORAGE_KEYS.AI_FEEDBACK) ? JSON.parse(localStorage.getItem(STORAGE_KEYS.AI_FEEDBACK)) : [],
@@ -181,7 +250,7 @@ export const storageService = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `svamitva_cadastre_state_dump_${Date.now()}.json`;
+    a.download = `svamitva_land_database_dump_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
