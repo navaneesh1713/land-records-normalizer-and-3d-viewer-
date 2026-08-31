@@ -65,9 +65,9 @@ CERTIFIED GENUINE & UNMODIFIED BY DIGITAL REVENUE REGISTRAR.`;
               <Lock size={18} color="#059669" />
             </div>
             <div>
-              <h2 className="audit-modal-title">Secure Document Repository & Immutable Audit Trail</h2>
+              <h2 className="audit-modal-title">Audit Trail</h2>
               <p className="audit-modal-subtitle">
-                Cryptographically sealed, timestamped record of every document upload, Patwari edit, and 3D cadastre mutation
+                Cryptographically sealed, timestamped record of every document upload, Patwari edit, and 3D mutation
               </p>
             </div>
           </div>

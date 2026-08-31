@@ -26,11 +26,12 @@ export default function AppSidebar({
   const fileInputRef = React.useRef(null);
 
   const mainNavItems = [
-    { id: 'map', label: '3D Cadastre Map', icon: Layers, badge: null },
+    { id: 'map', label: '3D Studio', icon: Layers, badge: null },
+    { id: 'upload', label: 'Upload & Scan', icon: Upload, badge: null },
     { id: 'review', label: 'Review Queue', icon: ShieldCheck, badge: pendingReviewCount > 0 ? pendingReviewCount : null, badgeColor: '#f59e0b' },
     { id: 'scanner', label: 'Document Scanner', icon: ScanLine, badge: null },
-    { id: 'analytics', label: 'Collector Analytics', icon: BarChart3, badge: null },
-    { id: 'audit', label: 'Immutable Audit Trail', icon: Lock, badge: null },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
+    { id: 'audit', label: 'Audit Trail', icon: Lock, badge: null },
     { id: 'ailoop', label: 'AI Feedback Loop', icon: BrainCircuit, badge: null },
   ];
 
@@ -48,7 +49,7 @@ export default function AppSidebar({
           <Building2 size={20} color="#ffffff" />
         </div>
         <div className="brand-text-wrap">
-          <div className="brand-title">BHU-DRISHTI 3D</div>
+          <div className="brand-title">LANDX3D</div>
           <div className="brand-tag">SVAMITVA 3.0</div>
         </div>
       </div>
@@ -83,9 +84,9 @@ export default function AppSidebar({
           </nav>
         </div>
 
-        {/* Cadastral Datasets & Data Sources */}
+        {/* Datasets & Data Sources */}
         <div className="sidebar-section">
-          <div className="sidebar-section-title">Cadastral Datasets</div>
+          <div className="sidebar-section-title">Land Datasets</div>
           <div className="sidebar-presets-list">
             {Object.entries(PRESET_DATASETS).map(([key, item]) => {
               const isSelected = currentPreset === key;

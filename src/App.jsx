@@ -14,6 +14,8 @@ import HeroLandingPage from './components/HeroLandingPage';
 import GovAuthModal from './components/GovAuthModal';
 import AppSidebar from './components/AppSidebar';
 import AppTopBar from './components/AppTopBar';
+import UploadDashboard from './components/UploadDashboard';
+import MobileScanner from './components/MobileScanner';
 import { storageService } from './services/storageService';
 import { auditTrailService } from './services/auditTrailService';
 import { getParcelData, PRESET_DATASETS } from './services/dataSource';
@@ -22,7 +24,7 @@ import { detectInputShape, runBrowserPipeline } from './utils/pipelineBrowser';
 import { FlyToInterpolator } from '@deck.gl/core';
 import {
   Loader2, AlertCircle, UploadCloud, X, FileText, CheckCircle2,
-  AlertTriangle, ScanLine, ShieldAlert, Ruler, History, HelpCircle,
+  AlertTriangle, ScanLine, ShieldAlert, Ruler, History,
   ShieldCheck, BrainCircuit, Lock, BarChart3, Terminal, Layers,
   Compass, MapPin, Database
 } from 'lucide-react';
@@ -56,12 +58,27 @@ export default function App() {
   // Document Scanner panel state
   const [showScanner, setShowScanner] = useState(false);
 
-  // 3D Controls Help Guide state
-  const [showHelp, setShowHelp] = useState(false);
+  const [showMobileScanner, setShowMobileScanner] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname === '/scan-mobile';
+    }
+    return false;
+  });
 
   // Government & SIH Core Workflow States
-  const [showHeroPage, setShowHeroPage] = useState(false);
-  const [activeTab, setActiveTab] = useState('map');
+  const [showHeroPage, setShowHeroPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname === '/';
+    }
+    return true;
+  });
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/home' || window.location.hash === '#/home') return 'map';
+      if (window.location.pathname === '/upload') return 'upload';
+    }
+    return 'hero';
+  });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
@@ -70,52 +87,107 @@ export default function App() {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
 
+  // Listen to browser Back/Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/scan-mobile') {
+        setShowMobileScanner(true);
+        return;
+      }
+      setShowMobileScanner(false);
+      
+      const isHome = path === '/home' || window.location.hash === '#/home';
+      const isUpload = path === '/upload';
+      
+      setShowHeroPage(path === '/');
+      if (isUpload) {
+        setActiveTab('upload');
+      } else if (isHome) {
+        setActiveTab('map');
+      } else {
+        setActiveTab('hero');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const handleSelectTab = useCallback((tabId) => {
     setActiveTab(tabId);
     if (tabId === 'hero') {
       setShowHeroPage(true);
-    } else if (tabId === 'map') {
+      if (window.location.pathname !== '/') {
+        window.history.pushState({}, '', '/');
+      }
+    } else {
       setShowHeroPage(false);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-    } else if (tabId === 'review') {
-      setShowHeroPage(false);
-      setShowReviewQueue(true);
-      setShowScanner(false);
-      setShowAnalytics(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-    } else if (tabId === 'scanner') {
-      setShowHeroPage(false);
-      setShowScanner(true);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-    } else if (tabId === 'analytics') {
-      setShowHeroPage(false);
-      setShowAnalytics(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-    } else if (tabId === 'audit') {
-      setShowHeroPage(false);
-      setShowAuditTrail(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowAiLog(false);
-    } else if (tabId === 'ailoop') {
-      setShowHeroPage(false);
-      setShowAiLog(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowAuditTrail(false);
+      if (tabId === 'upload') {
+        if (window.location.pathname !== '/upload') {
+          window.history.pushState({}, '', '/upload');
+        }
+      } else if (window.location.pathname !== '/home') {
+        window.history.pushState({}, '', '/home');
+      }
+      if (tabId === 'map') {
+        setShowScanner(false);
+        setShowReviewQueue(false);
+        setShowAnalytics(false);
+        setShowAuditTrail(false);
+        setShowAiLog(false);
+      } else if (tabId === 'review') {
+        setShowReviewQueue(true);
+        setShowScanner(false);
+        setShowAnalytics(false);
+        setShowAuditTrail(false);
+        setShowAiLog(false);
+      } else if (tabId === 'scanner') {
+        setShowScanner(true);
+        setShowReviewQueue(false);
+        setShowAnalytics(false);
+        setShowAuditTrail(false);
+        setShowAiLog(false);
+      } else if (tabId === 'analytics') {
+        setShowAnalytics(true);
+        setShowScanner(false);
+        setShowReviewQueue(false);
+        setShowAuditTrail(false);
+        setShowAiLog(false);
+      } else if (tabId === 'audit') {
+        setShowAuditTrail(true);
+        setShowScanner(false);
+        setShowReviewQueue(false);
+        setShowAnalytics(false);
+        setShowAiLog(false);
+      } else if (tabId === 'ailoop') {
+        setShowAiLog(true);
+        setShowScanner(false);
+        setShowReviewQueue(false);
+        setShowAnalytics(false);
+        setShowAuditTrail(false);
+      } else if (tabId === 'upload') {
+        setShowScanner(false);
+        setShowReviewQueue(false);
+        setShowAnalytics(false);
+        setShowAuditTrail(false);
+        setShowAiLog(false);
+      }
+    }
+  }, []);
+
+  const handleLaunchStudio = useCallback((tabId = 'map') => {
+    setShowHeroPage(false);
+    handleSelectTab(tabId);
+    if (window.location.pathname !== '/home') {
+      window.history.pushState({}, '', '/home');
+    }
+  }, [handleSelectTab]);
+
+  const handleGoToHero = useCallback(() => {
+    setShowHeroPage(true);
+    setActiveTab('hero');
+    if (window.location.pathname !== '/') {
+      window.history.pushState({}, '', '/');
     }
   }, []);
 
@@ -580,6 +652,13 @@ export default function App() {
         </div>
       )}
 
+      {/* Mobile Scanner Fullscreen Route */}
+      {showMobileScanner && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999 }}>
+          <MobileScanner />
+        </div>
+      )}
+
       {/* ─── ELEVENLABS-STYLE SIDEBAR NAVIGATION ─── */}
       <AppSidebar
         activeTab={activeTab}
@@ -590,12 +669,7 @@ export default function App() {
         currentPreset={currentPreset}
         onSelectPreset={handleSelectPreset}
         onFileSelect={handleFileSelect}
-        onToggleHelp={() => setShowHelp(prev => !prev)}
-        onExportDB={() => storageService.exportDatabaseDump()}
-        onToggleHero={() => {
-          setShowHeroPage(true);
-          setActiveTab('hero');
-        }}
+        onToggleHero={handleGoToHero}
         onOpenAuth={() => setShowGovAuth(true)}
       />
 
@@ -605,14 +679,10 @@ export default function App() {
         <AppTopBar
           activeTab={activeTab}
           metadata={data?.metadata}
-          mapTheme={mapTheme}
-          onChangeTheme={setMapTheme}
           onResetCamera={handleResetCamera}
-          onToggleHelp={() => setShowHelp(prev => !prev)}
-          onExportDB={() => storageService.exportDatabaseDump()}
           buildingCount={activeFeatures.length}
           unitCount={totalUnits}
-          onToggleHero={() => setShowHeroPage(true)}
+          onToggleHero={handleGoToHero}
           onSearchQuery={(q) => {
             if (!q) return;
             const match = data?.features?.find(f =>
@@ -627,243 +697,215 @@ export default function App() {
           }}
         />
 
-        {/* Dynamic Studio Workspace Canvas Container */}
-        <div className="eleven-view-container">
-
-      {/* 3D Navigation Guide Modal / Toast */}
-      {showHelp && (
-        <div className="help-guide-modal glass-panel animate-slide-in">
-          <div className="help-guide-header">
-            <div className="help-guide-title">
-              <HelpCircle size={14} color="#ca8a04" />
-              <span>3D Navigation & Controls Guide</span>
-            </div>
-            <button onClick={() => setShowHelp(false)} className="sidebar-close-btn">
-              <X size={14} />
-            </button>
+        {/* Upload Portal Workspace View */}
+        {activeTab === 'upload' ? (
+          <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 60px)' }}>
+            <UploadDashboard 
+              onFileReady={(file) => {
+                setScannerInitialFile(file);
+                setActiveTab('scanner');
+              }} 
+            />
           </div>
-          <div className="help-guide-body">
-            <div className="help-item">
-              <span className="help-key">Right-Click + Drag</span>
-              <span className="help-desc">Tilt 3D pitch and rotate camera angle around buildings</span>
-            </div>
-            <div className="help-item">
-              <span className="help-key">Left-Click</span>
-              <span className="help-desc">Select any building or floor unit to inspect title & download Property Card PDF</span>
-            </div>
-            <div className="help-item">
-              <span className="help-key">Explosion Slider</span>
-              <span className="help-desc">Separate stacked floors vertically to see multi-story unit partitions</span>
-            </div>
-            <div className="help-item">
-              <span className="help-key">Drag & Drop</span>
-              <span className="help-desc">Drop any GeoJSON or CSV file directly onto the window</span>
-            </div>
-          </div>
-        </div>
-      )}
+        ) : (
+          /* Dynamic Studio Workspace Canvas Container */
+          <div className="eleven-view-container">
 
-      {/* Unplaced Records Badge */}
-      {unplacedRecords.length > 0 && (
-        <div className="unplaced-badge glass-panel" onClick={() => setShowUnplaced(!showUnplaced)}>
-          <AlertTriangle size={14} color="#fbbf24" />
-          <span>{unplacedRecords.length} unplaced record{unplacedRecords.length !== 1 ? 's' : ''} (Tier C)</span>
-        </div>
-      )}
-
-      {/* Unplaced Records Panel */}
-      {showUnplaced && unplacedRecords.length > 0 && (
-        <div className="unplaced-panel glass-panel">
-          <div className="unplaced-panel-header">
-            <h3>Unplaced Records (Tier C)</h3>
-            <button onClick={() => setShowUnplaced(false)} className="file-error-close-btn">
-              <X size={16} />
-            </button>
-          </div>
-          <div className="unplaced-panel-body">
-            {unplacedRecords.map((rec, i) => (
-              <div key={i} className="unplaced-record-card">
-                <div className="unplaced-record-field"><span>Village:</span> <strong>{rec.village || '—'}</strong></div>
-                <div className="unplaced-record-field"><span>Khasra:</span> {rec.khasra_number || '—'}</div>
-                <div className="unplaced-record-field"><span>Owner:</span> {rec.owner_name || '—'}</div>
-                <div className="unplaced-record-field"><span>Reason:</span> <em>{rec.reason}</em></div>
+            {/* Unplaced Records Badge */}
+            {unplacedRecords.length > 0 && (
+              <div className="unplaced-badge glass-panel" onClick={() => setShowUnplaced(!showUnplaced)}>
+                <AlertTriangle size={14} color="#fbbf24" />
+                <span>{unplacedRecords.length} unplaced record{unplacedRecords.length !== 1 ? 's' : ''} (Tier C)</span>
               </div>
-            ))}
+            )}
+
+            {/* Unplaced Records Panel */}
+            {showUnplaced && unplacedRecords.length > 0 && (
+              <div className="unplaced-panel glass-panel">
+                <div className="unplaced-panel-header">
+                  <h3>Unplaced Records (Tier C)</h3>
+                  <button onClick={() => setShowUnplaced(false)} className="file-error-close-btn">
+                    <X size={16} />
+                  </button>
+                </div>
+                <div className="unplaced-panel-body">
+                  {unplacedRecords.map((rec, i) => (
+                    <div key={i} className="unplaced-record-card">
+                      <div className="unplaced-record-field"><span>Village:</span> <strong>{rec.village || '—'}</strong></div>
+                      <div className="unplaced-record-field"><span>Khasra:</span> {rec.khasra_number || '—'}</div>
+                      <div className="unplaced-record-field"><span>Owner:</span> {rec.owner_name || '—'}</div>
+                      <div className="unplaced-record-field"><span>Reason:</span> <em>{rec.reason}</em></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Error Alert Toast / Modal */}
+            {fileError && (
+              <div className="file-error-toast glass-panel animate-slide-in">
+                <div className="file-error-icon">
+                  <AlertCircle size={20} color="#f87171" />
+                </div>
+                <div className="file-error-content">
+                  <div className="file-error-title">JSON Load Error</div>
+                  <div className="file-error-msg">{fileError}</div>
+                </div>
+                <button
+                  onClick={() => setFileError(null)}
+                  className="file-error-close-btn"
+                  title="Dismiss error"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Pipeline completion status bar */}
+            {pipelineStatus && !pipelineRunning && (
+              <div className="pipeline-done-toast glass-panel animate-slide-in">
+                <CheckCircle2 size={16} color="#34d399" />
+                <span>{pipelineStatus}</span>
+              </div>
+            )}
+
+            {/* Drag & Drop Full-Screen Overlay */}
+            {isDragging && (
+              <div className="drag-drop-overlay">
+                <div className="drag-drop-box glass-panel">
+                  <UploadCloud size={48} color="#818cf8" className="spinner" style={{ animationDuration: '3s' }} />
+                  <h3 className="drag-drop-title">Drop GeoJSON or Raw Records Here</h3>
+                  <p className="drag-drop-sub">Release to process and render 3D building parcels</p>
+                </div>
+              </div>
+            )}
+
+            {/* 3D Mapbox + Deck.GL Canvas */}
+            <MapView
+              features={activeFeatures}
+              mapTheme={mapTheme}
+              viewState={viewState}
+              onViewStateChange={({ viewState: nextViewState }) => setViewState(nextViewState)}
+              onSelectUnit={handleSelectUnit}
+              selectedUnitId={selectedUnit?.unit_id}
+              explosionFactor={explosionFactor}
+              floorFilter={floorFilter}
+            />
+
+            {/* Legend */}
+            <Legend
+              unitCount={totalUnits}
+              syntheticCount={syntheticCount}
+            />
+
+            {/* 3D Floor Exploded View & Isolator Controls */}
+            {data?.features && data.features.length > 0 && !showScanner && (
+              <FloorControlPanel
+                explosionFactor={explosionFactor}
+                onExplosionChange={setExplosionFactor}
+                floorFilter={floorFilter}
+                onFloorFilterChange={setFloorFilter}
+                availableFloors={availableFloors}
+              />
+            )}
+
+            {/* Building Directory Side Menu */}
+            {showBuildingList && data?.features && data.features.length > 0 && !selectedUnit && (
+              <BuildingListPanel
+                features={data.features}
+                selectedPlotId={selectedUnit?.plot_id}
+                onSelectBuilding={handleSelectBuilding}
+                onClose={() => setShowBuildingList(false)}
+              />
+            )}
+
+            {/* Per-Floor Inspection Sidebar */}
+            {selectedUnit && (
+              <ParcelSidebar
+                unit={selectedUnit}
+                metadata={data?.metadata}
+                onClose={handleCloseSidebar}
+              />
+            )}
+
+            {/* Document Scanner / OCR / CSV Importer */}
+            {showScanner && (
+              <DocumentScanner
+                initialFile={scannerInitialFile}
+                onRecordsReady={handleScannerRecords}
+                onRouteToQueue={() => {
+                  setShowScanner(false);
+                  setScannerInitialFile(null);
+                  setShowReviewQueue(true);
+                  setActiveTab('review');
+                }}
+                onClose={() => {
+                  setShowScanner(false);
+                  setScannerInitialFile(null);
+                  setActiveTab('map');
+                }}
+              />
+            )}
+
+            {/* ─── NEW CORE SIH GOVTECH MODALS ─── */}
+
+            {/* Point 12: Human-in-the-Loop Verification Review Queue */}
+            {showReviewQueue && (
+              <VerificationQueueModal
+                userRole={userRole}
+                onApproveRecord={handleApproveQueueRecord}
+                onClose={() => setShowReviewQueue(false)}
+              />
+            )}
+
+            {/* Point 13: Continuous AI Learning & Model Improvement Log */}
+            {showAiLog && (
+              <AiImprovementLogModal
+                onClose={() => setShowAiLog(false)}
+              />
+            )}
+
+            {/* Point 15: Secure Document Repository & Immutable Audit Trail */}
+            {showAuditTrail && (
+              <AuditTrailModal
+                onClose={() => setShowAuditTrail(false)}
+              />
+            )}
+
+            {/* Executive Analytics Dashboard */}
+            {showAnalytics && (
+              <AnalyticsDashboardModal
+                onClose={() => setShowAnalytics(false)}
+              />
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Error Alert Toast / Modal */}
-      {fileError && (
-        <div className="file-error-toast glass-panel animate-slide-in">
-          <div className="file-error-icon">
-            <AlertCircle size={20} color="#f87171" />
-          </div>
-          <div className="file-error-content">
-            <div className="file-error-title">JSON Load Error</div>
-            <div className="file-error-msg">{fileError}</div>
-          </div>
-          <button
-            onClick={() => setFileError(null)}
-            className="file-error-close-btn"
-            title="Dismiss error"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* Pipeline completion status bar */}
-      {pipelineStatus && !pipelineRunning && (
-        <div className="pipeline-done-toast glass-panel animate-slide-in">
-          <CheckCircle2 size={16} color="#34d399" />
-          <span>{pipelineStatus}</span>
-        </div>
-      )}
-
-      {/* Drag & Drop Full-Screen Overlay */}
-      {isDragging && (
-        <div className="drag-drop-overlay">
-          <div className="drag-drop-box glass-panel">
-            <UploadCloud size={48} color="#818cf8" className="spinner" style={{ animationDuration: '3s' }} />
-            <h3 className="drag-drop-title">Drop GeoJSON or Raw Records Here</h3>
-            <p className="drag-drop-sub">Release to process and render 3D building parcels</p>
-          </div>
-        </div>
-      )}
-
-      {/* 3D Mapbox + Deck.GL Canvas */}
-      <MapView
-        features={activeFeatures}
-        mapTheme={mapTheme}
-        viewState={viewState}
-        onViewStateChange={({ viewState: nextViewState }) => setViewState(nextViewState)}
-        onSelectUnit={handleSelectUnit}
-        selectedUnitId={selectedUnit?.unit_id}
-        explosionFactor={explosionFactor}
-        floorFilter={floorFilter}
-      />
-
-      {/* Legend */}
-      <Legend
-        unitCount={totalUnits}
-        syntheticCount={syntheticCount}
-      />
-
-      {/* 3D Floor Exploded View & Isolator Controls */}
-      {data?.features && data.features.length > 0 && !showScanner && (
-        <FloorControlPanel
-          explosionFactor={explosionFactor}
-          onExplosionChange={setExplosionFactor}
-          floorFilter={floorFilter}
-          onFloorFilterChange={setFloorFilter}
-          availableFloors={availableFloors}
-        />
-      )}
-
-      {/* Building Directory Side Menu */}
-      {showBuildingList && data?.features && data.features.length > 0 && !selectedUnit && (
-        <BuildingListPanel
-          features={data.features}
-          selectedPlotId={selectedUnit?.plot_id}
-          onSelectBuilding={handleSelectBuilding}
-          onClose={() => setShowBuildingList(false)}
-        />
-      )}
-
-      {/* Per-Floor Inspection Sidebar */}
-      {selectedUnit && (
-        <ParcelSidebar
-          unit={selectedUnit}
-          metadata={data?.metadata}
-          onClose={handleCloseSidebar}
-        />
-      )}
-
-      {/* Document Scanner / OCR / CSV Importer */}
-      {showScanner && (
-        <DocumentScanner
-          initialFile={scannerInitialFile}
-          onRecordsReady={handleScannerRecords}
-          onRouteToQueue={() => {
-            setShowScanner(false);
-            setScannerInitialFile(null);
-            setShowReviewQueue(true);
-            setActiveTab('review');
-          }}
-          onClose={() => {
-            setShowScanner(false);
-            setScannerInitialFile(null);
-            setActiveTab('map');
-          }}
-        />
-      )}
-
-      {/* ─── NEW CORE SIH GOVTECH MODALS ─── */}
-
-      {/* Point 12: Human-in-the-Loop Verification Review Queue */}
-      {showReviewQueue && (
-        <VerificationQueueModal
-          userRole={userRole}
-          onApproveRecord={handleApproveQueueRecord}
-          onClose={() => setShowReviewQueue(false)}
-        />
-      )}
-
-      {/* Point 13: Continuous AI Learning & Model Improvement Log */}
-      {showAiLog && (
-        <AiImprovementLogModal
-          onClose={() => setShowAiLog(false)}
-        />
-      )}
-
-      {/* Point 15: Secure Document Repository & Immutable Audit Trail */}
-      {showAuditTrail && (
-        <AuditTrailModal
-          onClose={() => setShowAuditTrail(false)}
-        />
-      )}
-
-      {/* Executive Analytics Dashboard */}
-      {showAnalytics && (
-        <AnalyticsDashboardModal
-          onClose={() => setShowAnalytics(false)}
-        />
-      )}
-        </div>
+        )}
       </div>
-
       {/* ─── GOVERNMENT ROLE-BASED AUTH MODAL ─── */}
       {showGovAuth && (
         <GovAuthModal
           currentRole={userRole}
           onSelectRole={(newRole) => {
             handleRoleChange(newRole);
+          }}
+          onAuthSuccess={() => {
             setShowGovAuth(false);
+            setActiveTab('upload');
+            window.history.pushState({}, '', '/upload');
           }}
           onClose={() => setShowGovAuth(false)}
         />
       )}
 
       {/* ─── HERO LANDING OVERVIEW PAGE (PIN DESIGN) ─── */}
-      {showHeroPage && (
+      {showHeroPage && !showMobileScanner && (
         <HeroLandingPage
-          onLaunchApp={() => {
-            setShowHeroPage(false);
-            setActiveTab('map');
-          }}
-          onOpenScanner={() => {
-            setShowHeroPage(false);
-            setShowScanner(true);
-            setActiveTab('scanner');
-          }}
-          onOpenAnalytics={() => {
-            setShowHeroPage(false);
-            setShowAnalytics(true);
-            setActiveTab('analytics');
-          }}
+          onLaunchApp={() => handleLaunchStudio('map')}
+          onOpenScanner={() => handleLaunchStudio('scanner')}
+          onOpenAnalytics={() => handleLaunchStudio('analytics')}
           userRole={userRole}
           onChangeRole={handleRoleChange}
+          setShowAuthModal={setShowGovAuth}
         />
       )}
     </div>

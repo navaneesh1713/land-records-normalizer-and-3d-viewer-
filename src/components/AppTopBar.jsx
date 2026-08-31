@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import {
-  Search, Globe, Sun, Moon, HelpCircle, Download, Bell,
-  ChevronRight, Folder, MapPin, Sparkles, Building2, RefreshCw, Compass
+  Search, MapPin, RefreshCw, Compass
 } from 'lucide-react';
 
 export default function AppTopBar({
   activeTab = 'map',
   metadata,
-  mapTheme = 'light',
-  onChangeTheme,
   onResetCamera,
-  onToggleHelp,
-  onExportDB,
   buildingCount = 0,
   unitCount = 0,
   onSearchQuery,
@@ -27,23 +22,21 @@ export default function AppTopBar({
 
   const getBreadcrumbLabel = () => {
     switch (activeTab) {
-      case 'map': return '3D Cadastre Map Studio';
-      case 'review': return 'Human-in-the-Loop Review Workstation';
-      case 'scanner': return 'Document OCR Scanner & Importer';
-      case 'analytics': return 'Executive Collector Analytics';
-      case 'audit': return 'Secure Document Vault & Audit Trail';
-      case 'ailoop': return 'Continuous AI Learning Loop';
-      default: return 'Cadastre Workspace';
+      case 'upload': return 'Document Ingestion Portal';
+      case 'map': return '3D Studio';
+      case 'review': return 'Review Workstation';
+      case 'scanner': return 'Document Scanner';
+      case 'analytics': return 'Analytics';
+      case 'audit': return 'Audit Trail';
+      case 'ailoop': return 'AI Learning Loop';
+      default: return 'Studio';
     }
   };
 
   return (
     <header className="app-topbar-eleven">
-      {/* Left: Breadcrumbs & Location Pin */}
+      {/* Left: Current View & Location Pin */}
       <div className="topbar-left-breadcrumbs">
-        <Folder size={14} className="crumb-icon" />
-        <span className="crumb-root">Cadastre</span>
-        <ChevronRight size={12} className="crumb-sep" />
         <span className="crumb-current">{getBreadcrumbLabel()}</span>
 
         {metadata?.village && (
@@ -70,38 +63,12 @@ export default function AppTopBar({
         </div>
       </div>
 
-      {/* Right: Actions, Theme, DB Export & Profile */}
+      {/* Right: Actions & Profile */}
       <div className="topbar-right-actions">
         {onToggleHero && (
           <button onClick={onToggleHero} className="topbar-pill-btn" title="Hero Overview Landing Page">
             <Compass size={13} color="#4f46e5" />
             <span>Overview</span>
-          </button>
-        )}
-
-        <button onClick={onExportDB} className="topbar-pill-btn" title="Export Full Database & PostGIS Dump (JSON)">
-          <Download size={13} color="#10b981" />
-          <span>Export DB</span>
-        </button>
-
-        {/* Basemap Switcher */}
-        {onChangeTheme && (
-          <button
-            onClick={() => {
-              if (mapTheme === 'dark') onChangeTheme('light');
-              else if (mapTheme === 'light') onChangeTheme('satellite');
-              else onChangeTheme('dark');
-            }}
-            className="topbar-icon-btn"
-            title={`Basemap: ${mapTheme.toUpperCase()}. Click to switch.`}
-          >
-            {mapTheme === 'satellite' ? (
-              <Globe size={15} color="#0284c7" />
-            ) : mapTheme === 'light' ? (
-              <Sun size={15} color="#eab308" />
-            ) : (
-              <Moon size={15} color="#64748b" />
-            )}
           </button>
         )}
 
@@ -111,17 +78,6 @@ export default function AppTopBar({
           </button>
         )}
 
-        {onToggleHelp && (
-          <button onClick={onToggleHelp} className="topbar-icon-btn" title="3D Navigation Help Guide">
-            <HelpCircle size={15} color="#64748b" />
-          </button>
-        )}
-
-        {/* User Status Profile Icon */}
-        <div className="topbar-user-avatar" title="Official Indian Land Records Session">
-          <span>GOV</span>
-          <div className="user-online-dot" />
-        </div>
       </div>
     </header>
   );

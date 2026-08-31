@@ -81,27 +81,9 @@ export default function HeroLandingPage({
             <Building2 size={20} color="#ffffff" />
           </div>
           <div className="hero-brand-text">
-            <span className="hero-brand-name">BHU-DRISHTI 3D</span>
+            <span className="hero-brand-name">LANDX3D</span>
             <span className="hero-gov-badge">SVAMITVA 3.0</span>
           </div>
-        </div>
-
-        <nav className="hero-fullscreen-navlinks">
-          <button onClick={onLaunchApp} className="hero-link-btn">3D Map Viewer</button>
-          <button onClick={onOpenScanner} className="hero-link-btn">OCR Ingestion</button>
-          <button onClick={onOpenAnalytics} className="hero-link-btn">Collector Analytics</button>
-          <button onClick={() => setShowAuthModal(true)} className="hero-link-btn">Role Clearance</button>
-        </nav>
-
-        <div className="hero-fullscreen-actions">
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="hero-auth-badge-btn"
-            title="Switch Official Role & Digital Certificate"
-          >
-            <UserCheck size={14} color="#6366f1" />
-            <span>Role: {userRole.toUpperCase()}</span>
-          </button>
         </div>
       </header>
 
@@ -121,12 +103,12 @@ export default function HeroLandingPage({
         {/* Animated Creepy Launch Button */}
         <div className="hero-creepy-cta-wrapper animate-slide-up">
           <CreepyButton
-            onClick={onLaunchApp}
+            onClick={() => setShowAuthModal(true)}
             className="hero-launch-creepy-btn"
             coverClassName="hero-launch-creepy-cover"
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              Launch 3D Studio <ArrowUpRight size={16} />
+              Authenticate as Official <ArrowUpRight size={16} />
             </span>
           </CreepyButton>
         </div>

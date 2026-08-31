@@ -49,7 +49,7 @@ export default function AnalyticsDashboardModal({ onClose }) {
               <BarChart3 size={18} color="#2563eb" />
             </div>
             <div>
-              <h2 className="analytics-modal-title">National SVAMITVA 3D Cadastre Analytics Dashboard</h2>
+              <h2 className="analytics-modal-title">Analytics Dashboard</h2>
               <p className="analytics-modal-subtitle">
                 Executive monitoring portal for District Collectors, State Revenue Commissioners & Ministry of Panchayati Raj
               </p>
@@ -93,7 +93,7 @@ export default function AnalyticsDashboardModal({ onClose }) {
 
           <div className="analytics-kpi-card">
             <div className="kpi-top">
-              <span className="kpi-title">3D Extruded Cadastre Units</span>
+              <span className="kpi-title">3D Extruded Units</span>
               <Layers size={16} color="#8b5cf6" />
             </div>
             <div className="kpi-value">{total3dBuildings.toLocaleString()}</div>

@@ -8,7 +8,7 @@ import sampleParcelData from '../data/sample-parcel-data.json';
 
 export const PRESET_DATASETS = {
   'svamitva': {
-    name: 'SVAMITVA Drone Cadastre (Kadugodi)',
+    name: 'SVAMITVA Drone Dataset (Kadugodi)',
     data: svamitvaCadastre
   },
   'kadugodi-3': {
@@ -16,7 +16,7 @@ export const PRESET_DATASETS = {
     data: kadugodi3Buildings
   },
   'large-cadastre': {
-    name: 'Full Village 8-Building Cadastre',
+    name: 'Full Village 8-Building Dataset',
     data: sampleParcelData
   }
 };
