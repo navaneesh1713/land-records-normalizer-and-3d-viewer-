@@ -7,12 +7,11 @@ const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
 const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
 
 export const AVAILABLE_GEMINI_MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Fastest & highest accuracy multimodal model (Default)', recommended: true },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', desc: 'Next-gen multimodal vision with ultra-low latency' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', desc: 'Standard production vision model for documents' },
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Deep reasoning for damaged / complex handwritten deeds' },
-  { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash 8B', desc: 'High-throughput lightweight vision engine' },
-  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', desc: 'Cost-optimized vision OCR' },
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Latest high-throughput multimodal vision (Recommended)', recommended: true },
+  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', desc: 'Next-gen multimodal reasoning for land deeds' },
+  { id: 'gemini-3.5-pro', name: 'Gemini 3.5 Pro', desc: 'Deep reasoning for historical / damaged manuscripts' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Fast multimodal vision engine' },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Complex reasoning engine' },
 ];
 
 export function getGeminiApiKey() {
@@ -35,7 +34,7 @@ export function getGeminiModel() {
   return (
     import.meta.env.VITE_GEMINI_MODEL ||
     localStorage.getItem(LOCAL_STORAGE_MODEL_KEY) ||
-    'gemini-2.5-flash'
+    'gemini-3.5-flash-lite'
   );
 }
 
@@ -159,12 +158,11 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
   // 3. Construct ordered model sequence starting with user's preferred model
   const modelCandidates = [
     preferredModel,
+    'gemini-3.5-flash-lite',
+    'gemini-3.5-flash',
+    'gemini-3.5-pro',
     'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
     'gemini-2.5-pro',
-    'gemini-1.5-flash-8b',
-    'gemini-2.0-flash-lite',
   ];
   // Deduplicate candidate models
   const models = [...new Set(modelCandidates.filter(Boolean))];
