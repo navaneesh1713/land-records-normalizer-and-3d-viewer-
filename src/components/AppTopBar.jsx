@@ -25,10 +25,10 @@ export default function AppTopBar({
       case 'upload': return 'Document Ingestion Portal';
       case 'map': return '3D Studio';
       case 'review': return 'Review Workstation';
-      case 'scanner': return 'Document Scanner';
-      case 'analytics': return 'Analytics';
-      case 'audit': return 'Audit Trail';
-      case 'ailoop': return 'AI Learning Loop';
+      case 'scanner': return 'Document OCR Scanner & AI Normalizer';
+      case 'analytics': return 'Executive Analytics Dashboard';
+      case 'audit': return 'Immutable Audit Trail';
+      case 'ailoop': return 'Continuous AI Learning Loop';
       default: return 'Studio';
     }
   };

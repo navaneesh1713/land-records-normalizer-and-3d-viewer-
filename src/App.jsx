@@ -10,6 +10,9 @@ import VerificationQueueModal from './components/VerificationQueueModal';
 import AiImprovementLogModal from './components/AiImprovementLogModal';
 import AuditTrailModal from './components/AuditTrailModal';
 import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
+import AnalyticsView from './components/AnalyticsView';
+import AuditTrailView from './components/AuditTrailView';
+import AiFeedbackLoopView from './components/AiFeedbackLoopView';
 import HeroLandingPage from './components/HeroLandingPage';
 import GovAuthModal from './components/GovAuthModal';
 import AppSidebar from './components/AppSidebar';
@@ -74,17 +77,18 @@ export default function App() {
   });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
-      if (window.location.pathname.startsWith('/home') || window.location.hash === '#/home') return 'map';
-      if (window.location.pathname.startsWith('/upload')) return 'upload';
+      const path = window.location.pathname;
+      if (path.startsWith('/home') || window.location.hash === '#/home') return 'map';
+      if (path.startsWith('/upload')) return 'upload';
+      if (path.startsWith('/analytics')) return 'analytics';
+      if (path.startsWith('/audit')) return 'audit';
+      if (path.startsWith('/ailoop') || path.startsWith('/ai-learning')) return 'ailoop';
     }
     return 'hero';
   });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
-  const [showAiLog, setShowAiLog] = useState(false);
-  const [showAuditTrail, setShowAuditTrail] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
 
   // Listen to browser Back/Forward navigation
@@ -99,10 +103,19 @@ export default function App() {
       
       const isHome = path.startsWith('/home') || window.location.hash === '#/home';
       const isUpload = path.startsWith('/upload');
+      const isAnalytics = path.startsWith('/analytics');
+      const isAudit = path.startsWith('/audit');
+      const isAiLoop = path.startsWith('/ailoop') || path.startsWith('/ai-learning');
       
       setShowHeroPage(path === '/' || path === '');
       if (isUpload) {
         setActiveTab('upload');
+      } else if (isAnalytics) {
+        setActiveTab('analytics');
+      } else if (isAudit) {
+        setActiveTab('audit');
+      } else if (isAiLoop) {
+        setActiveTab('ailoop');
       } else if (isHome) {
         setActiveTab('map');
       } else {
@@ -123,54 +136,29 @@ export default function App() {
     } else {
       setShowHeroPage(false);
       if (tabId === 'upload') {
-        if (window.location.pathname !== '/upload') {
-          window.history.pushState({}, '', '/upload');
-        }
-      } else if (window.location.pathname !== '/home') {
-        window.history.pushState({}, '', '/home');
+        if (window.location.pathname !== '/upload') window.history.pushState({}, '', '/upload');
+      } else if (tabId === 'analytics') {
+        if (window.location.pathname !== '/analytics') window.history.pushState({}, '', '/analytics');
+      } else if (tabId === 'audit') {
+        if (window.location.pathname !== '/audit') window.history.pushState({}, '', '/audit');
+      } else if (tabId === 'ailoop') {
+        if (window.location.pathname !== '/ailoop') window.history.pushState({}, '', '/ailoop');
+      } else if (tabId === 'map' || tabId === 'review') {
+        if (window.location.pathname !== '/home') window.history.pushState({}, '', '/home');
       }
+
       if (tabId === 'map') {
         setShowScanner(false);
         setShowReviewQueue(false);
-        setShowAnalytics(false);
-        setShowAuditTrail(false);
-        setShowAiLog(false);
       } else if (tabId === 'review') {
         setShowReviewQueue(true);
         setShowScanner(false);
-        setShowAnalytics(false);
-        setShowAuditTrail(false);
-        setShowAiLog(false);
       } else if (tabId === 'scanner') {
         setShowScanner(true);
         setShowReviewQueue(false);
-        setShowAnalytics(false);
-        setShowAuditTrail(false);
-        setShowAiLog(false);
-      } else if (tabId === 'analytics') {
-        setShowAnalytics(true);
+      } else {
         setShowScanner(false);
         setShowReviewQueue(false);
-        setShowAuditTrail(false);
-        setShowAiLog(false);
-      } else if (tabId === 'audit') {
-        setShowAuditTrail(true);
-        setShowScanner(false);
-        setShowReviewQueue(false);
-        setShowAnalytics(false);
-        setShowAiLog(false);
-      } else if (tabId === 'ailoop') {
-        setShowAiLog(true);
-        setShowScanner(false);
-        setShowReviewQueue(false);
-        setShowAnalytics(false);
-        setShowAuditTrail(false);
-      } else if (tabId === 'upload') {
-        setShowScanner(false);
-        setShowReviewQueue(false);
-        setShowAnalytics(false);
-        setShowAuditTrail(false);
-        setShowAiLog(false);
       }
     }
   }, []);
@@ -697,8 +685,8 @@ export default function App() {
           }}
         />
 
-        {/* Upload Portal Workspace View */}
-        {activeTab === 'upload' ? (
+        {/* ─── DEDICATED FULL-PAGE WORKSPACE VIEWS ─── */}
+        {activeTab === 'upload' && (
           <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 60px)' }}>
             <UploadDashboard 
               onFileReady={(file) => {
@@ -708,8 +696,22 @@ export default function App() {
               }} 
             />
           </div>
-        ) : (
-          /* Dynamic Studio Workspace Canvas Container */
+        )}
+
+        {activeTab === 'analytics' && (
+          <AnalyticsView />
+        )}
+
+        {activeTab === 'audit' && (
+          <AuditTrailView />
+        )}
+
+        {activeTab === 'ailoop' && (
+          <AiFeedbackLoopView />
+        )}
+
+        {/* ─── 3D MAP & EXPLODED STUDIO WORKSPACE CANVAS ─── */}
+        {activeTab !== 'upload' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
           <div className="eleven-view-container">
 
             {/* Unplaced Records Badge */}
@@ -848,37 +850,18 @@ export default function App() {
               />
             )}
 
-            {/* ─── NEW CORE SIH GOVTECH MODALS ─── */}
-
-            {/* Point 12: Human-in-the-Loop Verification Review Queue */}
+            {/* Point 12: Human-in-the-Loop Verification Review Queue Modal */}
             {showReviewQueue && (
               <VerificationQueueModal
                 userRole={userRole}
                 onApproveRecord={handleApproveQueueRecord}
-                onClose={() => setShowReviewQueue(false)}
+                onClose={() => {
+                  setShowReviewQueue(false);
+                  setActiveTab('map');
+                }}
               />
             )}
 
-            {/* Point 13: Continuous AI Learning & Model Improvement Log */}
-            {showAiLog && (
-              <AiImprovementLogModal
-                onClose={() => setShowAiLog(false)}
-              />
-            )}
-
-            {/* Point 15: Secure Document Repository & Immutable Audit Trail */}
-            {showAuditTrail && (
-              <AuditTrailModal
-                onClose={() => setShowAuditTrail(false)}
-              />
-            )}
-
-            {/* Executive Analytics Dashboard */}
-            {showAnalytics && (
-              <AnalyticsDashboardModal
-                onClose={() => setShowAnalytics(false)}
-              />
-            )}
           </div>
         )}
       </div>
