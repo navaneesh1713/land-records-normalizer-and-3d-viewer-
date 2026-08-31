@@ -4,6 +4,16 @@
  */
 
 const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
+const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
+
+export const AVAILABLE_GEMINI_MODELS = [
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Fastest & highest accuracy multimodal model (Default)', recommended: true },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', desc: 'Next-gen multimodal vision with ultra-low latency' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', desc: 'Standard production vision model for documents' },
+  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Deep reasoning for damaged / complex handwritten deeds' },
+  { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash 8B', desc: 'High-throughput lightweight vision engine' },
+  { id: 'gemini-2.0-flash-lite', name: 'Gemini 2.0 Flash Lite', desc: 'Cost-optimized vision OCR' },
+];
 
 export function getGeminiApiKey() {
   return (
@@ -21,14 +31,32 @@ export function saveGeminiApiKey(key) {
   }
 }
 
+export function getGeminiModel() {
+  return (
+    import.meta.env.VITE_GEMINI_MODEL ||
+    localStorage.getItem(LOCAL_STORAGE_MODEL_KEY) ||
+    'gemini-2.5-flash'
+  );
+}
+
+export function saveGeminiModel(model) {
+  if (model) {
+    localStorage.setItem(LOCAL_STORAGE_MODEL_KEY, model.trim());
+  } else {
+    localStorage.removeItem(LOCAL_STORAGE_MODEL_KEY);
+  }
+}
+
 /**
  * Extract structured revenue entities from an image file using Google Gemini Multimodal Vision API.
  * @param {File|Blob} imageFile - The document image file
  * @param {string} [customApiKey] - Optional API key override
+ * @param {string} [customModel] - Optional Model override
  * @returns {Promise<object>} Parsed record with field-level confidence and uncertain flags
  */
-export async function extractHandwrittenLandRecord(imageFile, customApiKey = null) {
+export async function extractHandwrittenLandRecord(imageFile, customApiKey = null, customModel = null) {
   const apiKey = customApiKey || getGeminiApiKey();
+  const preferredModel = customModel || getGeminiModel();
 
   if (!apiKey || apiKey.trim() === '') {
     throw new Error(
@@ -59,9 +87,7 @@ export async function extractHandwrittenLandRecord(imageFile, customApiKey = nul
 
 Carefully examine this document image, decipher all handwriting, stamped text, marginal notations, and extract the key land registration entities.
 
-You MUST respond ONLY with a single valid JSON object with NO markdown formatting, NO backticks, NO explanation.
-
-Use this exact JSON schema:
+You MUST respond ONLY with a single valid JSON object matching this exact schema:
 {
   "owner_name": "Full legal name of owner / khatedar / pattadar (or null)",
   "survey_number": "Survey / Sy No / Khasra / Gat No (e.g. 48/2A or 104/1) (or null)",
@@ -97,8 +123,18 @@ Use this exact JSON schema:
   "handwriting_quality": "CLEAR | MODERATE | SEVERELY_SMUDGED | DAMAGED_INK"
 }`;
 
-  // 3. Model endpoints to try (Gemini 1.5 Flash -> Gemini 2.0 Flash -> Gemini 1.5 Pro)
-  const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+  // 3. Construct ordered model sequence starting with user's preferred model
+  const modelCandidates = [
+    preferredModel,
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-2.5-pro',
+    'gemini-1.5-flash-8b',
+    'gemini-2.0-flash-lite',
+  ];
+  // Deduplicate candidate models
+  const models = [...new Set(modelCandidates.filter(Boolean))];
   let lastError = null;
 
   for (const modelName of models) {
@@ -116,8 +152,8 @@ Use this exact JSON schema:
               parts: [
                 { text: systemPrompt },
                 {
-                  inline_data: {
-                    mime_type: mimeType,
+                  inlineData: {
+                    mimeType: mimeType,
                     data: base64Data,
                   },
                 },
@@ -127,6 +163,7 @@ Use this exact JSON schema:
           generationConfig: {
             temperature: 0.1,
             maxOutputTokens: 2048,
+            responseMimeType: 'application/json',
           },
         }),
       });
@@ -134,7 +171,7 @@ Use this exact JSON schema:
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
         throw new Error(
-          errJson.error?.message || `Gemini API returned HTTP status ${response.status}`
+          errJson.error?.message || `Gemini API (${modelName}) returned HTTP status ${response.status}`
         );
       }
 
@@ -142,7 +179,7 @@ Use this exact JSON schema:
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!rawText) {
-        throw new Error('Gemini API returned an empty response.');
+        throw new Error(`Gemini (${modelName}) returned an empty response.`);
       }
 
       // Clean markdown codeblocks if present

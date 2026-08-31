@@ -8,13 +8,16 @@ import { auditTrailService } from '../services/auditTrailService';
 import {
   extractHandwrittenLandRecord,
   getGeminiApiKey,
-  saveGeminiApiKey
+  saveGeminiApiKey,
+  getGeminiModel,
+  saveGeminiModel,
+  AVAILABLE_GEMINI_MODELS
 } from '../services/handwrittenOcrService';
 import {
   ScanLine, Upload, FileText, FileSpreadsheet, Image as ImageIcon,
   Loader2, CheckCircle2, AlertCircle, X, Eye, EyeOff, Edit3, Send, Trash2,
   Sparkles, Download, ShieldCheck, AlertTriangle, ArrowRight, Layers, FileCode,
-  Key, Wand2, Cpu, Check, HelpCircle, RefreshCw, PenTool
+  Key, Wand2, Cpu, Check, HelpCircle, RefreshCw, PenTool, Bot
 } from 'lucide-react';
 
 export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose }) {
@@ -23,8 +26,10 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   // Engine selection: 'gemini' (Handwritten & Multimodal) | 'tesseract' (Printed WASM)
   const [engineMode, setEngineMode] = useState('gemini');
   const [apiKey, setApiKey] = useState(() => getGeminiApiKey());
+  const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [tempApiKey, setTempApiKey] = useState(() => getGeminiApiKey());
+  const [tempModel, setTempModel] = useState(() => getGeminiModel());
   const [keySavedToast, setKeySavedToast] = useState(false);
 
   // OCR state
@@ -45,8 +50,11 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
   useEffect(() => {
     const activeKey = getGeminiApiKey();
+    const activeModel = getGeminiModel();
     setApiKey(activeKey);
     setTempApiKey(activeKey);
+    setSelectedModel(activeModel);
+    setTempModel(activeModel);
   }, []);
 
   // ─── Field Normalizer ───
@@ -154,13 +162,13 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
     try {
       setOcrProgress(50);
-      const extracted = await extractHandwrittenLandRecord(imageFile, activeKey);
+      const extracted = await extractHandwrittenLandRecord(imageFile, activeKey, selectedModel);
       setOcrProgress(90);
 
       const record = {
         _idx: 0,
         _source: 'gemini_vision_htr',
-        _modelUsed: extracted._modelUsed || 'Gemini 1.5/2.0 Flash Vision',
+        _modelUsed: extracted._modelUsed || selectedModel || 'Gemini 2.5 Flash',
         _fileName: imageFile.name,
         _rawText: extracted._rawText || '',
         _confidence: extracted._confidence || 90,
@@ -193,6 +201,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
         {
           fileName: imageFile.name,
           engine: 'Gemini-Multimodal-Vision',
+          model: record._modelUsed,
           confidence: record._confidence,
           quality: record._handwritingQuality,
         },
@@ -200,7 +209,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       );
     } catch (err) {
       console.error('Gemini Vision OCR Error:', err);
-      setError(`Handwritten Vision AI Error: ${err.message}. You can switch to Standard Tesseract OCR or update your API key.`);
+      setError(`Handwritten Vision AI Error: ${err.message}. You can switch to Standard Tesseract OCR or select a different Gemini model / update your API key.`);
     } finally {
       setOcrRunning(false);
     }
@@ -310,10 +319,20 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
   const handleSaveApiKey = () => {
     saveGeminiApiKey(tempApiKey);
+    saveGeminiModel(tempModel);
     setApiKey(tempApiKey.trim());
+    setSelectedModel(tempModel);
+    setError(null);
     setShowKeyModal(false);
     setKeySavedToast(true);
     setTimeout(() => setKeySavedToast(false), 3000);
+  };
+
+  const handleModelChange = (newModel) => {
+    setSelectedModel(newModel);
+    setTempModel(newModel);
+    saveGeminiModel(newModel);
+    setError(null);
   };
 
   const handleLoadSample = async () => {
@@ -551,6 +570,45 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
               <option value="guj+eng">Gujarati + English (AnyRoR Gujarat)</option>
               <option value="ben+eng">Bengali + English (BanglarBhumi)</option>
             </select>
+          </div>
+        )}
+
+        {/* Gemini Vision AI Model Strip (for Gemini Mode) */}
+        {engineMode === 'gemini' && (
+          <div className="scanner-lang-strip" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.6), rgba(245, 243, 255, 0.6))' }}>
+            <div className="lang-strip-left">
+              <Sparkles size={13} color="#4f46e5" />
+              <span className="lang-label-title" style={{ color: '#4338ca', fontWeight: 600 }}>Gemini Vision Model:</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <select
+                value={selectedModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="scanner-lang-select"
+                disabled={ocrRunning}
+                style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
+              >
+                {AVAILABLE_GEMINI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => {
+                  setTempModel(selectedModel);
+                  setTempApiKey(apiKey);
+                  setShowKeyModal(true);
+                }}
+                className="topbar-pill-btn"
+                style={{ padding: '3px 8px', fontSize: 11, background: '#ffffff', borderColor: '#c7d2fe', color: '#4338ca' }}
+                title="Configure Gemini API Key & Model Settings"
+              >
+                <Key size={11} />
+                <span>Config</span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -835,8 +893,36 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             </div>
 
             <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, marginBottom: 16 }}>
-              Enter your Google Gemini API Key below. It will be saved securely in your browser and used to read messy cursive handwriting, stamps, and Indic scripts (Kannada, Hindi, Marathi, Telugu, Tamil).
+              Enter your Google Gemini API Key and select your preferred vision model below. It will decipher cursive handwriting, revenue stamps, and regional Indic scripts (Kannada, Hindi, Marathi, Telugu, Tamil).
             </p>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
+                Gemini Vision AI Model
+              </label>
+              <select
+                value={tempModel}
+                onChange={(e) => setTempModel(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  fontSize: 13,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  background: '#ffffff',
+                  fontWeight: 600,
+                  color: '#1e293b'
+                }}
+              >
+                {AVAILABLE_GEMINI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} {m.recommended ? '⚡ (Recommended)' : ''} — {m.desc}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
