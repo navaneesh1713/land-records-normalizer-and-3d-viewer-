@@ -6,14 +6,10 @@ import ParcelSidebar from './components/ParcelSidebar';
 import BuildingListPanel from './components/BuildingListPanel';
 import FloorControlPanel from './components/FloorControlPanel';
 import DocumentScanner from './components/DocumentScanner';
-import ViolationPanel from './components/ViolationPanel';
-import MeasureToolPanel from './components/MeasureToolPanel';
-import TimelineSlider from './components/TimelineSlider';
 import VerificationQueueModal from './components/VerificationQueueModal';
 import AiImprovementLogModal from './components/AiImprovementLogModal';
 import AuditTrailModal from './components/AuditTrailModal';
 import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
-import ApiExplorerModal from './components/ApiExplorerModal';
 import HeroLandingPage from './components/HeroLandingPage';
 import GovAuthModal from './components/GovAuthModal';
 import AppSidebar from './components/AppSidebar';
@@ -23,8 +19,6 @@ import { auditTrailService } from './services/auditTrailService';
 import { getParcelData, PRESET_DATASETS } from './services/dataSource';
 import { calculateFeatureCenter } from './utils/geoUtils';
 import { detectInputShape, runBrowserPipeline } from './utils/pipelineBrowser';
-import { analyzeViolations } from './utils/violationDetector';
-import { TIMELINE_SNAPSHOTS } from './data/mutationTimeline';
 import { FlyToInterpolator } from '@deck.gl/core';
 import {
   Loader2, AlertCircle, UploadCloud, X, FileText, CheckCircle2,
@@ -62,19 +56,6 @@ export default function App() {
   // Document Scanner panel state
   const [showScanner, setShowScanner] = useState(false);
 
-  // Encroachment & FAR Violation Auditor state
-  const [showViolations, setShowViolations] = useState(false);
-  const [showEncroachmentOverlay, setShowEncroachmentOverlay] = useState(true);
-
-  // Spatial Measurement & Indian Land Unit Calculator state
-  const [showMeasureTool, setShowMeasureTool] = useState(false);
-  const [isMeasuring, setIsMeasuring] = useState(false);
-  const [measurePoints, setMeasurePoints] = useState([]);
-
-  // Cadastral Time-Travel Mutation Timeline state
-  const [showTimeline, setShowTimeline] = useState(false);
-  const [timelineYear, setTimelineYear] = useState(2024);
-
   // 3D Controls Help Guide state
   const [showHelp, setShowHelp] = useState(false);
 
@@ -87,7 +68,6 @@ export default function App() {
   const [showAiLog, setShowAiLog] = useState(false);
   const [showAuditTrail, setShowAuditTrail] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [showApiExplorer, setShowApiExplorer] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
 
   const handleSelectTab = useCallback((tabId) => {
@@ -99,113 +79,43 @@ export default function App() {
       setShowScanner(false);
       setShowReviewQueue(false);
       setShowAnalytics(false);
-      setShowViolations(false);
       setShowAuditTrail(false);
       setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setIsMeasuring(false);
-      setShowApiExplorer(false);
     } else if (tabId === 'review') {
       setShowHeroPage(false);
       setShowReviewQueue(true);
       setShowScanner(false);
       setShowAnalytics(false);
-      setShowViolations(false);
       setShowAuditTrail(false);
       setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
     } else if (tabId === 'scanner') {
       setShowHeroPage(false);
       setShowScanner(true);
       setShowReviewQueue(false);
       setShowAnalytics(false);
-      setShowViolations(false);
       setShowAuditTrail(false);
       setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
     } else if (tabId === 'analytics') {
       setShowHeroPage(false);
       setShowAnalytics(true);
       setShowScanner(false);
       setShowReviewQueue(false);
-      setShowViolations(false);
       setShowAuditTrail(false);
       setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
-    } else if (tabId === 'auditor') {
-      setShowHeroPage(false);
-      setShowViolations(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
     } else if (tabId === 'audit') {
       setShowHeroPage(false);
       setShowAuditTrail(true);
       setShowScanner(false);
       setShowReviewQueue(false);
       setShowAnalytics(false);
-      setShowViolations(false);
       setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
     } else if (tabId === 'ailoop') {
       setShowHeroPage(false);
       setShowAiLog(true);
       setShowScanner(false);
       setShowReviewQueue(false);
       setShowAnalytics(false);
-      setShowViolations(false);
       setShowAuditTrail(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
-    } else if (tabId === 'timeline') {
-      setShowHeroPage(false);
-      setShowTimeline(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowViolations(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-      setShowMeasureTool(false);
-      setShowApiExplorer(false);
-    } else if (tabId === 'ruler') {
-      setShowHeroPage(false);
-      setShowMeasureTool(true);
-      setIsMeasuring(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowViolations(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-      setShowTimeline(false);
-      setShowApiExplorer(false);
-    } else if (tabId === 'api') {
-      setShowHeroPage(false);
-      setShowApiExplorer(true);
-      setShowScanner(false);
-      setShowReviewQueue(false);
-      setShowAnalytics(false);
-      setShowViolations(false);
-      setShowAuditTrail(false);
-      setShowAiLog(false);
-      setShowTimeline(false);
-      setShowMeasureTool(false);
     }
   }, []);
 
@@ -226,22 +136,6 @@ export default function App() {
     if (verifiedRecord) {
       handleScannerRecords([verifiedRecord]);
     }
-  }, []);
-
-  const handleAddMeasurePoint = useCallback((coord) => {
-    setMeasurePoints((prev) => [...prev, coord]);
-  }, []);
-
-  const handleUndoMeasurePoint = useCallback(() => {
-    setMeasurePoints((prev) => prev.slice(0, -1));
-  }, []);
-
-  const handleClearMeasurePoints = useCallback(() => {
-    setMeasurePoints([]);
-  }, []);
-
-  const handleToggleMeasuring = useCallback(() => {
-    setIsMeasuring((prev) => !prev);
   }, []);
 
   const handleSelectPreset = useCallback((presetKey) => {
@@ -501,8 +395,23 @@ export default function App() {
     }
   }, [loadFeatureCollection, runPipelineOnRecords]);
 
+  const [scannerInitialFile, setScannerInitialFile] = useState(null);
+
   const handleFileSelect = useCallback((file) => {
     if (!file) return;
+    setFileError(null);
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    // If image, PDF, CSV, or Excel -> Route directly to DocumentScanner OCR engine
+    if (['jpg', 'jpeg', 'png', 'webp', 'tiff', 'tif', 'bmp', 'pdf', 'csv', 'xlsx', 'xls'].includes(ext)) {
+      setScannerInitialFile(file);
+      setShowScanner(true);
+      setShowHeroPage(false);
+      setActiveTab('scanner');
+      return;
+    }
+
+    // Otherwise treat as GeoJSON / Cadastre JSON
     const reader = new FileReader();
     reader.onload = (e) => {
       processUploadedJson(e.target.result, file.name);
@@ -588,18 +497,10 @@ export default function App() {
     return Array.from(floorSet).sort((a, b) => a - b);
   }, [data]);
 
-  // Active features (switch to historical timeline snapshot if timeline active and year < 2024)
+  // Active features
   const activeFeatures = useMemo(() => {
-    if (showTimeline && timelineYear < 2024 && TIMELINE_SNAPSHOTS[timelineYear]) {
-      return TIMELINE_SNAPSHOTS[timelineYear].features || [];
-    }
     return data?.features || [];
-  }, [showTimeline, timelineYear, data]);
-
-  // Real-time Encroachment & FAR Violation Analysis
-  const violationAnalysis = useMemo(() => {
-    return analyzeViolations(activeFeatures);
-  }, [activeFeatures]);
+  }, [data]);
 
   if (loading) {
     return (
@@ -686,7 +587,6 @@ export default function App() {
         userRole={userRole}
         onChangeRole={handleRoleChange}
         pendingReviewCount={storageService.getReviewQueue().filter(q => q.status === 'PENDING_REVIEW').length}
-        violationCount={violationAnalysis?.summary?.violations || 0}
         currentPreset={currentPreset}
         onSelectPreset={handleSelectPreset}
         onFileSelect={handleFileSelect}
@@ -842,11 +742,6 @@ export default function App() {
         selectedUnitId={selectedUnit?.unit_id}
         explosionFactor={explosionFactor}
         floorFilter={floorFilter}
-        encroachmentGeoJson={violationAnalysis.encroachmentFeatures}
-        showEncroachmentOverlay={showEncroachmentOverlay}
-        isMeasuring={isMeasuring}
-        measurePoints={measurePoints}
-        onAddMeasurePoint={handleAddMeasurePoint}
       />
 
       {/* Legend */}
@@ -856,7 +751,7 @@ export default function App() {
       />
 
       {/* 3D Floor Exploded View & Isolator Controls */}
-      {data?.features && data.features.length > 0 && !showTimeline && !showScanner && !showViolations && (
+      {data?.features && data.features.length > 0 && !showScanner && (
         <FloorControlPanel
           explosionFactor={explosionFactor}
           onExplosionChange={setExplosionFactor}
@@ -888,58 +783,17 @@ export default function App() {
       {/* Document Scanner / OCR / CSV Importer */}
       {showScanner && (
         <DocumentScanner
+          initialFile={scannerInitialFile}
           onRecordsReady={handleScannerRecords}
           onRouteToQueue={() => {
             setShowScanner(false);
+            setScannerInitialFile(null);
             setShowReviewQueue(true);
             setActiveTab('review');
           }}
           onClose={() => {
             setShowScanner(false);
-            setActiveTab('map');
-          }}
-        />
-      )}
-
-      {/* Encroachment & FAR Violation Auditor */}
-      {showViolations && (
-        <ViolationPanel
-          analysisResults={violationAnalysis}
-          onSelectBuilding={handleSelectBuilding}
-          features={data.features}
-          showEncroachmentOverlay={showEncroachmentOverlay}
-          onToggleEncroachmentOverlay={() => setShowEncroachmentOverlay((prev) => !prev)}
-          onClose={() => {
-            setShowViolations(false);
-            setActiveTab('map');
-          }}
-        />
-      )}
-
-      {/* Spatial Measurement & Indian Land Unit Converter */}
-      {showMeasureTool && (
-        <MeasureToolPanel
-          isMeasuring={isMeasuring}
-          onToggleMeasuring={handleToggleMeasuring}
-          measurePoints={measurePoints}
-          onUndoPoint={handleUndoMeasurePoint}
-          onClearPoints={handleClearMeasurePoints}
-          onClose={() => {
-            setShowMeasureTool(false);
-            setIsMeasuring(false);
-            setActiveTab('map');
-          }}
-        />
-      )}
-
-      {/* Cadastral Time-Travel Timeline Scrubber */}
-      {showTimeline && (
-        <TimelineSlider
-          selectedYear={timelineYear}
-          onSelectYear={(yr) => setTimelineYear(yr)}
-          onClose={() => {
-            setShowTimeline(false);
-            setTimelineYear(2024);
+            setScannerInitialFile(null);
             setActiveTab('map');
           }}
         />
@@ -974,13 +828,6 @@ export default function App() {
       {showAnalytics && (
         <AnalyticsDashboardModal
           onClose={() => setShowAnalytics(false)}
-        />
-      )}
-
-      {/* Point 14: External Integration REST API Explorer */}
-      {showApiExplorer && (
-        <ApiExplorerModal
-          onClose={() => setShowApiExplorer(false)}
         />
       )}
         </div>

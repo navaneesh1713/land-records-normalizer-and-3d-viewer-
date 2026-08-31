@@ -30,12 +30,8 @@ export default function AppSidebar({
     { id: 'review', label: 'Review Queue', icon: ShieldCheck, badge: pendingReviewCount > 0 ? pendingReviewCount : null, badgeColor: '#f59e0b' },
     { id: 'scanner', label: 'Document Scanner', icon: ScanLine, badge: null },
     { id: 'analytics', label: 'Collector Analytics', icon: BarChart3, badge: null },
-    { id: 'auditor', label: 'FAR & Dispute Auditor', icon: ShieldAlert, badge: violationCount > 0 ? violationCount : null, badgeColor: '#ef4444' },
     { id: 'audit', label: 'Immutable Audit Trail', icon: Lock, badge: null },
     { id: 'ailoop', label: 'AI Feedback Loop', icon: BrainCircuit, badge: null },
-    { id: 'timeline', label: '4D Mutation Timeline', icon: History, badge: null },
-    { id: 'ruler', label: 'Spatial Measure Tool', icon: Ruler, badge: null },
-    { id: 'api', label: 'REST API Console', icon: Terminal, badge: null },
   ];
 
   return (

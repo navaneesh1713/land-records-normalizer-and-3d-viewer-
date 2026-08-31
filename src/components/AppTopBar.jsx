@@ -31,12 +31,8 @@ export default function AppTopBar({
       case 'review': return 'Human-in-the-Loop Review Workstation';
       case 'scanner': return 'Document OCR Scanner & Importer';
       case 'analytics': return 'Executive Collector Analytics';
-      case 'auditor': return 'FAR Violation & Dispute Auditor';
       case 'audit': return 'Secure Document Vault & Audit Trail';
       case 'ailoop': return 'Continuous AI Learning Loop';
-      case 'timeline': return '4D Mutation Historical Timeline';
-      case 'ruler': return 'Spatial Measurement & Unit Converter';
-      case 'api': return 'REST API Gateway & OpenAPI Console';
       default: return 'Cadastre Workspace';
     }
   };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import DeckGL from '@deck.gl/react';
-import { PolygonLayer, GeoJsonLayer, PathLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { PolygonLayer } from '@deck.gl/layers';
 import { Map } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { calculateFeatureCenter } from '../utils/geoUtils';
@@ -98,11 +98,6 @@ export default function MapView({
   selectedUnitId,
   explosionFactor = 0,
   floorFilter = null,
-  encroachmentGeoJson = null,
-  showEncroachmentOverlay = true,
-  isMeasuring = false,
-  measurePoints = [],
-  onAddMeasurePoint,
 }) {
   const envToken = (import.meta.env.VITE_MAPBOX_TOKEN || '').trim();
   const [tokenError, setTokenError] = useState(false);
@@ -222,8 +217,8 @@ export default function MapView({
           },
           lineWidthUnits: 'pixels',
           lineWidthMinPixels: 1,
-          pickable: !isMeasuring,
-          autoHighlight: !isMeasuring,
+          pickable: true,
+          autoHighlight: true,
           highlightColor: [255, 255, 255, 80],
           material: {
             ambient: 0.45,
@@ -239,14 +234,14 @@ export default function MapView({
             getElevation: [explosionFactor, floorFilter],
           },
           onHover: (info) => {
-            if (!isMeasuring && info && info.object) {
+            if (info && info.object) {
               setHoverInfo(info);
             } else {
               setHoverInfo(null);
             }
           },
           onClick: (info) => {
-            if (!isMeasuring && info && info.object && onSelectUnit) {
+            if (info && info.object && onSelectUnit) {
               onSelectUnit(info.object);
             }
           }
@@ -254,112 +249,14 @@ export default function MapView({
       );
     }
 
-    // Encroachment Overlap Red Polygon Overlay Layer
-    if (showEncroachmentOverlay && encroachmentGeoJson && encroachmentGeoJson.features && encroachmentGeoJson.features.length > 0) {
-      layerList.push(
-        new GeoJsonLayer({
-          id: 'encroachment-violation-layer',
-          data: encroachmentGeoJson,
-          filled: true,
-          stroked: true,
-          extruded: true,
-          getElevation: 14,
-          getFillColor: [239, 68, 68, 200],
-          getLineColor: [255, 255, 255, 255],
-          getLineWidth: 2,
-          lineWidthUnits: 'pixels',
-          pickable: !isMeasuring,
-          autoHighlight: !isMeasuring,
-          highlightColor: [255, 255, 255, 120],
-          onHover: (info) => {
-            if (!isMeasuring && info && info.object) {
-              const p = info.object.properties || {};
-              setHoverInfo({
-                x: info.x,
-                y: info.y,
-                object: {
-                  unit_id: 'ENCROACHMENT ZONE',
-                  floor_number: '!',
-                  owner_name: `Overlap: ${p.overlap_sqm} m² between ${p.source_plot} & ${p.target_plot}`,
-                  classification: 'Boundary Encroachment',
-                  building_id: p.source_plot,
-                }
-              });
-            } else {
-              setHoverInfo(null);
-            }
-          }
-        })
-      );
-    }
-
-    // ── Interactive Measurement Layers ──
-    if (measurePoints && measurePoints.length > 0) {
-      // 1. Enclosed Polygon Fill (if >= 3 points)
-      if (measurePoints.length >= 3) {
-        layerList.push(
-          new PolygonLayer({
-            id: 'measure-polygon-layer',
-            data: [{ polygon: measurePoints }],
-            filled: true,
-            stroked: false,
-            getPolygon: (d) => d.polygon,
-            getFillColor: [254, 240, 138, 110], // Soft translucent gold
-            pickable: false,
-          })
-        );
-      }
-
-      // 2. Polyline Path
-      if (measurePoints.length >= 2) {
-        layerList.push(
-          new PathLayer({
-            id: 'measure-path-layer',
-            data: [{ path: measurePoints }],
-            getPath: (d) => d.path,
-            getColor: [234, 179, 8, 255], // Gold
-            getWidth: 3,
-            widthUnits: 'pixels',
-            jointRounded: true,
-            capRounded: true,
-            pickable: false,
-          })
-        );
-      }
-
-      // 3. Scatterplot Node Pins
-      layerList.push(
-        new ScatterplotLayer({
-          id: 'measure-nodes-layer',
-          data: measurePoints.map((pt, idx) => ({ position: pt, index: idx + 1 })),
-          getPosition: (d) => d.position,
-          getFillColor: (d) => (d.index === 1 ? [16, 185, 129, 255] : [234, 179, 8, 255]),
-          getLineColor: [255, 255, 255, 255],
-          getLineWidth: 2,
-          lineWidthUnits: 'pixels',
-          getRadius: 6,
-          radiusUnits: 'pixels',
-          pickable: false,
-        })
-      );
-    }
-
     return layerList;
-  }, [floorSlices, selectedUnitId, onSelectUnit, explosionFactor, floorFilter, showEncroachmentOverlay, encroachmentGeoJson, isMeasuring, measurePoints]);
-
-  const handleMapClick = (info) => {
-    if (isMeasuring && info && info.coordinate && onAddMeasurePoint) {
-      const [lng, lat] = info.coordinate;
-      onAddMeasurePoint([Number(lng.toFixed(6)), Number(lat.toFixed(6))]);
-    }
-  };
+  }, [floorSlices, selectedUnitId, onSelectUnit, explosionFactor, floorFilter]);
 
   return (
     <div className="map-wrapper">
       <DeckGL
         viewState={activeViewState}
         onViewStateChange={handleViewStateChange}
-        onClick={handleMapClick}
         controller={{
           dragRotate: true,
           touchRotate: true,
@@ -369,7 +266,7 @@ export default function MapView({
           keyboard: true
         }}
         layers={layers}
-        getCursor={({ isHovering }) => (isMeasuring ? 'crosshair' : isHovering ? 'pointer' : 'default')}
+        getCursor={({ isHovering }) => (isHovering ? 'pointer' : 'default')}
         style={{ width: '100%', height: '100%' }}
       >
         <Map

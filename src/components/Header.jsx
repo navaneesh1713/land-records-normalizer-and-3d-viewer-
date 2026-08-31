@@ -22,14 +22,6 @@ export default function Header({
   onToggleBuildingList,
   showScanner = false,
   onToggleScanner,
-  showViolations = false,
-  onToggleViolations,
-  violationCount = 0,
-  encroachmentCount = 0,
-  showMeasureTool = false,
-  onToggleMeasureTool,
-  showTimeline = false,
-  onToggleTimeline,
   showHelp = false,
   onToggleHelp,
   // New Government Core props
@@ -44,8 +36,6 @@ export default function Header({
   onToggleAuditTrail,
   showAnalytics = false,
   onToggleAnalytics,
-  showApiExplorer = false,
-  onToggleApiExplorer,
   onToggleHero,
 }) {
   const fileInputRef = useRef(null);
@@ -230,58 +220,6 @@ export default function Header({
               </button>
             )}
 
-            {/* 6. REST API Gateway */}
-            {onToggleApiExplorer && (
-              <button
-                onClick={onToggleApiExplorer}
-                className={`btn-control ${showApiExplorer ? 'btn-control-active' : ''}`}
-                title="External Integration REST APIs & Testing Console"
-              >
-                <Terminal size={13} color="#0284c7" />
-                <span>APIs</span>
-              </button>
-            )}
-          </div>
-
-          <div className="control-separator" />
-
-          {/* Spatial Tools Group */}
-          <div className="control-group">
-            {onToggleViolations && (
-              <button
-                onClick={onToggleViolations}
-                className={`btn-control ${showViolations ? 'btn-control-active' : ''} ${violationCount > 0 ? 'btn-violation-alert' : ''}`}
-                title="Encroachment & FAR Municipal Compliance Auditor"
-              >
-                <ShieldAlert size={13} color={violationCount > 0 ? '#ef4444' : '#10b981'} />
-                <span>Auditor</span>
-                {violationCount > 0 && (
-                  <span className="violation-count-pill">{violationCount}</span>
-                )}
-              </button>
-            )}
-
-            {onToggleMeasureTool && (
-              <button
-                onClick={onToggleMeasureTool}
-                className={`btn-control ${showMeasureTool ? 'btn-control-active' : ''}`}
-                title="Interactive Map Ruler & Indian Land Unit Converter"
-              >
-                <Ruler size={13} color="#ca8a04" />
-                <span>Ruler</span>
-              </button>
-            )}
-
-            {onToggleTimeline && (
-              <button
-                onClick={onToggleTimeline}
-                className={`btn-control ${showTimeline ? 'btn-control-active' : ''}`}
-                title="Cadastral Time-Travel: Historical Mutation Timeline"
-              >
-                <History size={13} color="#ca8a04" />
-                <span>Timeline</span>
-              </button>
-            )}
           </div>
 
           <div className="control-separator" />
