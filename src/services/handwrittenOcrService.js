@@ -7,11 +7,9 @@ const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
 const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
 
 export const AVAILABLE_GEMINI_MODELS = [
-  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Latest high-throughput multimodal vision (Recommended)', recommended: true },
-  { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', desc: 'Next-gen multimodal reasoning for land deeds' },
-  { id: 'gemini-3.5-pro', name: 'Gemini 3.5 Pro', desc: 'Deep reasoning for historical / damaged manuscripts' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', desc: 'Fast multimodal vision engine' },
-  { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', desc: 'Complex reasoning engine' },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', desc: 'Latest flagship multimodal vision (Recommended)', recommended: true },
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Ultra-fast low-latency vision OCR' },
+  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', desc: 'Deep reasoning for historical / damaged manuscripts' },
 ];
 
 export function getGeminiApiKey() {
@@ -34,7 +32,7 @@ export function getGeminiModel() {
   return (
     import.meta.env.VITE_GEMINI_MODEL ||
     localStorage.getItem(LOCAL_STORAGE_MODEL_KEY) ||
-    'gemini-3.5-flash-lite'
+    'gemini-3.6-flash'
   );
 }
 
@@ -158,11 +156,9 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
   // 3. Construct ordered model sequence starting with user's preferred model
   const modelCandidates = [
     preferredModel,
+    'gemini-3.6-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.5-flash',
-    'gemini-3.5-pro',
-    'gemini-2.5-flash',
-    'gemini-2.5-pro',
+    'gemini-3.1-pro-preview',
   ];
   // Deduplicate candidate models
   const models = [...new Set(modelCandidates.filter(Boolean))];

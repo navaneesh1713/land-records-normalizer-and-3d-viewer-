@@ -259,7 +259,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     } else {
       await runTesseractOCR(imageFile);
     }
-  }, [engineMode, apiKey, ocrLanguage]);
+  }, [engineMode, selectedModel, ocrLanguage]);
 
   // ─── File Selection Handler ───
   const handleFile = useCallback(async (file) => {
