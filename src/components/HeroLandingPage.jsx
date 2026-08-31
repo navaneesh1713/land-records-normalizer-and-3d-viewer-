@@ -12,6 +12,7 @@ export default function HeroLandingPage({
   onLaunchApp,
   onOpenScanner,
   onOpenAnalytics,
+  onAuthSuccess,
   userRole = 'patwari',
   onChangeRole,
 }) {
@@ -125,6 +126,12 @@ export default function HeroLandingPage({
           currentRole={userRole}
           onSelectRole={(newRole) => {
             if (onChangeRole) onChangeRole(newRole);
+          }}
+          onAuthSuccess={() => {
+            setShowAuthModal(false);
+            if (onAuthSuccess) {
+              onAuthSuccess();
+            }
           }}
           onClose={() => setShowAuthModal(false)}
         />

@@ -890,8 +890,8 @@ export default function App() {
           }}
           onAuthSuccess={() => {
             setShowGovAuth(false);
-            setActiveTab('upload');
-            window.history.pushState({}, '', '/upload');
+            setShowHeroPage(false);
+            handleSelectTab('upload');
           }}
           onClose={() => setShowGovAuth(false)}
         />
@@ -903,9 +903,12 @@ export default function App() {
           onLaunchApp={() => handleLaunchStudio('map')}
           onOpenScanner={() => handleLaunchStudio('scanner')}
           onOpenAnalytics={() => handleLaunchStudio('analytics')}
+          onAuthSuccess={() => {
+            setShowHeroPage(false);
+            handleSelectTab('upload');
+          }}
           userRole={userRole}
           onChangeRole={handleRoleChange}
-          setShowAuthModal={setShowGovAuth}
         />
       )}
     </div>
