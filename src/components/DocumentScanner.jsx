@@ -610,14 +610,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           </div>
         </div>
 
-        {/* API Key Saved Toast */}
-        {keySavedToast && (
-          <div className="scanner-toast success animate-slide-in">
-            <CheckCircle2 size={14} color="#16a34a" />
-            <span>Gemini API Key saved successfully! Handwritten Vision AI is active.</span>
-          </div>
-        )}
-
         {/* Success Toast */}
         {queueSuccessMsg && (
           <div className="scanner-toast success animate-slide-in">
