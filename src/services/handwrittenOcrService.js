@@ -7,14 +7,15 @@ const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
 const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
 
 export const AVAILABLE_GEMINI_MODELS = [
-  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', desc: 'Latest flagship multimodal vision (Recommended)', recommended: true },
-  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Ultra-fast low-latency vision OCR' },
-  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', desc: 'Deep reasoning for historical / damaged manuscripts' },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash', desc: 'Flagship multimodal vision (Free Tier supported)', recommended: true },
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', desc: 'Ultra-fast low-latency vision OCR (Free Tier supported)' },
+  { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro Preview', desc: 'Deep reasoning (Requires Paid Cloud Billing)' },
 ];
 
 export function getGeminiApiKey() {
   return (
     import.meta.env.VITE_GEMINI_API_KEY ||
+    import.meta.env.GEMINI_API_KEY ||
     localStorage.getItem(LOCAL_STORAGE_KEY) ||
     ''
   );
@@ -29,9 +30,14 @@ export function saveGeminiApiKey(key) {
 }
 
 export function getGeminiModel() {
+  const stored = localStorage.getItem(LOCAL_STORAGE_MODEL_KEY);
+  // If stored model was pro preview which has 0 quota on free keys, fallback to flash
+  if (stored === 'gemini-3.1-pro-preview') {
+    return 'gemini-3.6-flash';
+  }
   return (
     import.meta.env.VITE_GEMINI_MODEL ||
-    localStorage.getItem(LOCAL_STORAGE_MODEL_KEY) ||
+    stored ||
     'gemini-3.6-flash'
   );
 }
@@ -115,10 +121,13 @@ export async function extractHandwrittenLandRecord(imageFile, customApiKey = nul
   // 2. Structured Prompt for Indian Land Records & Handwritten Khatiyan / Jamabandi / 7-12 / RTC
   const systemPrompt = `You are a Senior Indian Revenue Cadastre Specialist & Multilingual Paleographer specializing in deciphering handwritten, cursive, and printed Indian Land Records (including 7/12 Satbara, Bhoomi RTC/Pahani, Khatiyan, Jamabandi, Sale Deeds, Gift Deeds, and SVAMITVA Property Cards in English, Hindi, Kannada, Marathi, Tamil, Telugu, and Bengali).
 
-Carefully examine this document image, decipher all handwriting, stamped text, marginal notations, and extract the key land registration entities.
+First, determine if the image is a valid government land or revenue record. A valid document must be an official government-issued land registration document such as a property card, Khatiyan, Jamabandi, 7/12 extract, RTC, sale deed, or any Indian government revenue cadastre record. If the image is a photo of a person, animal, landscape, food, a non-government document, a blank page, or anything unrelated to land records, set "is_valid_gov_document" to false and all other fields to null.
+
+If the document IS valid, carefully examine the image, decipher all handwriting, stamped text, marginal notations, and extract the key land registration entities.
 
 You MUST respond ONLY with a single valid JSON object matching this exact schema:
 {
+  "is_valid_gov_document": true,
   "owner_name": "Full legal name of owner / khatedar / pattadar (or null)",
   "survey_number": "Survey / Sy No / Khasra / Gat No (e.g. 48/2A or 104/1) (or null)",
   "khasra_number": "Khasra or Plot No if distinct (or null)",
@@ -158,7 +167,6 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
     preferredModel,
     'gemini-3.6-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.1-pro-preview',
   ];
   // Deduplicate candidate models
   const models = [...new Set(modelCandidates.filter(Boolean))];
@@ -213,6 +221,11 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
       const cleaned = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleaned);
 
+      // Validate: reject non-government documents immediately
+      if (parsed.is_valid_gov_document === false) {
+        throw new Error('NOT_A_GOV_DOCUMENT: The uploaded image does not appear to be a valid government land or revenue record.');
+      }
+
       // Build structured result matching cadastre pipeline
       const fieldConf = parsed.field_confidence || {};
       const uncertainList = parsed.uncertain_fields || [];
@@ -249,6 +262,10 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
         _handwritingQuality: parsed.handwriting_quality || 'MODERATE',
       };
     } catch (err) {
+      // If the document was successfully checked and rejected as non-government, don't fall back to other models
+      if (err.message?.startsWith('NOT_A_GOV_DOCUMENT')) {
+        throw err;
+      }
       lastError = err;
       console.warn(`Attempt with ${modelName} failed:`, err.message);
       // Try next model fallback

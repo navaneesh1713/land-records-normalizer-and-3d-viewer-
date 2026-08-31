@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Tesseract from 'tesseract.js';
+
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { extractFieldsFromOCR } from '../utils/ocrExtractor';
@@ -17,18 +17,14 @@ import {
   ScanLine, Upload, FileText, FileSpreadsheet, Image as ImageIcon,
   Loader2, CheckCircle2, AlertCircle, X, Eye, EyeOff, Edit3, Send, Trash2,
   Sparkles, Download, ShieldCheck, AlertTriangle, ArrowRight, Layers, FileCode,
-  Key, Wand2, Cpu, Check, HelpCircle, RefreshCw, PenTool, Bot
+  Wand2, Check, HelpCircle, RefreshCw, Bot
 } from 'lucide-react';
 
 export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose }) {
   const fileInputRef = useRef(null);
 
-  // Engine selection: 'gemini' (Handwritten & Multimodal) | 'tesseract' (Printed WASM)
-  const [engineMode, setEngineMode] = useState('gemini');
   const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
 
-  // OCR state
-  const [ocrLanguage, setOcrLanguage] = useState('eng');
   const [ocrRunning, setOcrRunning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrStatus, setOcrStatus] = useState('');
@@ -194,58 +190,16 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       );
     } catch (err) {
       console.error('Gemini Vision OCR Error:', err);
-      setError(`Handwritten Vision AI Error: ${err.message}. You can switch to Standard Tesseract OCR or select a different Gemini model / update your API key.`);
+      if (err.message?.startsWith('NOT_A_GOV_DOCUMENT')) {
+        setError('🚫 Invalid Document: The uploaded image does not appear to be a valid government land or revenue record. Please upload a Khatiyan, Jamabandi, 7/12, RTC, Property Card, or similar official document.');
+      } else {
+        setError(`AI Vision Error: ${err.message}`);
+      }
     } finally {
       setOcrRunning(false);
     }
   };
 
-  // ─── Tesseract.js WebAssembly Engine ───
-  const runTesseractOCR = async (imageFile) => {
-    setOcrRunning(true);
-    setOcrProgress(0);
-    setOcrStatus(`Initializing WebAssembly OCR engine (${ocrLanguage.toUpperCase()})...`);
-    setRawOcrText('');
-    setExtractedRecords([]);
-    setModelInfo('Processed with Tesseract.js (WASM Client-Side)');
-
-    try {
-      const result = await Tesseract.recognize(imageFile, ocrLanguage, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(Math.round((m.progress || 0) * 100));
-            setOcrStatus('Extracting printed text matrix...');
-          } else {
-            setOcrStatus(m.status ? m.status.replace(/_/g, ' ') : 'Processing document...');
-          }
-        },
-      });
-
-      const fullText = result.data.text || '';
-      const overallConfidence = Math.round(result.data.confidence || 0);
-      setRawOcrText(fullText);
-
-      const extracted = extractFieldsFromOCR(fullText, overallConfidence);
-
-      const record = {
-        _idx: 0,
-        _source: 'tesseract_wasm',
-        _fileName: imageFile.name,
-        _rawText: fullText,
-        _confidence: extracted._confidence || overallConfidence || 80,
-        _fieldConfidence: extracted._fieldConfidence,
-        _uncertainFields: extracted._uncertainFields,
-        ...extracted,
-      };
-
-      setExtractedRecords([record]);
-      setOcrStatus(`Printed OCR extraction complete (Confidence: ${record._confidence}%)`);
-    } catch (err) {
-      setError(`OCR Error: ${err.message || 'Failed to extract text from document.'}`);
-    } finally {
-      setOcrRunning(false);
-    }
-  };
 
   // ─── Image Processing Router ───
   const processImage = useCallback(async (imageFile) => {
@@ -254,12 +208,8 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     reader.onload = (e) => setPreviewSrc(e.target.result);
     reader.readAsDataURL(imageFile);
 
-    if (engineMode === 'gemini') {
-      await runGeminiVisionOCR(imageFile);
-    } else {
-      await runTesseractOCR(imageFile);
-    }
-  }, [engineMode, selectedModel, ocrLanguage]);
+    await runGeminiVisionOCR(imageFile);
+  }, [selectedModel]);
 
   // ─── File Selection Handler ───
   const handleFile = useCallback(async (file) => {
@@ -427,126 +377,28 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
       {/* Main Content Scrollable Area */}
       <div className="scanner-studio-body">
-        {/* Engine Mode Toggle (Handwritten AI vs Printed WASM) */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 8,
-          background: 'rgba(241, 245, 249, 0.7)',
-          padding: 6,
-          borderRadius: 10,
-          border: '1px solid rgba(226, 232, 240, 0.8)',
-          marginBottom: 12
-        }}>
-          <button
-            type="button"
-            onClick={() => setEngineMode('gemini')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 12,
-              background: engineMode === 'gemini' ? '#4f46e5' : 'transparent',
-              color: engineMode === 'gemini' ? '#ffffff' : '#64748b',
-              boxShadow: engineMode === 'gemini' ? '0 2px 6px rgba(79, 70, 229, 0.3)' : 'none',
-              transition: 'all 0.2s ease',
-            }}
+
+        {/* Gemini Vision AI Model Strip */}
+        <div className="scanner-lang-strip" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.6), rgba(245, 243, 255, 0.6))' }}>
+          <div className="lang-strip-left">
+            <Sparkles size={13} color="#4f46e5" />
+            <span className="lang-label-title" style={{ color: '#4338ca', fontWeight: 600 }}>Gemini Vision Model:</span>
+          </div>
+          <select
+            value={selectedModel}
+            onChange={(e) => handleModelChange(e.target.value)}
+            className="scanner-lang-select"
+            disabled={ocrRunning}
+            style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
           >
-            <PenTool size={13} />
-            <span>✍️ AI Vision (Handwritten & Indic)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setEngineMode('tesseract')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              padding: '8px 12px',
-              borderRadius: 8,
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 12,
-              background: engineMode === 'tesseract' ? '#4f46e5' : 'transparent',
-              color: engineMode === 'tesseract' ? '#ffffff' : '#64748b',
-              boxShadow: engineMode === 'tesseract' ? '0 2px 6px rgba(79, 70, 229, 0.3)' : 'none',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Cpu size={13} />
-            <span>⚡ Standard OCR (Printed WASM)</span>
-          </button>
+            {AVAILABLE_GEMINI_MODELS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {/* Engine Banner Hint */}
-        <div style={{
-          fontSize: 11,
-          padding: '6px 12px',
-          borderRadius: 6,
-          marginBottom: 12,
-          background: engineMode === 'gemini' ? 'rgba(79, 70, 229, 0.06)' : 'rgba(100, 116, 139, 0.06)',
-          borderLeft: engineMode === 'gemini' ? '3px solid #4f46e5' : '3px solid #64748b',
-          color: '#334155',
-        }}>
-          {engineMode === 'gemini'
-            ? '✨ AI Vision Mode: Zero-shot recognition of cursive handwriting, faded Khatiyans, Jamabandis, and regional Indic scripts.'
-            : '⚡ Printed Mode: Fast client-side WebAssembly OCR for typed PDFs, clean printouts, and tabular records.'}
-        </div>
-
-        {/* Language & Input Configuration Strip (for Tesseract Mode) */}
-        {engineMode === 'tesseract' && (
-          <div className="scanner-lang-strip">
-            <div className="lang-strip-left">
-              <span className="lang-label-title">OCR Recognition Language:</span>
-            </div>
-            <select
-              value={ocrLanguage}
-              onChange={(e) => setOcrLanguage(e.target.value)}
-              className="scanner-lang-select"
-              disabled={ocrRunning}
-            >
-              <option value="eng">English (Standard / National)</option>
-              <option value="hin+eng">Hindi + English (UP Bhulekh / MP Land)</option>
-              <option value="kan+eng">Kannada + English (Karnataka Bhoomi RTC)</option>
-              <option value="mar+eng">Marathi + English (Maharashtra 7/12)</option>
-              <option value="tel+eng">Telugu + English (Maa Bhoomi / Dharani)</option>
-              <option value="tam+eng">Tamil + English (Tamil Nadu Patta)</option>
-              <option value="guj+eng">Gujarati + English (AnyRoR Gujarat)</option>
-              <option value="ben+eng">Bengali + English (BanglarBhumi)</option>
-            </select>
-          </div>
-        )}
-
-        {/* Gemini Vision AI Model Strip (for Gemini Mode) */}
-        {engineMode === 'gemini' && (
-          <div className="scanner-lang-strip" style={{ borderColor: 'rgba(99, 102, 241, 0.25)', background: 'linear-gradient(135deg, rgba(238, 242, 255, 0.6), rgba(245, 243, 255, 0.6))' }}>
-            <div className="lang-strip-left">
-              <Sparkles size={13} color="#4f46e5" />
-              <span className="lang-label-title" style={{ color: '#4338ca', fontWeight: 600 }}>Gemini Vision Model:</span>
-            </div>
-            <select
-              value={selectedModel}
-              onChange={(e) => handleModelChange(e.target.value)}
-              className="scanner-lang-select"
-              disabled={ocrRunning}
-              style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
-            >
-              {AVAILABLE_GEMINI_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Modern Drag & Drop Zone */}
         <div className="scanner-dropzone-wrapper">
