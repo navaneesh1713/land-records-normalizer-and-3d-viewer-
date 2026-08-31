@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ShieldCheck, CheckCircle2, AlertTriangle, X, Edit3, ArrowRight,
-  FileText, Check, Ban, Sparkles, User, Clock, FileCheck, Layers
+  FileText, Check, Ban, Sparkles, User, Clock, FileCheck, Layers,
+  Search, Shield, MapPin, Building, ChevronRight, HelpCircle, RotateCcw
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { auditTrailService } from '../services/auditTrailService';
@@ -13,10 +14,12 @@ export default function VerificationQueueModal({
   userRole = 'patwari'
 }) {
   const [queue, setQueue] = useState(() => storageService.getReviewQueue());
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(() => {
     const q = storageService.getReviewQueue();
     return q.length > 0 ? q[0] : null;
   });
+
   const [editingFields, setEditingFields] = useState(() => {
     const q = storageService.getReviewQueue();
     if (!q || q.length === 0) return {};
@@ -26,8 +29,21 @@ export default function VerificationQueueModal({
     });
     return initialFields;
   });
+
   const [verifierRemarks, setVerifierRemarks] = useState('');
   const [successToast, setSuccessToast] = useState('');
+
+  const filteredQueue = useMemo(() => {
+    if (!searchQuery.trim()) return queue;
+    const q = searchQuery.toLowerCase();
+    return queue.filter((item) => {
+      const idMatch = item.id.toLowerCase().includes(q);
+      const villageMatch = (item.village || item.fields?.village?.value || '').toLowerCase().includes(q);
+      const stateMatch = (item.state || '').toLowerCase().includes(q);
+      const surveyMatch = (item.fields?.survey_number?.value || item.fields?.khasra_number?.value || '').toLowerCase().includes(q);
+      return idMatch || villageMatch || stateMatch || surveyMatch;
+    });
+  }, [queue, searchQuery]);
 
   const handleSelectItem = (item) => {
     setSelectedItem(item);
@@ -43,6 +59,15 @@ export default function VerificationQueueModal({
     setEditingFields((prev) => ({
       ...prev,
       [fieldKey]: val,
+    }));
+  };
+
+  const handleResetField = (fieldKey) => {
+    if (!selectedItem?.fields?.[fieldKey]) return;
+    const orig = selectedItem.fields[fieldKey]?.value ?? selectedItem.fields[fieldKey];
+    setEditingFields((prev) => ({
+      ...prev,
+      [fieldKey]: orig,
     }));
   };
 
@@ -73,7 +98,7 @@ export default function VerificationQueueModal({
       role: userRole === 'patwari' ? 'Patwari / Field Verifier' : 'Revenue Officer',
       empId: userRole === 'patwari' ? 'KA-REV-8492' : 'KA-REV-RO-0041',
       targetId: `${selectedItem.id} (Survey ${editingFields.survey_number || editingFields.khasra_number || 'N/A'})`,
-      details: `Verified & approved all extracted attributes. Remarks: ${verifierRemarks || 'Checked against land record registry.'}`,
+      details: `Verified & approved all extracted attributes. Remarks: ${verifierRemarks || 'Cross-verified with physical Village Form No. 16 register.'}`,
     });
 
     // Update state in storage
@@ -85,7 +110,7 @@ export default function VerificationQueueModal({
     );
     setQueue(updatedQueue);
 
-    // If caller provided callback to ingest to 3D Map
+    // Ingest into 3D Map
     if (onApproveRecord) {
       onApproveRecord({
         ...editingFields,
@@ -132,82 +157,112 @@ export default function VerificationQueueModal({
 
   const getConfidenceBadge = (confidence) => {
     const score = Number(confidence) || 0;
-    if (score >= 80) return <span className="conf-badge conf-high">{score}% High</span>;
-    if (score >= 60) return <span className="conf-badge conf-med">{score}% Review</span>;
-    return <span className="conf-badge conf-low">{score}% Low Flag</span>;
+    if (score >= 80) return <span className="hitl-badge-high">{score}% High</span>;
+    if (score >= 60) return <span className="hitl-badge-med">{score}% Review</span>;
+    return <span className="hitl-badge-low">{score}% Low Flag</span>;
   };
 
+  const presetRemarks = [
+    'Cross-verified with physical Village Form No. 16 register.',
+    'Corrected OCR spelling artefact in owner title.',
+    'Validated joint share split against land record registry.',
+    'Mortgage encumbrance cleared with local sub-registrar.'
+  ];
+
   return (
-    <div className="modal-backdrop animate-fade-in">
-      <div className="hitl-queue-modal glass-panel animate-scale-up">
-        {/* Modal Top Bar */}
-        <div className="hitl-modal-header">
-          <div className="hitl-header-left">
-            <div className="hitl-icon-pill">
-              <ShieldCheck size={18} color="#4f46e5" />
+    <div className="hitl-modal-backdrop animate-fade-in" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="hitl-modal-wrapper animate-scale-in">
+        
+        {/* ─── Modal Top Bar ─── */}
+        <div className="hitl-modal-topbar">
+          <div className="hitl-modal-topbar-left">
+            <div className="hitl-modal-icon-badge">
+              <ShieldCheck size={22} color="#ffffff" />
             </div>
             <div>
-              <h2 className="hitl-modal-title">Human-in-the-Loop (HITL) Verification Portal</h2>
-              <p className="hitl-modal-subtitle">
+              <div className="hitl-modal-headline">
+                <h2 className="hitl-modal-title">Human-in-the-Loop (HITL) Verification Portal</h2>
+                <span className="hitl-gov-tag">GOVTECH COMPLIANT</span>
+              </div>
+              <p className="hitl-modal-sub">
                 Inspect low-confidence OCR extractions side-by-side with source scans before committing to 3D Cadastre
               </p>
             </div>
           </div>
-          <div className="hitl-header-right">
-            <span className="queue-pending-pill">
-              <Clock size={13} /> {pendingCount} Pending Review
-            </span>
-            <button onClick={onClose} className="sidebar-close-btn" title="Close">
-              <X size={16} />
+
+          <div className="hitl-modal-topbar-right">
+            <div className="hitl-pending-indicator">
+              <div className="hitl-pulse-dot" />
+              <span>{pendingCount} Pending Review</span>
+            </div>
+            <button onClick={onClose} className="hitl-close-btn" title="Close modal">
+              <X size={18} />
             </button>
           </div>
         </div>
 
-        {/* Success Toast */}
+        {/* ─── Success Notification Banner ─── */}
         {successToast && (
-          <div className="hitl-toast-alert animate-slide-in">
+          <div className="hitl-success-banner animate-slide-in">
             <CheckCircle2 size={16} color="#16a34a" />
             <span>{successToast}</span>
           </div>
         )}
 
-        {/* Modal Main Content: Split Master-Detail */}
-        <div className="hitl-split-container">
-          {/* Left Column: Queue List */}
-          <div className="hitl-queue-sidebar">
-            <div className="hitl-queue-sidebar-header">
-              <span>Review Queue ({queue.length})</span>
+        {/* ─── Modal Split Workspace ─── */}
+        <div className="hitl-workspace-body">
+          
+          {/* Left Column: Master Queue List */}
+          <div className="hitl-queue-pane">
+            <div className="hitl-queue-header">
+              <span className="hitl-queue-count-label">Review Queue ({queue.length})</span>
+              <div className="hitl-queue-search-box">
+                <Search size={13} color="#94a3b8" />
+                <input
+                  type="text"
+                  placeholder="Filter by survey, village..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="hitl-queue-search-input"
+                />
+              </div>
             </div>
-            <div className="hitl-queue-list">
-              {queue.map((item) => {
+
+            <div className="hitl-queue-scroll-list">
+              {filteredQueue.map((item) => {
                 const isSelected = selectedItem?.id === item.id;
                 const isPending = item.status === 'PENDING_REVIEW';
+                const isApproved = item.status === 'APPROVED';
+
                 return (
                   <div
                     key={item.id}
                     onClick={() => handleSelectItem(item)}
-                    className={`hitl-queue-card ${isSelected ? 'selected' : ''} ${!isPending ? 'completed' : ''}`}
+                    className={`hitl-queue-item-card ${isSelected ? 'active-selected' : ''} ${!isPending ? 'item-resolved' : ''}`}
                   >
-                    <div className="hitl-card-top">
-                      <span className="hitl-card-id">{item.id}</span>
+                    <div className="hitl-item-card-row1">
+                      <span className="hitl-item-id">{item.id}</span>
                       {isPending ? (
-                        <span className="hitl-status-badge pending">Needs Review</span>
-                      ) : item.status === 'APPROVED' ? (
-                        <span className="hitl-status-badge approved">Approved</span>
+                        <span className="hitl-status-pill pending">Needs Review</span>
+                      ) : isApproved ? (
+                        <span className="hitl-status-pill approved">Approved</span>
                       ) : (
-                        <span className="hitl-status-badge rejected">Re-survey</span>
+                        <span className="hitl-status-pill rejected">Re-survey</span>
                       )}
                     </div>
-                    <div className="hitl-card-sub">
+
+                    <div className="hitl-item-location">
                       <strong>{item.fields?.village?.value || item.village || 'Kadugodi'}</strong> · {item.fields?.survey_number?.value || item.fields?.khasra_number?.value || 'Survey 48/2'}
                     </div>
-                    <div className="hitl-card-bottom">
-                      <span>{item.documentType}</span>
+
+                    <div className="hitl-item-card-row3">
+                      <span className="hitl-doc-type-tag">{item.documentType}</span>
                       {getConfidenceBadge(item.overallConfidence)}
                     </div>
+
                     {item.flaggedReason && isPending && (
-                      <div className="hitl-card-flag-msg">
-                        <AlertTriangle size={11} color="#f59e0b" />
+                      <div className="hitl-item-flag-reason">
+                        <AlertTriangle size={12} color="#d97706" style={{ flexShrink: 0 }} />
                         <span>{item.flaggedReason}</span>
                       </div>
                     )}
@@ -219,65 +274,110 @@ export default function VerificationQueueModal({
 
           {/* Right Column: Side-by-Side Review Workstation */}
           {selectedItem ? (
-            <div className="hitl-workstation">
-              <div className="hitl-workstation-panes">
-                {/* Left Sub-pane: Document Scan & OCR Source Preview */}
-                <div className="hitl-source-pane">
-                  <div className="hitl-pane-header">
-                    <FileText size={14} color="#6366f1" />
-                    <span>Source Document Transcript ({selectedItem.state})</span>
+            <div className="hitl-detail-workstation">
+              
+              {/* Split Sub-Panes */}
+              <div className="hitl-panes-grid">
+                
+                {/* Pane 1: Source Document Transcript */}
+                <div className="hitl-source-document-pane">
+                  <div className="hitl-subpane-header">
+                    <div className="hitl-subpane-title">
+                      <FileText size={15} color="#4f46e5" />
+                      <span>Source Document Transcript</span>
+                    </div>
+                    <span className="hitl-state-pill">{selectedItem.state}</span>
                   </div>
-                  <div className="hitl-source-meta">
-                    <div className="meta-item"><span>District:</span> <strong>{selectedItem.district}</strong></div>
-                    <div className="meta-item"><span>Taluk:</span> <strong>{selectedItem.taluk}</strong></div>
-                    <div className="meta-item"><span>Format:</span> <strong>{selectedItem.documentType}</strong></div>
+
+                  {/* Metadata Bar */}
+                  <div className="hitl-source-meta-bar">
+                    <div className="hitl-meta-pill">
+                      <span>District:</span> <strong>{selectedItem.district}</strong>
+                    </div>
+                    <div className="hitl-meta-pill">
+                      <span>Taluk:</span> <strong>{selectedItem.taluk}</strong>
+                    </div>
+                    <div className="hitl-meta-pill">
+                      <span>Format:</span> <strong>{selectedItem.documentType}</strong>
+                    </div>
                   </div>
-                  <div className="hitl-source-text-box">
-                    <pre>{selectedItem.sourceText}</pre>
+
+                  {/* Realistic Document Paper View */}
+                  <div className="hitl-document-paper-box">
+                    <div className="hitl-paper-header">
+                      <span className="hitl-paper-seal">🏛️ OFFICIAL LAND RECORD EXTRACT</span>
+                      <span className="hitl-paper-timestamp">OCR Ingested</span>
+                    </div>
+                    <pre className="hitl-paper-content">{selectedItem.sourceText}</pre>
                   </div>
-                  <div className="hitl-ai-heuristic-note">
-                    <Sparkles size={13} color="#818cf8" />
-                    <span>
-                      <strong>AI Extraction Note:</strong> {selectedItem.flaggedReason || 'OCR model found 1 or more uncertain tokens below 75% threshold.'}
-                    </span>
+
+                  {/* AI Extraction Warning Callout */}
+                  <div className="hitl-ai-callout-box">
+                    <Sparkles size={16} color="#6366f1" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <div>
+                      <div className="hitl-ai-callout-title">AI Extraction Note</div>
+                      <div className="hitl-ai-callout-msg">
+                        {selectedItem.flaggedReason || 'Uncertain Owner Name spelling requiring Patwari verification'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Sub-pane: Interactive Field Corrector */}
-                <div className="hitl-fields-pane">
-                  <div className="hitl-pane-header">
-                    <Edit3 size={14} color="#10b981" />
-                    <span>Editable Extracted Attributes (Field-by-Field)</span>
+                {/* Pane 2: Interactive Field-by-Field Editor */}
+                <div className="hitl-attributes-editor-pane">
+                  <div className="hitl-subpane-header">
+                    <div className="hitl-subpane-title">
+                      <Edit3 size={15} color="#10b981" />
+                      <span>Editable Extracted Attributes (Field-by-Field)</span>
+                    </div>
                   </div>
 
-                  <div className="hitl-fields-form">
+                  <div className="hitl-fields-scroll-container">
                     {Object.entries(selectedItem.fields || {}).map(([key, fieldData]) => {
                       const conf = fieldData?.confidence ?? 85;
                       const isUncertain = fieldData?.isUncertain || conf < 75;
                       const reason = fieldData?.reason;
+                      const origVal = fieldData?.value ?? fieldData;
+                      const currentVal = editingFields[key] !== undefined ? editingFields[key] : '';
+                      const isModified = String(origVal).trim() !== String(currentVal).trim();
 
                       return (
-                        <div key={key} className={`hitl-field-group ${isUncertain ? 'uncertain-highlight' : ''}`}>
-                          <div className="hitl-field-label-row">
-                            <label className="hitl-field-label">
+                        <div
+                          key={key}
+                          className={`hitl-field-card ${isUncertain ? 'field-uncertain' : ''} ${isModified ? 'field-modified' : ''}`}
+                        >
+                          <div className="hitl-field-card-header">
+                            <label className="hitl-field-name">
                               {key.replace(/_/g, ' ').toUpperCase()}
                             </label>
-                            <div className="hitl-field-conf-indicator">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {isModified && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetField(key)}
+                                  className="hitl-field-reset-btn"
+                                  title="Reset to original OCR value"
+                                >
+                                  <RotateCcw size={11} /> Reset
+                                </button>
+                              )}
                               {getConfidenceBadge(conf)}
                             </div>
                           </div>
 
-                          <input
-                            type={key === 'area_sqm' ? 'number' : 'text'}
-                            className="hitl-field-input"
-                            value={editingFields[key] !== undefined ? editingFields[key] : ''}
-                            onChange={(e) => handleFieldChange(key, key === 'area_sqm' ? parseFloat(e.target.value) || 0 : e.target.value)}
-                            placeholder={`Enter ${key}`}
-                          />
+                          <div className="hitl-field-input-wrapper">
+                            <input
+                              type={key === 'area_sqm' ? 'number' : 'text'}
+                              className="hitl-input-control"
+                              value={currentVal}
+                              onChange={(e) => handleFieldChange(key, key === 'area_sqm' ? parseFloat(e.target.value) || 0 : e.target.value)}
+                              placeholder={`Enter ${key}`}
+                            />
+                          </div>
 
                           {isUncertain && reason && (
-                            <div className="hitl-field-reason-warning">
-                              <AlertTriangle size={11} color="#f59e0b" />
+                            <div className="hitl-field-warning-row">
+                              <AlertTriangle size={12} color="#d97706" style={{ flexShrink: 0 }} />
                               <span>{reason}</span>
                             </div>
                           )}
@@ -285,47 +385,70 @@ export default function VerificationQueueModal({
                       );
                     })}
 
-                    {/* Verifier Remarks */}
-                    <div className="hitl-field-group">
-                      <label className="hitl-field-label">VERIFIER / PATWARI REMARKS</label>
+                    {/* Verifier Remarks Block */}
+                    <div className="hitl-remarks-block">
+                      <label className="hitl-field-name">VERIFIER / PATWARI REMARKS</label>
                       <input
                         type="text"
-                        className="hitl-field-input"
+                        className="hitl-input-control"
                         placeholder="e.g., Cross-verified with physical Village Form No. 16 register."
                         value={verifierRemarks}
                         onChange={(e) => setVerifierRemarks(e.target.value)}
                       />
+                      {/* Preset Chips */}
+                      <div className="hitl-remarks-chips">
+                        {presetRemarks.map((chip, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setVerifierRemarks(chip)}
+                            className="hitl-chip-btn"
+                          >
+                            + {chip}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
+
               </div>
 
-              {/* Workstation Footer Actions */}
-              <div className="hitl-workstation-footer">
-                <div className="hitl-footer-left">
-                  <User size={13} />
-                  <span>
-                    Acting as: <strong>{userRole === 'patwari' ? 'Patwari (Field Verifier)' : userRole === 'officer' ? 'Revenue Officer (Tehsildar)' : 'Administrator'}</strong>
-                  </span>
+              {/* ─── Workstation Bottom Action Bar ─── */}
+              <div className="hitl-workstation-bottom-bar">
+                <div className="hitl-bottom-actor-info">
+                  <div className="hitl-actor-avatar">
+                    <User size={14} color="#4f46e5" />
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Acting as: </span>
+                    <strong style={{ fontSize: '12px', color: '#0f172a' }}>
+                      {userRole === 'patwari' ? 'Patwari (Field Verifier)' : userRole === 'officer' ? 'Revenue Officer (Tehsildar)' : 'Administrator'}
+                    </strong>
+                  </div>
                 </div>
-                <div className="hitl-footer-right">
-                  <button onClick={handleReject} className="hitl-reject-btn">
-                    <Ban size={14} /> Reject / Re-survey
+
+                <div className="hitl-bottom-action-buttons">
+                  <button onClick={handleReject} className="hitl-btn-reject">
+                    <Ban size={15} /> Reject / Re-survey
                   </button>
-                  <button onClick={handleApprove} className="hitl-approve-btn">
-                    <CheckCircle2 size={15} /> Approve & Commit to 3D Cadastre
+                  <button onClick={handleApprove} className="hitl-btn-approve">
+                    <CheckCircle2 size={16} /> Approve & Commit to 3D Cadastre
                   </button>
                 </div>
               </div>
+
             </div>
           ) : (
-            <div className="hitl-empty-selection">
-              <FileCheck size={48} color="#94a3b8" />
-              <h3>All records in current queue are verified</h3>
-              <p>Scan or upload new land revenue documents to begin another review cycle.</p>
+            <div className="hitl-empty-state">
+              <FileCheck size={56} color="#94a3b8" />
+              <h3>All Queue Records Verified</h3>
+              <p>No low-confidence records currently require inspection.</p>
             </div>
           )}
+
         </div>
+
       </div>
     </div>
   );
