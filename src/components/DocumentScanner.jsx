@@ -296,6 +296,13 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     }
   }, [processImage]);
 
+  // Automatically process initialFile if passed from upload dashboard or mobile scan
+  useEffect(() => {
+    if (initialFile) {
+      handleFile(initialFile);
+    }
+  }, [initialFile, handleFile]);
+
   const handleModelChange = (newModel) => {
     setSelectedModel(newModel);
     saveGeminiModel(newModel);

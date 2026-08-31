@@ -703,6 +703,7 @@ export default function App() {
             <UploadDashboard 
               onFileReady={(file) => {
                 setScannerInitialFile(file);
+                setShowScanner(true);
                 setActiveTab('scanner');
               }} 
             />
