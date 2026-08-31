@@ -60,7 +60,7 @@ export default function App() {
 
   const [showMobileScanner, setShowMobileScanner] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.location.pathname === '/scan-mobile';
+      return window.location.pathname.startsWith('/scan-mobile');
     }
     return false;
   });
@@ -68,14 +68,14 @@ export default function App() {
   // Government & SIH Core Workflow States
   const [showHeroPage, setShowHeroPage] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.location.pathname === '/';
+      return window.location.pathname === '/' || window.location.pathname === '';
     }
     return true;
   });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
-      if (window.location.pathname === '/home' || window.location.hash === '#/home') return 'map';
-      if (window.location.pathname === '/upload') return 'upload';
+      if (window.location.pathname.startsWith('/home') || window.location.hash === '#/home') return 'map';
+      if (window.location.pathname.startsWith('/upload')) return 'upload';
     }
     return 'hero';
   });
@@ -91,16 +91,16 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname;
-      if (path === '/scan-mobile') {
+      if (path.startsWith('/scan-mobile')) {
         setShowMobileScanner(true);
         return;
       }
       setShowMobileScanner(false);
       
-      const isHome = path === '/home' || window.location.hash === '#/home';
-      const isUpload = path === '/upload';
+      const isHome = path.startsWith('/home') || window.location.hash === '#/home';
+      const isUpload = path.startsWith('/upload');
       
-      setShowHeroPage(path === '/');
+      setShowHeroPage(path === '/' || path === '');
       if (isUpload) {
         setActiveTab('upload');
       } else if (isHome) {
