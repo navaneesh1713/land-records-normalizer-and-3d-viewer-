@@ -58,14 +58,23 @@ export default function UploadDashboard({ onFileReady }) {
           setConnectionStatus('connected');
         });
 
-        conn.on('data', (data) => {
-          if (data.type === 'image' && data.blob) {
+        conn.on('data', async (data) => {
+          if (data.type === 'image' && (data.blob || data.dataUrl || data.buffer)) {
             setConnectionStatus('received');
-            // Convert Blob to File
-            const file = new File([data.blob], "scanned_document.jpg", { type: 'image/jpeg' });
+            let file;
+            if (data.blob) {
+              file = new File([data.blob], "scanned_document.jpg", { type: 'image/jpeg' });
+            } else if (data.dataUrl) {
+              const res = await fetch(data.dataUrl);
+              const blob = await res.blob();
+              file = new File([blob], "scanned_document.jpg", { type: 'image/jpeg' });
+            } else if (data.buffer) {
+              const blob = new Blob([data.buffer], { type: data.mimeType || 'image/jpeg' });
+              file = new File([blob], "scanned_document.jpg", { type: data.mimeType || 'image/jpeg' });
+            }
             setTimeout(() => {
               setShowQR(false);
-              onFileReady(file);
+              if (file) onFileReady(file);
             }, 1000);
           }
         });
