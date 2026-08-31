@@ -25,12 +25,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
   // Engine selection: 'gemini' (Handwritten & Multimodal) | 'tesseract' (Printed WASM)
   const [engineMode, setEngineMode] = useState('gemini');
-  const [apiKey, setApiKey] = useState(() => getGeminiApiKey());
   const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [tempApiKey, setTempApiKey] = useState(() => getGeminiApiKey());
-  const [tempModel, setTempModel] = useState(() => getGeminiModel());
-  const [keySavedToast, setKeySavedToast] = useState(false);
 
   // OCR state
   const [ocrLanguage, setOcrLanguage] = useState('eng');
@@ -49,12 +44,8 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const [modelInfo, setModelInfo] = useState(null);
 
   useEffect(() => {
-    const activeKey = getGeminiApiKey();
     const activeModel = getGeminiModel();
-    setApiKey(activeKey);
-    setTempApiKey(activeKey);
     setSelectedModel(activeModel);
-    setTempModel(activeModel);
   }, []);
 
   // ─── Field Normalizer ───
@@ -145,13 +136,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
   // ─── Gemini Multimodal Handwritten AI Vision Engine ───
   const runGeminiVisionOCR = async (imageFile) => {
-    const activeKey = apiKey || getGeminiApiKey();
-
-    if (!activeKey) {
-      setShowKeyModal(true);
-      setError('Please provide your Gemini API Key to enable Handwritten AI Vision extraction, or switch to Standard Tesseract OCR.');
-      return;
-    }
+    const activeKey = getGeminiApiKey();
 
     setOcrRunning(true);
     setOcrProgress(25);
@@ -311,26 +296,8 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     }
   }, [processImage]);
 
-  useEffect(() => {
-    if (initialFile) {
-      handleFile(initialFile);
-    }
-  }, [initialFile, handleFile]);
-
-  const handleSaveApiKey = () => {
-    saveGeminiApiKey(tempApiKey);
-    saveGeminiModel(tempModel);
-    setApiKey(tempApiKey.trim());
-    setSelectedModel(tempModel);
-    setError(null);
-    setShowKeyModal(false);
-    setKeySavedToast(true);
-    setTimeout(() => setKeySavedToast(false), 3000);
-  };
-
   const handleModelChange = (newModel) => {
     setSelectedModel(newModel);
-    setTempModel(newModel);
     saveGeminiModel(newModel);
     setError(null);
   };
@@ -431,21 +398,20 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button
-            onClick={() => setShowKeyModal(true)}
+          <div
             className="topbar-pill-btn"
             style={{
               padding: '4px 10px',
               fontSize: 11,
-              background: apiKey ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-              borderColor: apiKey ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
-              color: apiKey ? '#059669' : '#d97706',
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderColor: 'rgba(16, 185, 129, 0.3)',
+              color: '#059669',
             }}
-            title="Configure Google Gemini API Key for Handwritten AI Vision"
+            title="Active AI Vision Engine"
           >
-            <Key size={12} />
-            <span>{apiKey ? 'API Key Active' : 'Configure API Key'}</span>
-          </button>
+            <Sparkles size={12} color="#059669" />
+            <span>AI Vision Active</span>
+          </div>
           <button onClick={onClose} className="scanner-close-x-btn" title="Close Scanner">
             <X size={15} />
           </button>
@@ -522,31 +488,10 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           background: engineMode === 'gemini' ? 'rgba(79, 70, 229, 0.06)' : 'rgba(100, 116, 139, 0.06)',
           borderLeft: engineMode === 'gemini' ? '3px solid #4f46e5' : '3px solid #64748b',
           color: '#334155',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
         }}>
-          <span>
-            {engineMode === 'gemini'
-              ? '✨ AI Vision Mode: Zero-shot recognition of cursive handwriting, faded Khatiyans, Jamabandis, and regional Indic scripts.'
-              : '⚡ Printed Mode: Fast client-side WebAssembly OCR for typed PDFs, clean printouts, and tabular records.'}
-          </span>
-          {engineMode === 'gemini' && !apiKey && (
-            <button
-              onClick={() => setShowKeyModal(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#4f46e5',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 11,
-                padding: '2px 6px'
-              }}
-            >
-              Add API Key ↗
-            </button>
-          )}
+          {engineMode === 'gemini'
+            ? '✨ AI Vision Mode: Zero-shot recognition of cursive handwriting, faded Khatiyans, Jamabandis, and regional Indic scripts.'
+            : '⚡ Printed Mode: Fast client-side WebAssembly OCR for typed PDFs, clean printouts, and tabular records.'}
         </div>
 
         {/* Language & Input Configuration Strip (for Tesseract Mode) */}
@@ -580,35 +525,19 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
               <Sparkles size={13} color="#4f46e5" />
               <span className="lang-label-title" style={{ color: '#4338ca', fontWeight: 600 }}>Gemini Vision Model:</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <select
-                value={selectedModel}
-                onChange={(e) => handleModelChange(e.target.value)}
-                className="scanner-lang-select"
-                disabled={ocrRunning}
-                style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
-              >
-                {AVAILABLE_GEMINI_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => {
-                  setTempModel(selectedModel);
-                  setTempApiKey(apiKey);
-                  setShowKeyModal(true);
-                }}
-                className="topbar-pill-btn"
-                style={{ padding: '3px 8px', fontSize: 11, background: '#ffffff', borderColor: '#c7d2fe', color: '#4338ca' }}
-                title="Configure Gemini API Key & Model Settings"
-              >
-                <Key size={11} />
-                <span>Config</span>
-              </button>
-            </div>
+            <select
+              value={selectedModel}
+              onChange={(e) => handleModelChange(e.target.value)}
+              className="scanner-lang-select"
+              disabled={ocrRunning}
+              style={{ fontWeight: 600, color: '#312e81', background: '#ffffff', borderColor: '#c7d2fe' }}
+            >
+              {AVAILABLE_GEMINI_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} {m.recommended ? '⚡ (Recommended)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
@@ -860,141 +789,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             <Layers size={14} />
             <span>Apply to 3D Map</span>
           </button>
-        </div>
-      )}
-
-      {/* API Key Modal */}
-      {showKeyModal && (
-        <div className="modal-backdrop animate-fade-in" style={{ zIndex: 9999 }}>
-          <div className="glass-panel animate-scale-up" style={{
-            maxWidth: 480,
-            width: '90%',
-            padding: 24,
-            borderRadius: 16,
-            background: '#ffffff',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(79,70,229,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Key size={18} color="#4f46e5" />
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>Gemini AI Vision Setup</h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>For Handwritten Khatiyan & Land Record HTR</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowKeyModal(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, marginBottom: 16 }}>
-              Enter your Google Gemini API Key and select your preferred vision model below. It will decipher cursive handwriting, revenue stamps, and regional Indic scripts (Kannada, Hindi, Marathi, Telugu, Tamil).
-            </p>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
-                Gemini Vision AI Model
-              </label>
-              <select
-                value={tempModel}
-                onChange={(e) => setTempModel(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 13,
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  background: '#ffffff',
-                  fontWeight: 600,
-                  color: '#1e293b'
-                }}
-              >
-                {AVAILABLE_GEMINI_MODELS.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} {m.recommended ? '⚡ (Recommended)' : ''} — {m.desc}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 6 }}>
-                Google Gemini API Key
-              </label>
-              <input
-                type="password"
-                value={tempApiKey}
-                onChange={(e) => setTempApiKey(e.target.value)}
-                placeholder="AIzaSy..."
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  fontSize: 13,
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11 }}>
-                <a
-                  href="https://aistudio.google.com/app/apikey"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}
-                >
-                  Get free key from Google AI Studio ↗
-                </a>
-                <span style={{ color: '#94a3b8' }}>Stored locally in browser</span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(false)}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: 8,
-                  border: '1px solid #e2e8f0',
-                  background: '#f8fafc',
-                  color: '#64748b',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveApiKey}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: '#4f46e5',
-                  color: '#ffffff',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
-              >
-                <Check size={14} />
-                <span>Save Key & Activate</span>
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
