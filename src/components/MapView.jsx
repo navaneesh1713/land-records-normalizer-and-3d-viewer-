@@ -103,12 +103,7 @@ export default function MapView({
   const [tokenError, setTokenError] = useState(false);
   const [hoverInfo, setHoverInfo] = useState(null);
 
-  // Validate Mapbox token format (starts with pk. and is long enough)
-  const isLikelyValidMapboxToken = useMemo(() => {
-    return !tokenError && envToken.startsWith('pk.') && envToken.length > 25;
-  }, [envToken, tokenError]);
-
-  const mapboxToken = isLikelyValidMapboxToken ? envToken : undefined;
+  const mapboxToken = envToken && !tokenError ? envToken : undefined;
 
   // Dynamic center
   const defaultCenter = useMemo(() => calculateFeatureCenter(features), [features]);
