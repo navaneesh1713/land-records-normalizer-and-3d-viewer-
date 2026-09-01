@@ -20,19 +20,21 @@ export const INITIAL_LAND_DATABASE = [
     createdAt: '2026-08-30T10:15:00.000Z',
     sourceType: 'Bhoomi RTC Scan (Gemini Vision AI)',
     fileName: 'kadugodi_rtc_extract_48_2a.png',
+    building_name: 'Shree Sai Residency',
+    house_number: 'Flat 302, Bldg 4B',
+    street_name: 'Kadugodi Main Road',
+    locality: 'Whitefield Zone',
+    village_city: 'Kadugodi, Bengaluru',
+    district: 'Bengaluru Urban',
+    state: 'Karnataka',
+    country: 'India',
+    pincode: '560067',
     owner_name: 'Ramesh Kumar Sharma & Meera Ramesh',
     survey_number: '48/2A',
-    khasra_number: '104/1',
-    khata_number: '712/B',
-    village: 'Kadugodi',
-    tehsil: 'Bengaluru East',
-    district: 'Bengaluru Urban',
-    classification: 'residential',
-    area_sqm: 420.5,
-    floors: '2',
-    height_m: '6.5',
-    tax_status: 'PAID (FY 2025-26)',
-    encumbrance_status: 'CLEAR',
+    floors: '3',
+    size: '1450',
+    size_unit: 'sft',
+    area_sqm: 134.7,
     confidence: 96,
   },
   {
@@ -40,19 +42,21 @@ export const INITIAL_LAND_DATABASE = [
     createdAt: '2026-08-30T09:40:00.000Z',
     sourceType: 'UP Bhulekh / Khatauni Upload',
     fileName: 'up_khatauni_scan_184.pdf',
+    building_name: 'Pratap Mansion',
+    house_number: 'House No. 184/A',
+    street_name: 'GT Road Bypass',
+    locality: 'Shivpur Industrial Sector',
+    village_city: 'Shivpur, Varanasi',
+    district: 'Varanasi',
+    state: 'Uttar Pradesh',
+    country: 'India',
+    pincode: '221003',
     owner_name: 'विरेन्द्र प्रताप सिंह व सन्तोष कुमार',
     survey_number: '184/3',
-    khasra_number: '184/3',
-    khata_number: '00491',
-    village: 'Shivpur',
-    tehsil: 'Pindra',
-    district: 'Varanasi',
-    classification: 'residential',
-    area_sqm: 2450.0,
     floors: '3',
-    height_m: '9.0',
-    tax_status: 'PAID',
-    encumbrance_status: 'CLEAR',
+    size: '2900',
+    size_unit: 'sqy',
+    area_sqm: 2424.8,
     confidence: 94,
   },
   {
@@ -60,19 +64,21 @@ export const INITIAL_LAND_DATABASE = [
     createdAt: '2026-08-30T08:20:00.000Z',
     sourceType: 'Maharashtra 7/12 Extract',
     fileName: 'wagholi_7_12_extract.jpg',
+    building_name: 'Patil Commercial Arcade',
+    house_number: 'Building 12',
+    street_name: 'Nagar Highway',
+    locality: 'Wagholi East',
+    village_city: 'Wagholi, Pune',
+    district: 'Pune',
+    state: 'Maharashtra',
+    country: 'India',
+    pincode: '412207',
     owner_name: 'राजेश मारुती पाटील (Rajesh M. Patil)',
     survey_number: '302/1B',
-    khasra_number: '302/1B',
-    khata_number: '1045',
-    village: 'Wagholi',
-    tehsil: 'Haveli',
-    district: 'Pune',
-    classification: 'commercial',
-    area_sqm: 1850.0,
     floors: '4',
-    height_m: '12.5',
-    tax_status: 'PAID',
-    encumbrance_status: 'MORTGAGED',
+    size: '1.2',
+    size_unit: 'acr',
+    area_sqm: 4856.2,
     confidence: 95,
   }
 ];
@@ -99,80 +105,181 @@ export const storageService = {
   },
 
   /**
+   * Validate that all critical cadastral fields are filled (no blanks).
+   * @param {object} record
+   * @returns {{ isValid: boolean, missingFields: string[] }}
+   */
+  validateCadastralRecord(record) {
+    const requiredFields = [
+      { key: 'building_name', label: 'Building Name' },
+      { key: 'house_number', label: 'Building/House Number' },
+      { key: 'street_name', label: 'Street/Road Name' },
+      { key: 'locality', label: 'Locality/Area' },
+      { key: 'village_city', label: 'Village/Town/City' },
+      { key: 'district', label: 'District' },
+      { key: 'state', label: 'State/Province' },
+      { key: 'country', label: 'Country' },
+      { key: 'pincode', label: 'PIN/ZIP Code' },
+      { key: 'owner_name', label: 'Owner / Khatadar Name' },
+      { key: 'survey_number', label: 'Survey / Hissa No' },
+      { key: 'floors', label: 'Storeys (Floors)' },
+      { key: 'size', label: 'Size' },
+    ];
+
+    const missingFields = [];
+    requiredFields.forEach(({ key, label }) => {
+      const val = record[key];
+      if (val === undefined || val === null || String(val).trim() === '' || (key === 'size' && isNaN(Number(val)))) {
+        missingFields.push(label);
+      }
+    });
+
+    return {
+      isValid: missingFields.length === 0,
+      missingFields,
+    };
+  },
+
+  /**
    * Add records with strict deduplication check.
-   * Duplicate identified by matching Survey/Khasra No + Village + District (case-insensitive).
+   * Duplicate identified by matching Survey No + Village/City + District (case-insensitive) or existing ID.
    */
   addRecordsToDatabase(newRecords) {
     const existing = this.getDatabaseRecords();
     let addedCount = 0;
     let updatedCount = 0;
     let duplicateWarnings = [];
+    let lastRecord = null;
 
     const updatedList = [...existing];
 
     newRecords.forEach((rec) => {
-      const surveyKey = (rec.survey_number || rec.khasra_number || '').trim().toLowerCase();
-      const villageKey = (rec.village || '').trim().toLowerCase();
-      const districtKey = (rec.district || '').trim().toLowerCase();
+      const surveyKey = String(rec.survey_number || rec.khasra_number || '').trim().toLowerCase();
+      const villageKey = String(rec.village_city || rec.village || '').trim().toLowerCase();
+      const districtKey = String(rec.district || '').trim().toLowerCase();
+      const recId = rec.id ? String(rec.id).trim() : null;
 
-      // Find existing match
+      // Find existing match by ID or Survey+Village+District
       const matchIndex = updatedList.findIndex((item) => {
-        const itemSurvey = (item.survey_number || item.khasra_number || '').trim().toLowerCase();
-        const itemVillage = (item.village || '').trim().toLowerCase();
-        const itemDistrict = (item.district || '').trim().toLowerCase();
+        if (recId && item.id === recId) return true;
+
+        const itemSurvey = String(item.survey_number || item.khasra_number || '').trim().toLowerCase();
+        const itemVillage = String(item.village_city || item.village || '').trim().toLowerCase();
+        const itemDistrict = String(item.district || '').trim().toLowerCase();
 
         if (surveyKey && itemSurvey && surveyKey === itemSurvey) {
           if (!villageKey || !itemVillage || villageKey === itemVillage) {
-            return true;
+            if (!districtKey || !itemDistrict || districtKey === itemDistrict) {
+              return true;
+            }
           }
         }
         return false;
       });
 
+      // Calculate area_sqm from size & size_unit
+      const unit = String(rec.size_unit || 'sft').toLowerCase();
+      const numSize = Number(rec.size) || 1200;
+      let calculatedSqm = numSize;
+      if (unit === 'sft') calculatedSqm = Math.round(numSize * 0.092903 * 10) / 10;
+      else if (unit === 'sqy') calculatedSqm = Math.round(numSize * 0.836127 * 10) / 10;
+      else if (unit === 'acr') calculatedSqm = Math.round(numSize * 4046.86 * 10) / 10;
+
       if (matchIndex >= 0) {
-        // Update existing record rather than duplicating
-        updatedList[matchIndex] = {
-          ...updatedList[matchIndex],
+        // Update existing record in-place to guarantee zero duplicates
+        const existingRec = updatedList[matchIndex];
+        const merged = {
+          ...existingRec,
           ...rec,
+          id: existingRec.id,
+          createdAt: existingRec.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          building_name: String(rec.building_name || existingRec.building_name || '').trim(),
+          house_number: String(rec.house_number || existingRec.house_number || '').trim(),
+          street_name: String(rec.street_name || existingRec.street_name || '').trim(),
+          locality: String(rec.locality || existingRec.locality || '').trim(),
+          village_city: String(rec.village_city || rec.village || existingRec.village_city || existingRec.village || '').trim(),
+          district: String(rec.district || existingRec.district || '').trim(),
+          state: String(rec.state || existingRec.state || 'Karnataka').trim(),
+          country: String(rec.country || existingRec.country || 'India').trim(),
+          pincode: String(rec.pincode || existingRec.pincode || '').trim(),
+          owner_name: String(rec.owner_name || existingRec.owner_name || '').trim(),
+          survey_number: String(rec.survey_number || rec.khasra_number || existingRec.survey_number || '').trim(),
+          floors: String(rec.floors || existingRec.floors || '2').trim(),
+          size: String(rec.size || existingRec.size || '1200').trim(),
+          size_unit: String(rec.size_unit || existingRec.size_unit || 'sft').toLowerCase().trim(),
+          area_sqm: calculatedSqm,
+          confidence: rec.confidence || rec._confidence || existingRec.confidence || 95,
         };
+        updatedList[matchIndex] = merged;
         updatedCount++;
-        duplicateWarnings.push(`Updated existing record for Survey No. ${rec.survey_number || rec.khasra_number}`);
+        lastRecord = merged;
+        duplicateWarnings.push(`Survey No. ${merged.survey_number} already existed — updated existing entry with zero duplicate creation.`);
       } else {
-        // Add new unique record
+        // Generate clean state prefix code
+        const stateCode = (rec.district || rec.state || 'KA').substring(0, 2).toUpperCase();
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(1000 + Math.random() * 9000);
+        const newId = rec.id || `REC-${stateCode}-${year}-${Date.now().toString().slice(-4)}-${randomNum}`;
+
         const newEntry = {
-          id: `REC-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          createdAt: new Date().toISOString(),
-          sourceType: rec._source ? String(rec._source).toUpperCase() : 'AI VISION SCAN',
-          fileName: rec._fileName || 'Scanned Document',
-          owner_name: rec.owner_name || '',
-          survey_number: rec.survey_number || rec.khasra_number || '',
-          khasra_number: rec.khasra_number || '',
-          khata_number: rec.khata_number || '',
-          village: rec.village || '',
-          tehsil: rec.tehsil || '',
-          district: rec.district || '',
-          classification: rec.classification || 'residential',
-          area_sqm: rec.area_sqm || (rec.area_acres ? Number(rec.area_acres) * 4046.86 : 350),
-          floors: rec.floors || '2',
-          height_m: rec.height_m || '6.5',
-          tax_status: rec.tax_status || 'PAID',
-          encumbrance_status: rec.encumbrance_status || 'CLEAR',
-          confidence: rec._confidence || 90,
           ...rec,
+          id: newId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          sourceType: rec._source ? String(rec._source).toUpperCase() : (rec.sourceType || 'AI VISION SCAN'),
+          fileName: rec._fileName || rec.fileName || 'Scanned Cadastral Document',
+          building_name: String(rec.building_name || '').trim(),
+          house_number: String(rec.house_number || '').trim(),
+          street_name: String(rec.street_name || '').trim(),
+          locality: String(rec.locality || '').trim(),
+          village_city: String(rec.village_city || rec.village || '').trim(),
+          district: String(rec.district || '').trim(),
+          state: String(rec.state || 'Karnataka').trim(),
+          country: String(rec.country || 'India').trim(),
+          pincode: String(rec.pincode || '').trim(),
+          owner_name: String(rec.owner_name || '').trim(),
+          survey_number: String(rec.survey_number || rec.khasra_number || '').trim(),
+          floors: String(rec.floors || '2').trim(),
+          size: String(rec.size || '1200').trim(),
+          size_unit: String(rec.size_unit || 'sft').toLowerCase().trim(),
+          area_sqm: calculatedSqm,
+          confidence: rec.confidence || rec._confidence || 95,
         };
         updatedList.unshift(newEntry);
         addedCount++;
+        lastRecord = newEntry;
       }
     });
 
     this.saveDatabaseRecords(updatedList);
     return {
+      success: true,
       addedCount,
       updatedCount,
       totalCount: updatedList.length,
       duplicateWarnings,
-      records: updatedList,
+      lastRecord,
+    };
+  },
+
+  /**
+   * Add a single verified record with blank validation and deduplication.
+   */
+  addSingleRecord(record) {
+    const validation = this.validateCadastralRecord(record);
+    if (!validation.isValid) {
+      return {
+        success: false,
+        error: `Please fill in all blanks before saving: ${validation.missingFields.join(', ')}`,
+        missingFields: validation.missingFields,
+      };
+    }
+
+    const res = this.addRecordsToDatabase([record]);
+    return {
+      success: true,
+      ...res,
     };
   },
 

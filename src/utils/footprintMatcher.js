@@ -63,7 +63,19 @@ export function getSearchBBox(geo, defaultTier = 'B') {
   const lat = Number(geo?.lat);
   const lng = Number(geo?.lng);
 
-  // If a polygon boundary is present, extract its extent
+  // Always center search radius around exact geocoded point (e.g. Hafeezpet pin)
+  const radiusDeg = tier === 'A' ? 0.0015 : 0.0025;
+
+  if (!isNaN(lat) && !isNaN(lng)) {
+    return {
+      south: lat - radiusDeg,
+      west: lng - radiusDeg,
+      north: lat + radiusDeg,
+      east: lng + radiusDeg,
+    };
+  }
+
+  // Fallback to boundary polygon extent if point is absent
   if (geo?.boundary_polygon && geo.boundary_polygon.coordinates) {
     const coords = geo.boundary_polygon.coordinates;
     let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
@@ -82,7 +94,6 @@ export function getSearchBBox(geo, defaultTier = 'B') {
     flattenCoords(coords);
 
     if (minLng < maxLng && minLat < maxLat) {
-      // Clamp huge bounding boxes to a sensible search area
       const spanLat = Math.min(0.025, maxLat - minLat);
       const spanLng = Math.min(0.025, maxLng - minLng);
       const cLat = (minLat + maxLat) / 2;
@@ -97,16 +108,11 @@ export function getSearchBBox(geo, defaultTier = 'B') {
     }
   }
 
-  // Fixed radius around point based on tier
-  // Tier A: ~150m radius (delta ~0.0015 deg)
-  // Tier B: ~250m radius (delta ~0.0025 deg)
-  const radiusDeg = tier === 'A' ? 0.0015 : 0.0025;
-
   return {
-    south: lat - radiusDeg,
-    west: lng - radiusDeg,
-    north: lat + radiusDeg,
-    east: lng + radiusDeg,
+    south: 17.4938 - radiusDeg,
+    west: 78.3533 - radiusDeg,
+    north: 17.4938 + radiusDeg,
+    east: 78.3533 + radiusDeg,
   };
 }
 

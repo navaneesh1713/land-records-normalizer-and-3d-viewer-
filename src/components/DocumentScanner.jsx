@@ -33,6 +33,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const [ocrRunning, setOcrRunning] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrStatus, setOcrStatus] = useState('');
+  const [elapsedSec, setElapsedSec] = useState('0.0');
   const [rawOcrText, setRawOcrText] = useState('');
   const [showRawText, setShowRawText] = useState(false);
   const [previewSrc, setPreviewSrc] = useState(null);
@@ -43,22 +44,42 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const [error, setError] = useState(null);
   const [queueSuccessMsg, setQueueSuccessMsg] = useState('');
   const [modelInfo, setModelInfo] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [notificationPopup, setNotificationPopup] = useState(null);
 
+  // Live Timer Effect for OCR Processing
+  useEffect(() => {
+    let interval = null;
+    if (ocrRunning) {
+      const startTime = Date.now();
+      interval = setInterval(() => {
+        setElapsedSec(((Date.now() - startTime) / 1000).toFixed(1));
+      }, 100);
+    } else {
+      setElapsedSec('0.0');
+    }
+    return () => clearInterval(interval);
+  }, [ocrRunning]);
+
+  // ─── Field Normalizer ───
   // ─── Field Normalizer ───
   const normalizeRecord = (raw) => {
     const r = {};
     const keyMap = {
-      owner_name: ['owner', 'owner_name', 'name', 'khatadar', 'ownername'],
-      khasra_number: ['khasra', 'khasra_no', 'khasra_number', 'gata', 'gata_no', 'survey', 'survey_no', 'survey_number'],
-      survey_number: ['survey', 'survey_no', 'survey_number', 'hissa'],
-      khata_number: ['khata', 'khata_no', 'khata_number', 'khatoni'],
-      village: ['village', 'village_name', 'mauza', 'gram'],
-      tehsil: ['tehsil', 'taluk', 'taluka', 'mandal'],
+      building_name: ['building_name', 'building', 'structure_name', 'complex', 'apartment', 'property_name'],
+      house_number: ['house_number', 'building_number', 'door_number', 'house_no', 'plot_no', 'door_no', 'flat_no'],
+      street_name: ['street_name', 'street', 'road', 'road_name', 'lane', 'marg', 'cross'],
+      locality: ['locality', 'area', 'colony', 'sector', 'nagar', 'mohalla', 'zone'],
+      village_city: ['village_city', 'village', 'town', 'city', 'mauza', 'gram', 'taluk'],
       district: ['district', 'zilla', 'zila'],
-      area_acres: ['area', 'area_acres', 'acres', 'area_sqft', 'extent'],
-      classification: ['classification', 'land_type', 'type', 'use'],
-      floors: ['floors', 'floor_count', 'storeys'],
-      height_m: ['height', 'height_m', 'building_height'],
+      state: ['state', 'province', 'state_province', 'rajya'],
+      country: ['country', 'nation', 'rashtra'],
+      pincode: ['pincode', 'pin_code', 'zip', 'zip_code', 'postal_code', 'pin'],
+      owner_name: ['owner', 'owner_name', 'name', 'khatadar', 'ownername', 'pattadar'],
+      survey_number: ['survey', 'survey_no', 'survey_number', 'hissa', 'hissa_no', 'khasra', 'khasra_no'],
+      floors: ['floors', 'floor_count', 'storeys', 'storeys_floors', 'levels'],
+      size: ['size', 'extent', 'area', 'area_sqft', 'built_up_area', 'plot_area', 'area_sqm'],
+      size_unit: ['size_unit', 'unit', 'area_unit'],
     };
 
     for (const [canonical, aliases] of Object.entries(keyMap)) {
@@ -70,6 +91,9 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
         }
       }
     }
+    if (!r.country) r.country = 'India';
+    if (!r.size_unit) r.size_unit = 'sft';
+    if (!r.floors) r.floors = '2';
     return r;
   };
 
@@ -135,16 +159,22 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     const activeKey = getGeminiApiKey();
 
     setOcrRunning(true);
-    setOcrProgress(25);
-    setOcrStatus('Deciphering handwriting & Indic script with Gemini Flash Vision...');
+    setOcrProgress(15);
+    setOcrStatus('Optimizing document resolution & pre-processing frame...');
     setRawOcrText('');
     setExtractedRecords([]);
     setModelInfo(null);
 
     try {
-      setOcrProgress(50);
-      const extracted = await extractHandwrittenLandRecord(imageFile, activeKey);
-      setOcrProgress(90);
+      const extracted = await extractHandwrittenLandRecord(
+        imageFile,
+        activeKey,
+        null,
+        (pct, text) => {
+          setOcrProgress(pct);
+          setOcrStatus(text);
+        }
+      );
 
       const record = {
         _idx: 0,
@@ -156,17 +186,20 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
         _fieldConfidence: extracted._fieldConfidence || {},
         _uncertainFields: extracted._uncertainFields || [],
         _handwritingQuality: extracted._handwritingQuality || 'CLEAR',
+        building_name: extracted.building_name || '',
+        house_number: extracted.house_number || '',
+        street_name: extracted.street_name || '',
+        locality: extracted.locality || '',
+        village_city: extracted.village_city || extracted.village || '',
+        district: extracted.district || '',
+        state: extracted.state || 'Karnataka',
+        country: extracted.country || 'India',
+        pincode: extracted.pincode || '',
         owner_name: extracted.owner_name || '',
         survey_number: extracted.survey_number || '',
-        khasra_number: extracted.khasra_number || '',
-        khata_number: extracted.khata_number || '',
-        village: extracted.village || '',
-        tehsil: extracted.tehsil || '',
-        district: extracted.district || '',
-        classification: extracted.classification || '',
-        area_sqm: extracted.area_sqm || '',
-        floors: extracted.floors || '',
-        height_m: extracted.height_m || '',
+        floors: extracted.floors || '2',
+        size: extracted.size || extracted.area_sqm || '',
+        size_unit: extracted.size_unit || 'sft',
       };
 
       setRawOcrText(record._rawText);
@@ -273,6 +306,14 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     setExtractedRecords((prev) =>
       prev.map((rec) => (rec._idx === idx ? { ...rec, [field]: value } : rec))
     );
+    // Clear validation error for this field if user enters a value
+    if (String(value).trim()) {
+      setValidationErrors((prev) => {
+        const currentList = prev[idx] || [];
+        const nextList = currentList.filter((f) => f !== field);
+        return { ...prev, [idx]: nextList };
+      });
+    }
   };
 
   const deleteRecord = (idx) => {
@@ -287,6 +328,60 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const handleAddToDatabase = () => {
     if (extractedRecords.length === 0) return;
 
+    // 1. Strict Blank Field Validation across all 13 fields
+    const requiredKeys = [
+      { key: 'building_name', label: 'Building Name' },
+      { key: 'house_number', label: 'Building/House Number' },
+      { key: 'street_name', label: 'Street/Road Name' },
+      { key: 'locality', label: 'Locality/Area' },
+      { key: 'village_city', label: 'Village/Town/City' },
+      { key: 'district', label: 'District' },
+      { key: 'state', label: 'State/Province' },
+      { key: 'country', label: 'Country' },
+      { key: 'pincode', label: 'PIN/ZIP Code' },
+      { key: 'owner_name', label: 'Owner / Khatadar Name' },
+      { key: 'survey_number', label: 'Survey / Hissa No' },
+      { key: 'floors', label: 'Storeys (Floors)' },
+      { key: 'size', label: 'Size' },
+    ];
+
+    const errorsByRecord = {};
+    let hasAnyBlank = false;
+    const missingFieldLabels = new Set();
+
+    extractedRecords.forEach((rec) => {
+      const missingInThisRec = [];
+      requiredKeys.forEach(({ key, label }) => {
+        const val = rec[key];
+        if (val === undefined || val === null || String(val).trim() === '' || (key === 'size' && isNaN(Number(val)))) {
+          missingInThisRec.push(key);
+          missingFieldLabels.add(label);
+          hasAnyBlank = true;
+        }
+      });
+      if (missingInThisRec.length > 0) {
+        errorsByRecord[rec._idx] = missingInThisRec;
+      }
+    });
+
+    if (hasAnyBlank) {
+      setValidationErrors(errorsByRecord);
+      const labels = Array.from(missingFieldLabels);
+      setNotificationPopup({
+        type: 'error',
+        title: 'Action Required: Incomplete Land Record',
+        message: `Cannot add to database. Please fill in all blank fields before saving: ${labels.slice(0, 4).join(', ')}${labels.length > 4 ? ` and ${labels.length - 4} more` : ''}.`,
+      });
+      setTimeout(() => {
+        setNotificationPopup((prev) => (prev?.type === 'error' ? null : prev));
+      }, 5000);
+      return;
+    }
+
+    // Clear validation errors
+    setValidationErrors({});
+
+    // 2. Strict Uniqueness Ingestion
     const result = storageService.addRecordsToDatabase(extractedRecords);
 
     auditTrailService.logAction(
@@ -302,15 +397,26 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       'Official'
     );
 
+    const firstRec = extractedRecords[0];
+    const surveyRef = firstRec?.survey_number || firstRec?.khasra_number || 'Record';
+
     if (result.updatedCount > 0 && result.addedCount === 0) {
-      setQueueSuccessMsg(`Updated ${result.updatedCount} existing record(s) in Land Database (Zero duplicates created).`);
+      setNotificationPopup({
+        type: 'success',
+        title: 'Database Updated (Zero Duplicates)',
+        message: `Existing cadastral entry for Survey No. ${surveyRef} was updated in-place. Guaranteed 100% uniqueness in Land Database.`,
+      });
     } else {
-      setQueueSuccessMsg(`Successfully saved ${result.addedCount} record(s) to Land Database! (${result.totalCount} total parcels)`);
+      setNotificationPopup({
+        type: 'success',
+        title: 'Record Successfully Saved!',
+        message: `Survey No. ${surveyRef} (Owner: ${firstRec?.owner_name || 'Owner'}) stored in Cadastre Database (${result.totalCount} total parcels).`,
+      });
     }
 
     setTimeout(() => {
-      setQueueSuccessMsg('');
-    }, 2500);
+      setNotificationPopup(null);
+    }, 4500);
   };
 
   const getConfidenceBadge = (confidence) => {
@@ -440,18 +546,147 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           </div>
         )}
 
-        {/* OCR Progress Section */}
+        {/* Interactive Multi-Stage OCR Progress Dashboard */}
         {ocrRunning && (
-          <div className="scanner-progress-box">
-            <div className="progress-top-info">
-              <span className="progress-status-label">
-                <Loader2 size={13} className="spin-animate" color="#4f46e5" />
-                {ocrStatus}
-              </span>
-              <span className="progress-percent-val">{ocrProgress}%</span>
+          <div
+            className="animate-slide-in"
+            style={{
+              marginBottom: 20,
+              padding: '18px 20px',
+              borderRadius: 14,
+              background: '#ffffff',
+              border: '1.5px solid #e2e8f0',
+              boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.12), 0 8px 10px -6px rgba(79, 70, 229, 0.08)',
+              overflow: 'hidden',
+              position: 'relative'
+            }}
+          >
+            {/* Ambient subtle glowing top border */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #4f46e5, #06b6d4, #10b981)' }} />
+
+            {/* Top info bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: '#e0e7ff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#4f46e5'
+                  }}
+                >
+                  <Bot size={18} className="spin-animate" />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                    Multimodal AI Vision Engine Active
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{getGeminiModel() || 'Gemini 2.5 Flash'}</span>
+                    <span>•</span>
+                    <span style={{ color: '#4f46e5', fontWeight: 600 }}>⚡ {elapsedSec}s elapsed</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: '#4f46e5', letterSpacing: '-0.02em' }}>
+                  {ocrProgress}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#6366f1' }}>%</span>
+              </div>
             </div>
-            <div className="progress-track-bg">
-              <div className="progress-fill-bar" style={{ width: `${ocrProgress}%` }} />
+
+            {/* Animated Pulsing Progress Track */}
+            <div
+              style={{
+                width: '100%',
+                height: 10,
+                background: '#f1f5f9',
+                borderRadius: 20,
+                overflow: 'hidden',
+                position: 'relative',
+                marginBottom: 16,
+                border: '1px solid #e2e8f0'
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.max(8, ocrProgress)}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 50%, #10b981 100%)',
+                  borderRadius: 20,
+                  transition: 'width 0.35s ease',
+                  boxShadow: '0 0 12px rgba(6, 182, 212, 0.5)',
+                  position: 'relative',
+                }}
+              />
+            </div>
+
+            {/* Interactive Live 4-Stage Workflow Stepper */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: 8,
+                padding: '10px',
+                background: '#f8fafc',
+                borderRadius: 10,
+                border: '1px solid #edf2f7',
+                marginBottom: 12
+              }}
+            >
+              {[
+                { threshold: 15, label: '1. Optimize Frame', desc: 'Downscale & Enhance' },
+                { threshold: 35, label: '2. Cloud Stream', desc: 'Gemini AI Vision' },
+                { threshold: 75, label: '3. Indic OCR', desc: 'Handwriting / Stamp' },
+                { threshold: 88, label: '4. Cadastre Schema', desc: '13 Entities Extracted' }
+              ].map((step, sIdx) => {
+                const isDone = ocrProgress > step.threshold + 15 || ocrProgress === 100;
+                const isActive = ocrProgress >= step.threshold && !isDone;
+                return (
+                  <div
+                    key={sIdx}
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      background: isDone ? '#ecfdf5' : isActive ? '#eef2ff' : 'transparent',
+                      border: `1px solid ${isDone ? '#a7f3d0' : isActive ? '#c7d2fe' : 'transparent'}`,
+                      transition: 'all 0.25s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+                      {isDone ? (
+                        <CheckCircle2 size={12} color="#059669" />
+                      ) : isActive ? (
+                        <Loader2 size={12} color="#4f46e5" className="spin-animate" />
+                      ) : (
+                        <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#cbd5e1' }} />
+                      )}
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: isDone ? '#065f46' : isActive ? '#3730a3' : '#94a3b8'
+                      }}>
+                        {step.label}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 9, color: isDone ? '#047857' : isActive ? '#6366f1' : '#94a3b8', paddingLeft: 17 }}>
+                      {step.desc}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Current Realtime Status Note */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#334155', fontWeight: 500 }}>
+              <Sparkles size={14} color="#4f46e5" />
+              <span>{ocrStatus || 'Deciphering handwritten deed with Gemini AI...'}</span>
             </div>
           </div>
         )}
@@ -488,6 +723,62 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             {showRawText && (
               <pre className="raw-ocr-pre">{rawOcrText}</pre>
             )}
+          </div>
+        )}
+
+        {/* Floating Rich Notification Pop-up */}
+        {notificationPopup && (
+          <div
+            className={`scanner-notification-popup ${notificationPopup.type} animate-slide-in`}
+            style={{
+              position: 'relative',
+              marginBottom: 16,
+              padding: '12px 16px',
+              borderRadius: 10,
+              background: notificationPopup.type === 'success' ? '#ecfdf5' : '#fef2f2',
+              border: `1.5px solid ${notificationPopup.type === 'success' ? '#10b981' : '#ef4444'}`,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+            }}
+          >
+            <div style={{ flexShrink: 0, marginTop: 2 }}>
+              {notificationPopup.type === 'success' ? (
+                <CheckCircle2 size={18} color="#059669" />
+              ) : (
+                <AlertCircle size={18} color="#dc2626" />
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: notificationPopup.type === 'success' ? '#065f46' : '#991b1b',
+                marginBottom: 2
+              }}>
+                {notificationPopup.title}
+              </div>
+              <div style={{
+                fontSize: 12,
+                color: notificationPopup.type === 'success' ? '#047857' : '#b91c1c',
+                lineHeight: 1.4
+              }}>
+                {notificationPopup.message}
+              </div>
+            </div>
+            <button
+              onClick={() => setNotificationPopup(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: notificationPopup.type === 'success' ? '#059669' : '#dc2626',
+                padding: 2
+              }}
+            >
+              <X size={14} />
+            </button>
           </div>
         )}
 
@@ -550,43 +841,100 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
                 <div className="record-fields-grid">
                   {[
-                    { key: 'owner_name', label: 'Owner / Khatadar Name' },
-                    { key: 'khasra_number', label: 'Khasra / Gata No' },
-                    { key: 'survey_number', label: 'Survey / Hissa No' },
-                    { key: 'khata_number', label: 'Khatauni No' },
-                    { key: 'village', label: 'Village / Mauza' },
-                    { key: 'tehsil', label: 'Tehsil / Taluk' },
+                    { key: 'building_name', label: 'Building Name' },
+                    { key: 'house_number', label: 'Building/House Number' },
+                    { key: 'street_name', label: 'Street/Road Name' },
+                    { key: 'locality', label: 'Locality/Area' },
+                    { key: 'village_city', label: 'Village/Town/City' },
                     { key: 'district', label: 'District' },
-                    { key: 'classification', label: 'Land Use' },
+                    { key: 'state', label: 'State/Province' },
+                    { key: 'country', label: 'Country' },
+                    { key: 'pincode', label: 'PIN/ZIP Code' },
+                    { key: 'owner_name', label: 'Owner / Khatadar Name' },
+                    { key: 'survey_number', label: 'Survey / Hissa No' },
                     { key: 'floors', label: 'Storeys (Floors)' },
-                    { key: 'height_m', label: 'Height (m)' },
-                  ].map(({ key, label }) => {
+                    { key: 'size', label: 'Size', isSize: true },
+                  ].map(({ key, label, isSize }) => {
                     const hasValue = Boolean(rec[key] && String(rec[key]).trim());
+                    const isValidationError = Boolean(validationErrors[rec._idx]?.includes(key));
                     const fieldConf = rec._fieldConfidence?.[key]?.score ?? (hasValue ? (rec._confidence || 85) : 35);
-                    const isUncertain = rec._fieldConfidence?.[key]?.isUncertain || !hasValue || fieldConf < 75;
-                    const reason = rec._fieldConfidence?.[key]?.reason || (!hasValue ? 'Unclear / missing from scan — please enter manually' : null);
+                    const isUncertain = rec._fieldConfidence?.[key]?.isUncertain || !hasValue || fieldConf < 75 || isValidationError;
+                    const reason = isValidationError
+                      ? '⚠️ Required blank — please fill in before adding to database'
+                      : (rec._fieldConfidence?.[key]?.reason || (!hasValue ? 'Unclear / missing from scan — please enter manually' : null));
 
                     return (
                       <div
                         key={key}
                         className={`record-field-cell ${isUncertain ? 'uncertain' : ''}`}
-                        style={!hasValue ? { borderColor: '#f59e0b', background: 'rgba(254, 243, 199, 0.3)' } : {}}
+                        style={
+                          isValidationError
+                            ? { borderColor: '#ef4444', background: 'rgba(254, 226, 226, 0.45)', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.2)' }
+                            : !hasValue
+                            ? { borderColor: '#f59e0b', background: 'rgba(254, 243, 199, 0.3)' }
+                            : {}
+                        }
                       >
                         <div className="field-cell-header">
-                          <label className="field-cell-label">{label}</label>
+                          <label className="field-cell-label" style={isValidationError ? { color: '#b91c1c', fontWeight: 700 } : {}}>
+                            {label} {isValidationError && <span style={{ color: '#ef4444' }}>*</span>}
+                          </label>
                           {getConfidenceBadge(fieldConf)}
                         </div>
-                        <input
-                          type="text"
-                          className="field-cell-input"
-                          value={rec[key] || ''}
-                          onChange={(e) => updateField(rec._idx, key, e.target.value)}
-                          placeholder={!hasValue ? `⚠️ Click to fill in ${label}...` : `Enter ${label}...`}
-                          style={!hasValue ? { borderColor: '#f59e0b', fontStyle: 'italic' } : {}}
-                        />
+
+                        {isSize ? (
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <input
+                              type="number"
+                              className="field-cell-input"
+                              value={rec.size || ''}
+                              onChange={(e) => updateField(rec._idx, 'size', e.target.value)}
+                              placeholder={isValidationError ? '⚠️ REQUIRED: Size...' : 'Enter size...'}
+                              style={{
+                                flex: 1,
+                                ...(isValidationError ? { borderColor: '#ef4444', color: '#991b1b', fontWeight: 600 } : {})
+                              }}
+                            />
+                            <select
+                              value={rec.size_unit || 'sft'}
+                              onChange={(e) => updateField(rec._idx, 'size_unit', e.target.value)}
+                              style={{
+                                padding: '6px 8px',
+                                borderRadius: 6,
+                                border: '1.5px solid #cbd5e1',
+                                background: '#f8fafc',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: '#1e293b',
+                                cursor: 'pointer',
+                                height: '36px'
+                              }}
+                            >
+                              <option value="sft">sft</option>
+                              <option value="sqy">sqy</option>
+                              <option value="acr">acr</option>
+                            </select>
+                          </div>
+                        ) : (
+                          <input
+                            type="text"
+                            className="field-cell-input"
+                            value={rec[key] || ''}
+                            onChange={(e) => updateField(rec._idx, key, e.target.value)}
+                            placeholder={isValidationError ? `⚠️ REQUIRED: Enter ${label}...` : !hasValue ? `⚠️ Click to fill in ${label}...` : `Enter ${label}...`}
+                            style={
+                              isValidationError
+                                ? { borderColor: '#ef4444', background: '#fff', color: '#991b1b', fontWeight: 600 }
+                                : !hasValue
+                                ? { borderColor: '#f59e0b', fontStyle: 'italic' }
+                                : {}
+                            }
+                          />
+                        )}
+
                         {isUncertain && reason && (
-                          <div className="field-uncertain-note">
-                            <AlertTriangle size={10} color="#d97706" />
+                          <div className="field-uncertain-note" style={isValidationError ? { color: '#b91c1c' } : {}}>
+                            <AlertTriangle size={10} color={isValidationError ? '#dc2626' : '#d97706'} />
                             <span>{reason}</span>
                           </div>
                         )}

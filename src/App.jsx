@@ -94,6 +94,8 @@ export default function App() {
   const [showFaceAuthForDatabase, setShowFaceAuthForDatabase] = useState(false);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Listen to browser Back/Forward navigation
   useEffect(() => {
@@ -143,6 +145,7 @@ export default function App() {
   }, []);
 
   const handleSelectTab = useCallback((tabId) => {
+    setMobileSidebarOpen(false);
     if (tabId === 'database') {
       setShowFaceAuthForDatabase(true);
       return;
@@ -682,10 +685,22 @@ export default function App() {
         onFileSelect={handleFileSelect}
         onToggleHero={handleGoToHero}
         onOpenAuth={() => setShowGovAuth(true)}
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
       />
 
+      {/* Mobile Drawer Backdrop Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          className="mobile-sidebar-backdrop mobile-only"
+          onClick={() => setMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* ─── MAIN ELEVENLABS DASHBOARD AREA ─── */}
-      <div className="eleven-main-area">
+      <div className={`eleven-main-area ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Top Header Bar with Breadcrumbs, Search & Profile */}
         <AppTopBar
           activeTab={activeTab}
@@ -694,6 +709,9 @@ export default function App() {
           buildingCount={activeFeatures.length}
           unitCount={totalUnits}
           onToggleHero={handleGoToHero}
+          isSidebarCollapsed={sidebarCollapsed}
+          onToggleSidebarCollapse={() => setSidebarCollapsed(prev => !prev)}
+          onToggleMobileMenu={() => setMobileSidebarOpen(prev => !prev)}
           onSearchQuery={(q) => {
             if (!q) return;
             const match = data?.features?.find(f =>

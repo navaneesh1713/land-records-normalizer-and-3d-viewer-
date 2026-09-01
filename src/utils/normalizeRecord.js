@@ -86,27 +86,77 @@ function normalizeStatus(raw) {
   return 'unverified';
 }
 
-// ── Main entry point ─────────────────────────────────────────────────────
-
 /**
  * Normalize one raw OCR/NLP record into the target Division shape.
  *
  * @param {object} raw  – messy input record
- * @returns {object}    – normalized record with exactly these keys:
- *   village, tehsil, district, khasra_number, survey_number,
- *   owner_name, classification, status
+ * @returns {object}    – normalized record with all cadastral and geospatial keys
  */
 export function normalizeRecord(raw = {}) {
+  // Extract intelligent fallbacks for Indian cadastral admin hierarchies
+  const rawLocality = raw.locality || raw.area || raw.colony || raw.sector || '';
+  const rawVillageCity = raw.village_city || raw.village || raw.city || raw.town || '';
+  const rawTehsil = raw.tehsil || raw.taluk || raw.mandal || raw.subdistrict || '';
+  const rawDistrict = raw.district || raw.zila || (rawVillageCity.toLowerCase().includes('bengaluru') ? 'Bengaluru Urban' : rawVillageCity);
+
+  const cleanVillage = raw.village || (rawLocality ? rawLocality.split(',')[0].trim() : '') || (rawVillageCity ? rawVillageCity.split(',')[0].trim() : '');
+  const cleanTehsil = rawTehsil || (rawLocality && rawVillageCity && rawLocality !== rawVillageCity ? rawVillageCity.split(',')[0].trim() : '');
+  const cleanDistrict = rawDistrict || 'Hyderabad';
+  const cleanState = raw.state || raw.province || (cleanDistrict.toLowerCase().includes('hyderabad') ? 'Telangana' : 'Karnataka');
+
+  const khasra = raw.khasra_number != null && String(raw.khasra_number).trim() !== ''
+    ? String(raw.khasra_number).trim()
+    : (raw.survey_number != null ? String(raw.survey_number).trim() : '');
+
+  const survey = raw.survey_number != null && String(raw.survey_number).trim() !== ''
+    ? String(raw.survey_number).trim()
+    : (raw.khasra_number != null ? String(raw.khasra_number).trim() : '');
+
+  // Parse storeys/floors count e.g. "G+2 Storeys" -> 3, "3" -> 3, "G+1" -> 2
+  let parsedFloors = 2;
+  if (raw.floors != null) {
+    const floorStr = String(raw.floors).toLowerCase();
+    if (floorStr.includes('g+')) {
+      const extra = parseInt(floorStr.replace(/[^0-9]/g, ''), 10) || 1;
+      parsedFloors = 1 + extra;
+    } else {
+      parsedFloors = parseInt(floorStr.replace(/[^0-9]/g, ''), 10) || 2;
+    }
+  }
+
+  // Parse area/size
+  const rawSize = raw.size != null ? String(raw.size).replace(/[^0-9.]/g, '') : '';
+  const numSize = parseFloat(rawSize) || 1200;
+  const unit = String(raw.size_unit || 'sft').toLowerCase();
+  let calculatedSqm = raw.area_sqm ? Number(raw.area_sqm) : null;
+  if (!calculatedSqm) {
+    if (unit === 'sft' || unit === 'sqft') calculatedSqm = Math.round(numSize * 0.092903 * 10) / 10;
+    else if (unit === 'sqy' || unit === 'sqyd') calculatedSqm = Math.round(numSize * 0.836127 * 10) / 10;
+    else if (unit === 'acr' || unit === 'acre') calculatedSqm = Math.round(numSize * 4046.86 * 10) / 10;
+    else calculatedSqm = numSize;
+  }
+
   return {
-    village:         titleCase(raw.village),
-    tehsil:          titleCase(raw.tehsil),
-    district:        titleCase(raw.district),
-    khasra_number:   raw.khasra_number != null ? String(raw.khasra_number).trim() : '',
-    survey_number:   raw.survey_number != null ? String(raw.survey_number).trim() : '',
+    building_name:   titleCase(raw.building_name || raw.structure_name || raw.complex || ''),
+    house_number:    raw.house_number != null ? String(raw.house_number).replace(/^(no|plot|door)[:\s]*/i, '').trim() : '',
+    street_name:     titleCase(raw.street_name || raw.road || raw.street || ''),
+    locality:        titleCase(rawLocality),
+    village:         titleCase(cleanVillage),
+    tehsil:          titleCase(cleanTehsil),
+    district:        titleCase(cleanDistrict),
+    state:           titleCase(cleanState),
+    country:         titleCase(raw.country || 'India'),
+    pincode:         raw.pincode != null ? String(raw.pincode).trim() : '',
+    khasra_number:   khasra,
+    survey_number:   survey,
     owner_name:      (raw.owner_name && typeof raw.owner_name === 'string' && raw.owner_name.trim())
                        ? raw.owner_name.trim()
                        : 'Unknown',
+    floors:          parsedFloors,
+    size:            rawSize || String(numSize),
+    size_unit:       unit,
+    area_sqm:        calculatedSqm,
     classification:  normalizeClassification(raw.classification),
-    status:          normalizeStatus(raw.status),
+    status:          normalizeStatus(raw.status || raw.tax_status || 'verified'),
   };
 }

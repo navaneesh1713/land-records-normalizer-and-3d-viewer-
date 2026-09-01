@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ShieldCheck, UserCheck, Key, CheckCircle2,
-  Shield, X, Fingerprint, RefreshCw, Camera
+  Shield, X, Fingerprint, RefreshCw, Camera, AlertCircle
 } from 'lucide-react';
 import Webcam from "react-webcam";
 import { storageService } from '../services/storageService';
 import { auditTrailService } from '../services/auditTrailService';
-
-const FACIAL_AUTH_KEY = 'landx3d_face_registered';
+import { biometricFaceService } from '../services/biometricFaceService';
 
 export default function GovAuthModal({
   currentRole = 'patwari',
@@ -20,8 +19,10 @@ export default function GovAuthModal({
   const [passcode, setPasscode] = useState('');
   const [authenticating, setAuthenticating] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
+  const [authError, setAuthError] = useState('');
   
-  const hasFaceRegistered = localStorage.getItem(FACIAL_AUTH_KEY) === 'true';
+  const webcamRef = useRef(null);
+  const hasFaceRegistered = biometricFaceService.hasRegisteredFace();
 
   const rolesConfig = [
     {
@@ -47,6 +48,7 @@ export default function GovAuthModal({
   const currentConfig = rolesConfig.find(r => r.id === activeTab) || rolesConfig[0];
 
   const handleRoleContinue = () => {
+    setAuthError('');
     if (hasFaceRegistered) {
       setAuthStep('FACE_SCAN');
     } else {
@@ -56,16 +58,15 @@ export default function GovAuthModal({
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
+    setAuthError('');
     if (passcode === currentConfig.defaultPin) {
       if (hasFaceRegistered) {
-        // Fallback login successful
         completeAuthentication();
       } else {
-        // Go to register face
         setAuthStep('FACE_REGISTER');
       }
     } else {
-      alert("Invalid Security PIN");
+      setAuthError("Invalid Security PIN. Default PIN is 1234.");
     }
   };
 
@@ -76,12 +77,17 @@ export default function GovAuthModal({
       setAuthSuccess(true);
       if (onSelectRole) onSelectRole(activeTab);
       storageService.setActiveRole(activeTab);
-      auditTrailService.logAction({
-        action: 'USER_AUTHENTICATED_ROLE',
-        actor: currentConfig.officerName,
-        role: currentConfig.title,
-        details: `Digital Certificate Verified (${currentConfig.badge})`,
-      });
+      auditTrailService.logAction(
+        'USER_AUTHENTICATED_ROLE',
+        'auth_sso',
+        currentConfig.officerName,
+        {
+          role: activeTab,
+          badge: currentConfig.badge,
+          hasBiometricEnrolled: biometricFaceService.hasRegisteredFace()
+        },
+        currentConfig.title
+      );
       setTimeout(() => {
         if (onAuthSuccess) onAuthSuccess();
         if (onClose) onClose();
@@ -89,22 +95,61 @@ export default function GovAuthModal({
     }, 600);
   };
 
-  const handleFaceCapture = () => {
-    // Simulate Face Scan processing
+  const handleFaceCapture = async () => {
     setAuthenticating(true);
-    setTimeout(() => {
+    setAuthError('');
+
+    try {
+      const screenshot = webcamRef.current?.getScreenshot();
+      const registeredProfile = biometricFaceService.getRegisteredOfficerFace();
+
+      if (!screenshot) {
+        setAuthenticating(false);
+        setAuthError('Camera feed unavailable. Please allow webcam access.');
+        return;
+      }
+
+      if (!registeredProfile || !registeredProfile.features) {
+        setAuthenticating(false);
+        setAuthStep('FACE_REGISTER');
+        return;
+      }
+
+      const liveFeatures = await biometricFaceService.extractFacialFeatures(screenshot);
+      const comparison = biometricFaceService.compareFacialBiometrics(liveFeatures, registeredProfile.features);
+
+      if (comparison.match) {
+        setAuthenticating(false);
+        completeAuthentication();
+      } else {
+        setAuthenticating(false);
+        setAuthError(`Biometric Mismatch (${comparison.similarity}% similarity). Only the registered officer (${registeredProfile.officerName}) is permitted.`);
+      }
+    } catch (err) {
       setAuthenticating(false);
-      completeAuthentication();
-    }, 1500);
+      setAuthError('Biometric processing error. Please try again or use PIN.');
+    }
   };
 
-  const handleFaceRegistration = () => {
+  const handleFaceRegistration = async () => {
     setAuthenticating(true);
-    setTimeout(() => {
+    setAuthError('');
+
+    try {
+      const screenshot = webcamRef.current?.getScreenshot();
+      if (!screenshot) {
+        setAuthenticating(false);
+        setAuthError('Please position your face in the camera view to capture.');
+        return;
+      }
+
+      await biometricFaceService.registerOfficerFace(activeTab, currentConfig.officerName, screenshot);
       setAuthenticating(false);
-      localStorage.setItem(FACIAL_AUTH_KEY, 'true');
       completeAuthentication();
-    }, 2000);
+    } catch (err) {
+      setAuthenticating(false);
+      setAuthError('Failed to capture face biometric template.');
+    }
   };
 
   return (
@@ -192,6 +237,25 @@ export default function GovAuthModal({
             </form>
           )}
 
+          {authError && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: 8,
+              color: '#dc2626',
+              fontSize: 12,
+              marginBottom: 16,
+              textAlign: 'left'
+            }}>
+              <AlertCircle size={16} style={{ flexShrink: 0 }} />
+              <span>{authError}</span>
+            </div>
+          )}
+
           {authStep === 'FACE_REGISTER' && (
             <div className="animate-fade-in" style={{ textAlign: 'center' }}>
               <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#0f172a' }}>Register Face for Future Logins</h3>
@@ -199,7 +263,7 @@ export default function GovAuthModal({
                 Look directly at the camera to store your biometric template securely in local memory.
               </p>
               <div style={{ position: 'relative', width: '100%', height: '200px', background: '#000', borderRadius: '8px', overflow: 'hidden', marginBottom: '24px' }}>
-                <Webcam audio={false} width="100%" height="100%" style={{ objectFit: 'cover' }} />
+                <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" width="100%" height="100%" style={{ objectFit: 'cover' }} />
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, border: '4px solid rgba(79, 70, 229, 0.5)', borderRadius: '8px', zIndex: 10 }}></div>
               </div>
               <button
@@ -221,7 +285,7 @@ export default function GovAuthModal({
               </p>
               
               <div style={{ position: 'relative', width: '100%', height: '200px', background: '#000', borderRadius: '8px', overflow: 'hidden', marginBottom: '24px' }}>
-                <Webcam audio={false} width="100%" height="100%" style={{ objectFit: 'cover' }} />
+                <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" width="100%" height="100%" style={{ objectFit: 'cover' }} />
                 {authenticating && (
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(79,70,229,0.3)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <div style={{ width: '100%', height: '4px', background: '#4f46e5', position: 'absolute', top: '50%', animation: 'scanline 2s linear infinite' }} />

@@ -3,7 +3,7 @@ import {
   Database, Search, Filter, Trash2, Layers, Download,
   CheckCircle2, AlertTriangle, ArrowUpRight, FileText,
   MapPin, UserCheck, ShieldCheck, Sparkles, Plus,
-  Building, RefreshCw, Upload, FileSpreadsheet, Eye
+  Building, RefreshCw, Upload, FileSpreadsheet, Eye, X, AlertCircle
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { auditTrailService } from '../services/auditTrailService';
@@ -18,6 +18,25 @@ export default function LandDatabaseDashboard({
   const [filterType, setFilterType] = useState('ALL');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
+  const [toastType, setToastType] = useState('success');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addFormErrors, setAddFormErrors] = useState([]);
+  const [newRecordForm, setNewRecordForm] = useState({
+    building_name: '',
+    house_number: '',
+    street_name: '',
+    locality: '',
+    village_city: '',
+    district: '',
+    state: 'Karnataka',
+    country: 'India',
+    pincode: '',
+    owner_name: '',
+    survey_number: '',
+    floors: '2',
+    size: '1200',
+    size_unit: 'sft',
+  });
 
   const loadRecords = () => {
     const data = storageService.getDatabaseRecords();
@@ -28,9 +47,57 @@ export default function LandDatabaseDashboard({
     loadRecords();
   }, []);
 
-  const showToast = (msg) => {
+  const showToast = (msg, type = 'success') => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
+    setToastType(type);
+    setTimeout(() => setToastMsg(''), 4500);
+  };
+
+  const handleCreateRecord = (e) => {
+    e?.preventDefault();
+    const validation = storageService.validateCadastralRecord(newRecordForm);
+    if (!validation.isValid) {
+      setAddFormErrors(validation.missingFields);
+      showToast(`Cannot add record: Please fill in all blank fields (${validation.missingFields.slice(0, 3).join(', ')}${validation.missingFields.length > 3 ? '...' : ''})`, 'error');
+      return;
+    }
+
+    setAddFormErrors([]);
+    const res = storageService.addSingleRecord(newRecordForm);
+    if (res.success) {
+      loadRecords();
+      setShowAddModal(false);
+      setNewRecordForm({
+        building_name: '',
+        house_number: '',
+        street_name: '',
+        locality: '',
+        village_city: '',
+        district: '',
+        state: 'Karnataka',
+        country: 'India',
+        pincode: '',
+        owner_name: '',
+        survey_number: '',
+        floors: '2',
+        size: '1200',
+        size_unit: 'sft',
+      });
+
+      if (res.updatedCount > 0 && res.addedCount === 0) {
+        showToast(`Survey No. ${newRecordForm.survey_number} already existed — updated existing entry with zero duplicate creation.`, 'success');
+      } else {
+        showToast(`Successfully added Survey No. ${newRecordForm.survey_number} (Owner: ${newRecordForm.owner_name}) to Land Database! (100% Unique)`, 'success');
+      }
+
+      auditTrailService.logAction(
+        'DATABASE_RECORD_MANUAL_ADD',
+        'land_database',
+        res.lastRecord?.id || 'REC-NEW',
+        { surveyNo: newRecordForm.survey_number, owner: newRecordForm.owner_name },
+        'Official'
+      );
+    }
   };
 
   const handleDelete = (id, surveyNo) => {
@@ -131,52 +198,78 @@ export default function LandDatabaseDashboard({
 
   return (
     <div style={{ flex: 1, height: '100%', overflowY: 'auto', background: '#f8fafc', padding: '24px 32px' }}>
-      {/* Toast Notification */}
+      {/* Toast Notification Pop-up */}
       {toastMsg && (
         <div
           style={{
             position: 'fixed',
-            top: 20,
-            right: 20,
+            top: 24,
+            right: 24,
             zIndex: 9999,
-            background: '#1e1b4b',
+            background: toastType === 'success' ? '#064e3b' : '#7f1d1d',
             color: '#ffffff',
-            padding: '12px 20px',
-            borderRadius: 10,
-            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            padding: '14px 22px',
+            borderRadius: 12,
+            boxShadow: '0 12px 30px rgba(0,0,0,0.25)',
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 12,
             fontSize: 13,
             fontWeight: 600,
-            animation: 'slideInRight 0.3s ease'
+            animation: 'slideInRight 0.3s ease',
+            maxWidth: '90vw',
           }}
         >
-          <CheckCircle2 size={16} color="#10b981" />
-          <span>{toastMsg}</span>
+          {toastType === 'success' ? (
+            <CheckCircle2 size={18} color="#34d399" style={{ flexShrink: 0 }} />
+          ) : (
+            <AlertCircle size={18} color="#f87171" style={{ flexShrink: 0 }} />
+          )}
+          <span style={{ flex: 1 }}>{toastMsg}</span>
+          <button
+            onClick={() => setToastMsg('')}
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: 2 }}
+          >
+            <X size={14} />
+          </button>
         </div>
       )}
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ padding: 8, background: '#4f46e5', borderRadius: 10, color: '#ffffff', display: 'flex' }}>
               <Database size={20} />
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>
               Government Land Cadastre Database
             </h1>
-            <span style={{ fontSize: 11, background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: 12, fontWeight: 700 }}>
-              Local Memory Persisted
-            </span>
           </div>
-          <p style={{ fontSize: 13, color: '#64748b', margin: 0 }}>
-            Official ledger of all verified land parcels, SVAMITVA drone cards, RTC extracts, and AI Vision scanned records.
-          </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setShowAddModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 16px',
+              background: '#4f46e5',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
+            }}
+          >
+            <Plus size={14} />
+            <span>Add Record</span>
+          </button>
+
           <button
             onClick={handleExportCSV}
             style={{
@@ -196,48 +289,6 @@ export default function LandDatabaseDashboard({
           >
             <FileSpreadsheet size={14} color="#10b981" />
             <span>Export CSV</span>
-          </button>
-
-          <button
-            onClick={handleExportJSON}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '8px 14px',
-              background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#334155',
-              cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}
-          >
-            <Download size={14} color="#6366f1" />
-            <span>Export JSON</span>
-          </button>
-
-          <button
-            onClick={onNavigateToUpload}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '8px 16px',
-              background: '#4f46e5',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
-            }}
-          >
-            <Upload size={14} />
-            <span>Scan / Upload New Document</span>
           </button>
         </div>
       </div>
@@ -281,13 +332,13 @@ export default function LandDatabaseDashboard({
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
+      {/* Search Bar */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 18, background: '#ffffff', padding: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
-            placeholder="Search by Survey No, Khasra, Owner Name, Village, District..."
+            placeholder="Search by Survey No, Building, Owner Name, Street, Locality, District..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -302,28 +353,26 @@ export default function LandDatabaseDashboard({
           />
         </div>
 
-        <div style={{ display: 'flex', gap: 6 }}>
-          {['ALL', 'residential', 'commercial', 'agricultural'].map((type) => (
-            <button
-              key={type}
-              onClick={() => setFilterType(type)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 6,
-                fontSize: 12,
-                fontWeight: 600,
-                border: 'none',
-                cursor: 'pointer',
-                background: filterType === type ? '#4f46e5' : '#f1f5f9',
-                color: filterType === type ? '#ffffff' : '#475569',
-                textTransform: 'capitalize',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+        <button
+          onClick={() => setShowAddModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '8px 16px',
+            background: '#4f46e5',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)',
+          }}
+        >
+          <Plus size={15} />
+          <span>Add Record</span>
+        </button>
 
         {filteredRecords.length > 0 && (
           <button
@@ -332,18 +381,18 @@ export default function LandDatabaseDashboard({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '6px 14px',
+              padding: '8px 16px',
               background: '#059669',
               color: '#ffffff',
               border: 'none',
               borderRadius: 6,
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 600,
               cursor: 'pointer',
             }}
           >
             <Layers size={14} />
-            <span>Apply Filtered to 3D Map ({filteredRecords.length})</span>
+            <span>Apply to 3D Map ({filteredRecords.length})</span>
           </button>
         )}
       </div>
@@ -377,11 +426,11 @@ export default function LandDatabaseDashboard({
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 600, fontSize: 12 }}>
-                <th style={{ padding: '12px 16px' }}>SURVEY / KHASRA</th>
-                <th style={{ padding: '12px 16px' }}>OWNER / KHATEDAR</th>
-                <th style={{ padding: '12px 16px' }}>VILLAGE & DISTRICT</th>
-                <th style={{ padding: '12px 16px' }}>LAND USE</th>
-                <th style={{ padding: '12px 16px' }}>EXTENT (SQ.M)</th>
+                <th style={{ padding: '12px 16px' }}>SURVEY / HISSA NO</th>
+                <th style={{ padding: '12px 16px' }}>BUILDING & NUMBER</th>
+                <th style={{ padding: '12px 16px' }}>OWNER / KHATADAR</th>
+                <th style={{ padding: '12px 16px' }}>LOCALITY & CITY</th>
+                <th style={{ padding: '12px 16px' }}>STOREYS & SIZE</th>
                 <th style={{ padding: '12px 16px' }}>SOURCE / CONFIDENCE</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>ACTIONS</th>
               </tr>
@@ -399,52 +448,37 @@ export default function LandDatabaseDashboard({
                 >
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 700, color: '#1e1b4b', fontSize: 14 }}>
-                      {rec.survey_number || rec.khasra_number || 'N/A'}
+                      {rec.survey_number || 'N/A'}
                     </div>
-                    {rec.khata_number && (
-                      <div style={{ fontSize: 11, color: '#64748b' }}>
-                        Khata: {rec.khata_number}
-                      </div>
-                    )}
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                      {rec.building_name || 'Individual Parcel'}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                      {rec.house_number ? `No: ${rec.house_number}` : ''}
+                    </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 600, color: '#0f172a' }}>
                       {rec.owner_name || 'Unspecified'}
                     </div>
+                  </td>
+                  <td style={{ padding: '12px 16px' }}>
+                    <div style={{ color: '#334155', fontWeight: 500 }}>
+                      {rec.locality ? `${rec.locality}, ` : ''}{rec.village_city || rec.village || 'N/A'}
+                    </div>
                     <div style={{ fontSize: 11, color: '#64748b' }}>
-                      {rec.tax_status === 'PAID' || rec.tax_status?.includes('PAID') ? (
-                        <span style={{ color: '#16a34a' }}>● Tax Paid</span>
-                      ) : (
-                        <span style={{ color: '#d97706' }}>● {rec.tax_status || 'Unverified'}</span>
-                      )}
+                      {rec.district ? `${rec.district}, ` : ''}{rec.state || ''} {rec.pincode ? `(${rec.pincode})` : ''}
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <div style={{ color: '#334155' }}>
-                      {rec.village || 'N/A'}
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                      {rec.size || '1200'} {rec.size_unit || 'sft'}
                     </div>
                     <div style={{ fontSize: 11, color: '#64748b' }}>
-                      {rec.tehsil ? `${rec.tehsil}, ` : ''}{rec.district || ''}
+                      {rec.floors || '2'} Storeys ({rec.area_sqm ? `${rec.area_sqm} m²` : ''})
                     </div>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '2px 8px',
-                        borderRadius: 12,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        textTransform: 'capitalize',
-                        background: (rec.classification || '').toLowerCase() === 'commercial' ? '#fef3c7' : '#e0e7ff',
-                        color: (rec.classification || '').toLowerCase() === 'commercial' ? '#92400e' : '#3730a3',
-                      }}
-                    >
-                      {rec.classification || 'Residential'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px', fontWeight: 600, color: '#0f172a' }}>
-                    {rec.area_sqm ? `${Number(rec.area_sqm).toLocaleString()} m²` : 'N/A'}
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -513,6 +547,254 @@ export default function LandDatabaseDashboard({
           </table>
         )}
       </div>
+
+      {/* ─── Add Record Modal Dialog ─── */}
+      {showAddModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddModal(false);
+          }}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: 16,
+              width: '100%',
+              maxWidth: 680,
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              animation: 'fadeInUp 0.25s ease',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '18px 24px',
+                borderBottom: '1px solid #f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#f8fafc',
+                borderTopLeftRadius: 16,
+                borderTopRightRadius: 16,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ padding: 8, background: '#4f46e5', borderRadius: 10, color: '#fff', display: 'flex' }}>
+                  <Plus size={18} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                    Add Certified Land Record
+                  </h2>
+                  <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>
+                    All blank fields must be completed. System enforces 100% database uniqueness.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Validation Alert */}
+            {addFormErrors.length > 0 && (
+              <div
+                style={{
+                  margin: '16px 24px 0',
+                  padding: '10px 14px',
+                  background: '#fef2f2',
+                  border: '1px solid #f87171',
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  color: '#991b1b',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>All blanks required:</strong> Please fill in the missing fields: {addFormErrors.join(', ')}.
+                </span>
+              </div>
+            )}
+
+            {/* Modal Form Body */}
+            <form onSubmit={handleCreateRecord} style={{ padding: 24 }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                  gap: 16,
+                  marginBottom: 24,
+                }}
+              >
+                {[
+                  { key: 'building_name', label: 'Building Name *', placeholder: 'e.g. Shree Sai Residency' },
+                  { key: 'house_number', label: 'Building/House Number *', placeholder: 'e.g. Flat 302, Bldg 4B' },
+                  { key: 'street_name', label: 'Street/Road Name *', placeholder: 'e.g. Kadugodi Main Road' },
+                  { key: 'locality', label: 'Locality/Area *', placeholder: 'e.g. Whitefield Zone' },
+                  { key: 'village_city', label: 'Village/Town/City *', placeholder: 'e.g. Kadugodi, Bengaluru' },
+                  { key: 'district', label: 'District *', placeholder: 'e.g. Bengaluru Urban' },
+                  { key: 'state', label: 'State/Province *', placeholder: 'e.g. Karnataka' },
+                  { key: 'country', label: 'Country *', placeholder: 'e.g. India' },
+                  { key: 'pincode', label: 'PIN/ZIP Code *', placeholder: 'e.g. 560067' },
+                  { key: 'owner_name', label: 'Owner / Khatadar Name *', placeholder: 'e.g. Ramesh Kumar Sharma' },
+                  { key: 'survey_number', label: 'Survey / Hissa No *', placeholder: 'e.g. 48/2A' },
+                  { key: 'floors', label: 'Storeys (Floors) *', placeholder: 'e.g. 3' },
+                ].map(({ key, label, placeholder }) => {
+                  const isMissing = addFormErrors.some((err) => label.toLowerCase().includes(err.toLowerCase().split(' ')[0]));
+                  return (
+                    <div key={key}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: isMissing ? '#dc2626' : '#334155',
+                          marginBottom: 4,
+                        }}
+                      >
+                        {label}
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={placeholder}
+                        value={newRecordForm[key]}
+                        onChange={(e) => {
+                          setNewRecordForm((prev) => ({ ...prev, [key]: e.target.value }));
+                          if (addFormErrors.length > 0) setAddFormErrors([]);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          border: `1.5px solid ${isMissing ? '#ef4444' : '#cbd5e1'}`,
+                          background: isMissing ? '#fff5f5' : '#ffffff',
+                          fontSize: 13,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                    Size (Area) *
+                  </label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      type="number"
+                      placeholder="e.g. 1450"
+                      value={newRecordForm.size}
+                      onChange={(e) => setNewRecordForm((prev) => ({ ...prev, size: e.target.value }))}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        border: '1.5px solid #cbd5e1',
+                        background: '#ffffff',
+                        fontSize: 13,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <select
+                      value={newRecordForm.size_unit}
+                      onChange={(e) => setNewRecordForm((prev) => ({ ...prev, size_unit: e.target.value }))}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: 8,
+                        border: '1.5px solid #cbd5e1',
+                        background: '#f8fafc',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="sft">sft</option>
+                      <option value="sqy">sqy</option>
+                      <option value="acr">acr</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Footer Action */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 12,
+                  paddingTop: 16,
+                  borderTop: '1px solid #f1f5f9',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  style={{
+                    padding: '9px 18px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  style={{
+                    padding: '9px 20px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: '#4f46e5',
+                    color: '#ffffff',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Database size={14} />
+                  <span>Save to Land Database</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

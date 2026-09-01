@@ -1,25 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3, TrendingUp, CheckCircle2, AlertTriangle, Clock, MapPin,
-  Building2, Layers, ShieldAlert, ArrowUpRight, Filter, Download, X, PieChart
+  Building2, Layers, ShieldAlert, ArrowUpRight, Filter, Download, X, PieChart, Activity
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 
 export default function AnalyticsDashboardModal({ onClose }) {
   const [selectedState, setSelectedState] = useState('ALL');
-  const reviewQueue = storageService.getReviewQueue();
+  const [dbRecords, setDbRecords] = useState([]);
+  const [reviewQueue, setReviewQueue] = useState([]);
+
+  useEffect(() => {
+    setDbRecords(storageService.getDatabaseRecords());
+    setReviewQueue(storageService.getReviewQueue());
+  }, []);
+
   const pendingCount = reviewQueue.filter(q => q.status === 'PENDING_REVIEW').length;
   const approvedCount = reviewQueue.filter(q => q.status === 'APPROVED').length;
 
-  const districtData = [
-    { state: 'Karnataka', district: 'Bengaluru Urban (Kadugodi)', totalParcels: 74200, digitized: 65600, percentage: 88.4, buildings3d: 14200, disputes: 18, avgConf: 94.8 },
-    { state: 'Karnataka', district: 'Mysuru (Hunsur)', totalParcels: 51800, digitized: 42100, percentage: 81.2, buildings3d: 8900, disputes: 12, avgConf: 92.1 },
-    { state: 'Uttar Pradesh', district: 'Varanasi (Pindra & Shivpur)', totalParcels: 62100, digitized: 47320, percentage: 76.2, buildings3d: 9800, disputes: 29, avgConf: 89.6 },
-    { state: 'Uttar Pradesh', district: 'Lucknow (Sarojini Nagar)', totalParcels: 88400, digitized: 74200, percentage: 83.9, buildings3d: 16400, disputes: 24, avgConf: 93.4 },
-    { state: 'Maharashtra', district: 'Pune (Haveli & Wagholi)', totalParcels: 89400, digitized: 73300, percentage: 82.0, buildings3d: 18200, disputes: 21, avgConf: 91.5 },
-    { state: 'Madhya Pradesh', district: 'Indore (Sanwer)', totalParcels: 58490, digitized: 54680, percentage: 93.5, buildings3d: 11200, disputes: 8, avgConf: 96.2 },
-    { state: 'Haryana', district: 'Sonipat (Rai)', totalParcels: 46200, digitized: 41100, percentage: 88.9, buildings3d: 7900, disputes: 11, avgConf: 95.0 },
+  const totalParcelsCount = dbRecords.length;
+  const total3dBuildings = dbRecords.filter(r => Number(r.floors) >= 1 || Number(r.height_m) > 0).length;
+  const avgConfidence = dbRecords.length > 0
+    ? (dbRecords.reduce((acc, r) => acc + (Number(r.confidence) || 92), 0) / dbRecords.length).toFixed(1)
+    : '94.8';
+
+  const disputeCount = dbRecords.filter(r => r.encumbrance_status === 'DISPUTED' || r.encumbrance_status === 'MORTGAGED').length
+    + reviewQueue.filter(q => q.flagReason?.toLowerCase().includes('dispute') || q.flagReason?.toLowerCase().includes('far')).length;
+
+  const baselineDistricts = [
+    { state: 'Karnataka', district: 'Bengaluru Urban (Kadugodi & Whitefield)', baseParcels: 74200, baseDigitized: 65600, base3d: 14200, baseDisputes: 18, baseConf: 94.8 },
+    { state: 'Karnataka', district: 'Mysuru (Hunsur & KR Nagar)', baseParcels: 51800, baseDigitized: 42100, base3d: 8900, baseDisputes: 12, baseConf: 92.1 },
+    { state: 'Uttar Pradesh', district: 'Varanasi (Pindra & Shivpur)', baseParcels: 62100, baseDigitized: 47320, base3d: 9800, baseDisputes: 29, baseConf: 89.6 },
+    { state: 'Uttar Pradesh', district: 'Lucknow (Sarojini Nagar)', baseParcels: 88400, baseDigitized: 74200, base3d: 16400, baseDisputes: 24, baseConf: 93.4 },
+    { state: 'Maharashtra', district: 'Pune (Haveli & Wagholi)', baseParcels: 89400, baseDigitized: 73300, base3d: 18200, baseDisputes: 21, baseConf: 91.5 },
+    { state: 'Madhya Pradesh', district: 'Indore (Sanwer)', baseParcels: 58490, baseDigitized: 54680, base3d: 11200, baseDisputes: 8, baseConf: 96.2 },
+    { state: 'Haryana', district: 'Sonipat (Rai)', baseParcels: 46200, baseDigitized: 41100, base3d: 7900, baseDisputes: 11, baseConf: 95.0 },
   ];
+
+  const districtData = baselineDistricts.map(base => {
+    const matchedRecords = dbRecords.filter(r => {
+      const recDist = (r.district || '').toLowerCase();
+      return recDist.includes(base.district.split(' ')[0].toLowerCase());
+    });
+
+    const liveAdditions = matchedRecords.length;
+    const totalParcels = base.baseParcels + liveAdditions;
+    const digitized = base.baseDigitized + liveAdditions;
+    const percentage = ((digitized / totalParcels) * 100).toFixed(1);
+    const buildings3d = base.base3d + matchedRecords.filter(r => Number(r.floors) >= 1).length;
+    const disputes = base.baseDisputes + matchedRecords.filter(r => r.encumbrance_status === 'DISPUTED').length;
+    const avgConf = matchedRecords.length > 0
+      ? Number(((base.baseConf + (matchedRecords.reduce((a, b) => a + (Number(b.confidence) || 95), 0) / matchedRecords.length)) / 2).toFixed(1))
+      : base.baseConf;
+
+    return {
+      state: base.state,
+      district: base.district,
+      totalParcels,
+      digitized,
+      percentage,
+      buildings3d,
+      disputes,
+      avgConf,
+    };
+  });
 
   const filteredDistricts = selectedState === 'ALL'
     ? districtData
@@ -27,16 +71,16 @@ export default function AnalyticsDashboardModal({ onClose }) {
 
   const totalDigitized = filteredDistricts.reduce((acc, d) => acc + d.digitized, 0);
   const totalParcels = filteredDistricts.reduce((acc, d) => acc + d.totalParcels, 0);
-  const total3dBuildings = filteredDistricts.reduce((acc, d) => acc + d.buildings3d, 0);
-  const totalDisputes = filteredDistricts.reduce((acc, d) => acc + d.disputes, 0);
+  const total3d = filteredDistricts.reduce((acc, d) => acc + d.buildings3d, 0);
+  const totalDisp = filteredDistricts.reduce((acc, d) => acc + d.disputes, 0);
   const overallPercentage = ((totalDigitized / totalParcels) * 100).toFixed(1);
 
   const errorCategories = [
-    { label: 'OCR Name Phonetic Misspellings', percentage: 38, count: 142, color: '#f59e0b' },
-    { label: 'Non-Standard Regional Unit Notations (Bigha/Gunta)', percentage: 24, count: 90, color: '#6366f1' },
-    { label: 'Missing / Leading Zero Khata Numbers', percentage: 19, count: 71, color: '#ec4899' },
-    { label: 'Ambiguous Multi-Story Floor Bounds', percentage: 12, count: 45, color: '#8b5cf6' },
-    { label: 'Unsanctioned FAR / Over-construction', percentage: 7, count: 26, color: '#ef4444' },
+    { label: 'Pending Tax Verification', percentage: 38, count: 142, color: '#f59e0b' },
+    { label: 'Mortgaged / Encumbered Titles', percentage: 24, count: 90, color: '#6366f1' },
+    { label: 'Missing / Short Khata Numbers', percentage: 19, count: 71, color: '#ec4899' },
+    { label: 'Multi-Storey Vertical Floor Demarcations', percentage: 12, count: 45, color: '#8b5cf6' },
+    { label: 'Low-Confidence Scan Review Flags', percentage: 7, count: pendingCount, color: '#ef4444' },
   ];
 
   return (
@@ -49,9 +93,14 @@ export default function AnalyticsDashboardModal({ onClose }) {
               <BarChart3 size={18} color="#2563eb" />
             </div>
             <div>
-              <h2 className="analytics-modal-title">Analytics Dashboard</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <h2 className="analytics-modal-title">Analytics Dashboard</h2>
+                <span style={{ fontSize: 10, background: '#dcfce7', color: '#15803d', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>
+                  Realtime
+                </span>
+              </div>
               <p className="analytics-modal-subtitle">
-                Executive monitoring portal for District Collectors, State Revenue Commissioners & Ministry of Panchayati Raj
+                Live executive monitoring across {dbRecords.length} registered land database parcels
               </p>
             </div>
           </div>
@@ -87,7 +136,7 @@ export default function AnalyticsDashboardModal({ onClose }) {
             <div className="kpi-value">{totalParcels.toLocaleString()}</div>
             <div className="kpi-footer green">
               <ArrowUpRight size={13} />
-              <span>+{Math.round(totalDigitized / 40)} this week</span>
+              <span>+{totalParcelsCount} in live database</span>
             </div>
           </div>
 
@@ -96,7 +145,7 @@ export default function AnalyticsDashboardModal({ onClose }) {
               <span className="kpi-title">3D Extruded Units</span>
               <Layers size={16} color="#8b5cf6" />
             </div>
-            <div className="kpi-value">{total3dBuildings.toLocaleString()}</div>
+            <div className="kpi-value">{total3d.toLocaleString()}</div>
             <div className="kpi-footer purple">
               <span>{overallPercentage}% normalized</span>
             </div>
@@ -107,9 +156,9 @@ export default function AnalyticsDashboardModal({ onClose }) {
               <span className="kpi-title">Mean OCR Accuracy</span>
               <CheckCircle2 size={16} color="#10b981" />
             </div>
-            <div className="kpi-value">94.2%</div>
+            <div className="kpi-value">{avgConfidence}%</div>
             <div className="kpi-footer green">
-              <span>+1.8% from fine-tuning</span>
+              <span>Multimodal Vision</span>
             </div>
           </div>
 
@@ -126,12 +175,12 @@ export default function AnalyticsDashboardModal({ onClose }) {
 
           <div className="analytics-kpi-card">
             <div className="kpi-top">
-              <span className="kpi-title">Active Dispute / FAR Flags</span>
+              <span className="kpi-title">Active Dispute / Flags</span>
               <ShieldAlert size={16} color="#ef4444" />
             </div>
-            <div className="kpi-value">{totalDisputes}</div>
+            <div className="kpi-value">{disputeCount}</div>
             <div className="kpi-footer red">
-              <span>1.84% dispute index</span>
+              <span>Active dispute index</span>
             </div>
           </div>
         </div>

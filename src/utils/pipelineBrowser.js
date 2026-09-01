@@ -24,10 +24,22 @@ export function detectInputShape(parsed) {
     return 'feature_collection';
   }
 
-  // Raw OCR array: top-level array of objects with at least village or district
+  // Raw OCR array: top-level array of objects with land record fields
   if (Array.isArray(parsed) && parsed.length > 0) {
     const first = parsed[0];
-    if (first && typeof first === 'object' && (first.village || first.district || first.khasra_number)) {
+    if (
+      first &&
+      typeof first === 'object' &&
+      (first.village ||
+        first.district ||
+        first.khasra_number ||
+        first.survey_number ||
+        first.locality ||
+        first.village_city ||
+        first.building_name ||
+        first.owner_name ||
+        first.house_number)
+    ) {
       return 'raw_records';
     }
   }

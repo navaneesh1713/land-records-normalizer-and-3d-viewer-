@@ -105,11 +105,14 @@ export function assembleBuildingFeatures(placedWithFootprints = []) {
     const poly = polygon(footprint.geometry.coordinates);
     const calculatedArea = parseFloat(area(poly).toFixed(1));
 
+    // Check if the record specifies multiple storeys/floors
+    const recordStoreys = Math.max(1, parseInt(items[0]?.normalized?.floors || items[0]?.raw?.floors || 1, 10));
+
     // Organize items into floors and divisions.
     // If ANY item has an explicit floor_number, use those directly.
     // If NONE do, sort by khasra_number (fallback survey_number) lexicographically
-    // and assign sequential floor numbers. Items sharing the same khasra go on
-    // the same floor as co-divisions. (Anomaly #5 fix)
+    // and assign sequential floor numbers. If record has multi-storeys (e.g. 3 floors),
+    // expand across all storeys.
     const floorMap = new Map();
 
     const hasAnyExplicitFloor = items.some(
@@ -117,14 +120,17 @@ export function assembleBuildingFeatures(placedWithFootprints = []) {
     );
 
     if (hasAnyExplicitFloor) {
-      // Use explicit floor numbers
       items.forEach((it) => {
         const floorNum = Number(it.raw?.floor_number) || Number(it.normalized?.floor_number) || 1;
         if (!floorMap.has(floorNum)) floorMap.set(floorNum, []);
         floorMap.get(floorNum).push(it);
       });
+    } else if (items.length === 1 && recordStoreys > 1) {
+      // Single record representing an entire multi-story building (e.g. G+2 / 3 storeys)
+      for (let f = 1; f <= recordStoreys; f++) {
+        floorMap.set(f, [items[0]]);
+      }
     } else {
-      // Deterministic auto-assignment: sort by khasra (fallback survey), group same-khasra on same floor
       const sortedItems = [...items].sort((a, b) => {
         const aKey = (a.normalized.khasra_number || a.normalized.survey_number || '').toLowerCase();
         const bKey = (b.normalized.khasra_number || b.normalized.survey_number || '').toLowerCase();
@@ -157,11 +163,19 @@ export function assembleBuildingFeatures(placedWithFootprints = []) {
 
         return {
           unit_id: it.raw?.unit_id || `${plotId}-F${floorNum}-D${divIndex}`,
-          khasra_number: norm.khasra_number || '',
-          survey_number: norm.survey_number || '',
+          khasra_number: norm.khasra_number || norm.survey_number || '',
+          survey_number: norm.survey_number || norm.khasra_number || '',
           owner_name: norm.owner_name || 'Unknown',
           classification: norm.classification || 'residential',
-          status: norm.status || 'unverified',
+          status: norm.status || 'verified',
+          building_name: norm.building_name || '',
+          house_number: norm.house_number || '',
+          street_name: norm.street_name || '',
+          locality: norm.locality || '',
+          pincode: norm.pincode || '',
+          size: norm.size || '',
+          size_unit: norm.size_unit || 'sft',
+          area_sqm: norm.area_sqm || null,
           division_index: divIndex,
           division_share: it.raw?.division_share ? Number(it.raw.division_share) : equalShare,
           is_synthetic: Boolean(it.footprint.is_synthetic || it.raw?.is_synthetic),
@@ -174,17 +188,28 @@ export function assembleBuildingFeatures(placedWithFootprints = []) {
       };
     });
 
+    const firstNorm = items[0]?.normalized || {};
+
     features.push({
       type: 'Feature',
       geometry: footprint.geometry,
       properties: {
         plot_id: plotId,
         osm_way_id: isSynthetic ? null : String(footprint.osm_way_id),
+        building_name: firstNorm.building_name || '',
+        house_number: firstNorm.house_number || '',
+        street_name: firstNorm.street_name || '',
+        locality: firstNorm.locality || '',
         village,
         tehsil,
         district,
+        state: firstNorm.state || '',
+        pincode: firstNorm.pincode || '',
+        survey_number: firstNorm.survey_number || firstNorm.khasra_number || '',
+        khasra_number: firstNorm.khasra_number || firstNorm.survey_number || '',
+        owner_name: firstNorm.owner_name || '',
         floor_height_m: 3.5, // Fixed global default per requirement
-        footprint_area_sqm: calculatedArea,
+        footprint_area_sqm: firstNorm.area_sqm || calculatedArea,
         floors,
       },
     });
