@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X, Navigation, MapPin, QrCode, ExternalLink, Copy, Check, Car, Bike, Footprints,
   Compass, ShieldCheck, User, Phone, CheckCircle2, LocateFixed, RefreshCw
@@ -140,7 +141,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
     }
   };
 
-  return (
+  const modalJSX = (
     <div className="reach-citizen-backdrop animate-fade-in" onClick={onClose}>
       <div
         className="reach-citizen-modal glass-panel animate-scale-up"
@@ -568,4 +569,9 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalJSX, document.body);
+  }
+  return modalJSX;
 }
