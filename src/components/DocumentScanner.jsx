@@ -9,6 +9,8 @@ import {
   extractHandwrittenLandRecord,
   getGeminiApiKey,
   saveGeminiApiKey,
+  getGeminiModel,
+  saveGeminiModel,
 } from '../services/handwrittenOcrService';
 import {
   ScanLine, Upload, FileText, FileSpreadsheet, Image as ImageIcon,
@@ -147,7 +149,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       const record = {
         _idx: 0,
         _source: 'gemini_vision_htr',
-        _modelUsed: extracted._modelUsed || 'Gemini 3.6 Flash',
+        _modelUsed: extracted._modelUsed || getGeminiModel() || 'Gemini 2.5 Flash',
         _fileName: imageFile.name,
         _rawText: extracted._rawText || '',
         _confidence: extracted._confidence || 75,

@@ -6,7 +6,7 @@
 const LOCAL_STORAGE_KEY = 'sih_gemini_api_key';
 const LOCAL_STORAGE_MODEL_KEY = 'sih_gemini_model';
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-3.6-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 export function getGeminiApiKey() {
   return (
@@ -22,6 +22,22 @@ export function saveGeminiApiKey(key) {
     localStorage.setItem(LOCAL_STORAGE_KEY, key.trim());
   } else {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+  }
+}
+
+export function getGeminiModel() {
+  return (
+    import.meta.env.VITE_GEMINI_MODEL ||
+    localStorage.getItem(LOCAL_STORAGE_MODEL_KEY) ||
+    DEFAULT_GEMINI_MODEL
+  );
+}
+
+export function saveGeminiModel(model) {
+  if (model) {
+    localStorage.setItem(LOCAL_STORAGE_MODEL_KEY, model.trim());
+  } else {
+    localStorage.removeItem(LOCAL_STORAGE_MODEL_KEY);
   }
 }
 
@@ -145,6 +161,9 @@ You MUST respond ONLY with a single valid JSON object matching this exact schema
   // 3. Construct ordered model sequence starting with user's preferred model
   const modelCandidates = [
     preferredModel,
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-3.6-flash',
     'gemini-3.5-flash-lite',
   ];
