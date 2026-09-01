@@ -4,6 +4,7 @@ import {
   Compass, ShieldCheck, User, Phone, CheckCircle2, LocateFixed, RefreshCw
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ReachCitizenModal({ unit, onClose, destinationCoords }) {
   const [copied, setCopied] = useState(false);
@@ -11,6 +12,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
   const [locationStatus, setLocationStatus] = useState('locating'); // 'locating' | 'ready' | 'denied'
   const [travelMode, setTravelMode] = useState('driving'); // 'driving' | 'bicycling' | 'walking'
   const [mapType, setMapType] = useState('m'); // 'm' (standard) | 'k' (satellite)
+  const { t } = useLanguage();
 
   // Smart fallback lookup if coordinates are not attached directly to unit
   const lookupCoords = () => {
@@ -188,7 +190,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#ffffff' }}>
-                  Reach Citizen • Field Navigation & QR
+                  {t('reach_citizen_title', 'Reach Citizen • Field Navigation & QR')}
                 </h3>
                 <span
                   style={{
@@ -201,11 +203,11 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                     border: '1px solid rgba(16, 185, 129, 0.3)',
                   }}
                 >
-                  LIVE GPS ROUTING
+                  {t('live_gps_routing', 'LIVE GPS ROUTING')}
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>
-                {unit?.khasra_number ? `Khasra: ${unit.khasra_number} • ` : ''}Survey No: {unit?.survey_number || '—'} • {unit?.owner_name || 'Citizen'}
+                {unit?.khasra_number ? `${t('khasra_number', 'Khasra')}: ${unit.khasra_number} • ` : ''}{t('survey_number', 'Survey No')}: {unit?.survey_number || '—'} • {unit?.owner_name || t('registered_citizen', 'Citizen')}
               </p>
             </div>
           </div>
@@ -285,14 +287,14 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 }}
               >
                 <QrCode size={13} color="#4f46e5" />
-                <span>SCAN WITH MOBILE CAMERA</span>
+                <span>{t('scan_with_mobile', 'SCAN WITH MOBILE CAMERA')}</span>
               </div>
             </div>
 
             {/* Travel Mode Selector */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Travel Mode
+                {t('travel_mode', 'Travel Mode')}
               </div>
               <div
                 style={{
@@ -306,9 +308,9 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 }}
               >
                 {[
-                  { mode: 'driving', label: 'Drive', icon: Car },
-                  { mode: 'bicycling', label: 'Bike', icon: Bike },
-                  { mode: 'walking', label: 'Walk', icon: Footprints },
+                  { mode: 'driving', label: t('drive', 'Drive'), icon: Car },
+                  { mode: 'bicycling', label: t('bike', 'Bike'), icon: Bike },
+                  { mode: 'walking', label: t('walk', 'Walk'), icon: Footprints },
                 ].map(({ mode, label, icon: Icon }) => (
                   <button
                     key={mode}
@@ -349,13 +351,13 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
               }}
             >
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>EST. DISTANCE</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{t('est_distance', 'EST. DISTANCE')}</div>
                 <div style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8', marginTop: '2px' }}>
-                  {distanceKm ? `${distanceKm} km` : 'Calculating...'}
+                  {distanceKm ? `${distanceKm} km` : t('calculating', 'Calculating...')}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>EST. DURATION</div>
+                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>{t('est_duration', 'EST. DURATION')}</div>
                 <div style={{ fontSize: '16px', fontWeight: 800, color: '#34d399', marginTop: '2px' }}>
                   {estimatedDuration || '—'}
                 </div>
@@ -385,7 +387,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 }}
               >
                 <ExternalLink size={15} />
-                <span>Open in Google Maps</span>
+                <span>{t('open_in_google_maps', 'Open in Google Maps')}</span>
               </a>
 
               <button
@@ -407,7 +409,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 }}
               >
                 {copied ? <Check size={14} color="#34d399" /> : <Copy size={14} />}
-                <span>{copied ? 'Directions Link Copied!' : 'Copy Navigation URL'}</span>
+                <span>{copied ? t('directions_link_copied', 'Directions Link Copied!') : t('copy_navigation_url', 'Copy Navigation URL')}</span>
               </button>
             </div>
           </div>
@@ -443,7 +445,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 </div>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc' }}>
-                    {unit?.owner_name || 'Registered Citizen'}
+                    {unit?.owner_name || t('registered_citizen', 'Registered Citizen')}
                   </div>
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>
                     {fullAddress}
@@ -475,7 +477,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                     cursor: 'pointer',
                   }}
                 >
-                  Roadmap
+                  {t('roadmap', 'Roadmap')}
                 </button>
                 <button
                   onClick={() => setMapType('k')}
@@ -490,7 +492,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                     cursor: 'pointer',
                   }}
                 >
-                  Satellite
+                  {t('satellite', 'Satellite')}
                 </button>
               </div>
             </div>
@@ -557,8 +559,8 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
               <LocateFixed size={13} color="#4f46e5" />
               <span>
                 {locationStatus === 'ready'
-                  ? 'Your live field coordinates are connected for turn-by-turn routing.'
-                  : 'Scan the QR code with your mobile camera to launch direct navigation in your phone.'}
+                  ? t('gps_connected', 'Your live field coordinates are connected for turn-by-turn routing.')
+                  : t('scan_instruction', 'Scan the QR code with your mobile camera to launch direct navigation in your phone.')}
               </span>
             </div>
           </div>

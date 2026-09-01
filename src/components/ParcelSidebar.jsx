@@ -4,11 +4,13 @@ import { formatArea } from '../utils/geoUtils';
 import { CLASSIFICATION_COLORS } from '../utils/colorUtils';
 import { generatePropertyCardPDF } from '../utils/pdfGenerator';
 import ReachCitizenModal from './ReachCitizenModal';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ParcelSidebar({ unit, onClose, metadata }) {
   const [copiedField, setCopiedField] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showReachModal, setShowReachModal] = useState(false);
+  const { t } = useLanguage();
 
   if (!unit) return null;
 
@@ -39,21 +41,21 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
         return (
           <span className="status-badge status-verified">
             <CheckCircle2 size={13} />
-            <span>Verified Record</span>
+            <span>{t('status_verified', 'Verified Record')}</span>
           </span>
         );
       case 'disputed':
         return (
           <span className="status-badge status-disputed">
             <AlertTriangle size={13} />
-            <span>Disputed Record</span>
+            <span>{t('status_disputed', 'Disputed Record')}</span>
           </span>
         );
       default:
         return (
           <span className="status-badge status-unverified">
             <HelpCircle size={13} />
-            <span>Unverified Record</span>
+            <span>{t('status_unverified', 'Unverified Record')}</span>
           </span>
         );
     }
@@ -66,9 +68,9 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
         <div className="sidebar-title-group">
           <div className="sidebar-type-tag" style={{ color: classificationMeta.hex }}>
             <Layers size={14} />
-            <span>Floor {unit.floor_number} • {classificationMeta.name}</span>
+            <span>{t('floor', 'Floor')} {unit.floor_number} • {classificationMeta.name}</span>
           </div>
-          <h2 className="sidebar-id">{unit.unit_id || 'Unit Details'}</h2>
+          <h2 className="sidebar-id">{unit.unit_id || t('unit_details', 'Unit Details')}</h2>
         </div>
         <button onClick={onClose} className="sidebar-close-btn" aria-label="Close unit details">
           <X size={18} />
@@ -81,36 +83,36 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
         {unit.is_synthetic && (
           <span className="status-badge status-synthetic">
             <Sparkles size={12} />
-            <span>Simulated Floor</span>
+            <span>{t('simulated_floor', 'Simulated Floor')}</span>
           </span>
         )}
       </div>
 
       {/* Unit Properties List */}
       <div className="sidebar-body">
-        <div className="prop-section-title">Floor Unit Attributes</div>
+        <div className="prop-section-title">{t('floor_unit_attributes', 'Floor Unit Attributes')}</div>
 
         <div className="prop-grid">
           {/* Owner Name */}
           <div className="prop-card full-width">
             <div className="prop-label">
               <User size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Unit Owner / Titleholder
+              {t('titleholder', 'Unit Owner / Titleholder')}
             </div>
             <div className="prop-value font-medium text-slate-100">{unit.owner_name || '—'}</div>
           </div>
 
           {/* Floor Number */}
           <div className="prop-card">
-            <div className="prop-label">Floor Level</div>
+            <div className="prop-label">{t('floor_level', 'Floor Level')}</div>
             <div className="prop-value font-mono text-indigo-300">
-              Level {unit.floor_number} (of {unit.total_floors || '—'})
+              {t('level', 'Level')} {unit.floor_number} (of {unit.total_floors || '—'})
             </div>
           </div>
 
           {/* Classification */}
           <div className="prop-card">
-            <div className="prop-label">Classification</div>
+            <div className="prop-label">{t('classification', 'Classification')}</div>
             <div className="prop-value capitalize" style={{ color: classificationMeta.hex }}>
               {unit.classification || '—'}
             </div>
@@ -118,7 +120,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
 
           {/* Khasra Number */}
           <div className="prop-card">
-            <div className="prop-label">Khasra Number</div>
+            <div className="prop-label">{t('khasra_number', 'Khasra Number')}</div>
             <div className="prop-value-row">
               <span className="prop-value">{unit.khasra_number || '—'}</span>
               {unit.khasra_number && (
@@ -135,7 +137,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
 
           {/* Survey Number */}
           <div className="prop-card">
-            <div className="prop-label">Survey Number</div>
+            <div className="prop-label">{t('survey_number', 'Survey Number')}</div>
             <div className="prop-value-row">
               <span className="prop-value">{unit.survey_number || '—'}</span>
               {unit.survey_number && (
@@ -154,7 +156,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
           <div className="prop-card full-width">
             <div className="prop-label">
               <Building2 size={12} style={{ display: 'inline', marginRight: 4 }} />
-              Plot / Building ID
+              {t('plot_building_id', 'Plot / Building ID')}
             </div>
             <div className="prop-value text-slate-300 font-mono text-xs">{unit.plot_id || unit.building_id || '—'}</div>
           </div>
@@ -164,7 +166,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
             <div className="prop-card full-width">
               <div className="prop-label">
                 <Hash size={12} style={{ display: 'inline', marginRight: 4 }} />
-                Floor Division Share
+                {t('floor_division_share', 'Floor Division Share')}
               </div>
               <div className="prop-value text-emerald-400 font-mono text-xs">
                 Division {unit.division_index || 1} • {typeof unit.division_share === 'number' ? `${(unit.division_share * 100).toFixed(1)}% of floor` : '100%'}
@@ -174,7 +176,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
 
           {/* Building Footprint Area */}
           <div className="prop-card full-width">
-            <div className="prop-label">Building Footprint Area</div>
+            <div className="prop-label">{t('building_footprint_area', 'Building Footprint Area')}</div>
             <div className="prop-value text-indigo-300 font-mono">
               {formatArea(unit.footprint_area_sqm)}
             </div>
@@ -182,12 +184,12 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
 
           {/* Location details */}
           <div className="prop-card">
-            <div className="prop-label">Village</div>
+            <div className="prop-label">{t('village', 'Village')}</div>
             <div className="prop-value">{unit.village || '—'}</div>
           </div>
 
           <div className="prop-card">
-            <div className="prop-label">Tehsil</div>
+            <div className="prop-label">{t('tehsil', 'Tehsil')}</div>
             <div className="prop-value">{unit.tehsil || '—'}</div>
           </div>
         </div>
@@ -218,7 +220,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
             title="Launch field route navigation to this citizen's land parcel with QR code and Google Map"
           >
             <Navigation size={15} />
-            <span>Reach Citizen</span>
+            <span>{t('reach_citizen', 'Reach Citizen')}</span>
             <span
               style={{
                 marginLeft: 'auto',
@@ -232,7 +234,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
               }}
             >
               <QrCode size={11} />
-              <span>MAP & QR</span>
+              <span>{t('map_and_qr', 'MAP & QR')}</span>
             </span>
           </button>
 
@@ -248,7 +250,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
             ) : (
               <FileDown size={15} />
             )}
-            <span>{isGeneratingPdf ? 'Generating Certificate...' : 'Download Property Card (PDF)'}</span>
+            <span>{isGeneratingPdf ? t('generating_certificate', 'Generating Certificate...') : t('download_property_card', 'Download Property Card (PDF)')}</span>
             <QrCode size={13} style={{ marginLeft: 'auto', opacity: 0.8 }} />
           </button>
         </div>

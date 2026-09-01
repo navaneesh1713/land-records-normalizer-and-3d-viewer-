@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import {
   Search, MapPin, RefreshCw, Compass, Menu, PanelLeftOpen, PanelLeftClose, X
 } from 'lucide-react';
+import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AppTopBar({
   activeTab = 'map',
@@ -16,6 +18,7 @@ export default function AppTopBar({
   onToggleSidebarCollapse,
 }) {
   const [searchVal, setSearchVal] = useState('');
+  const { t } = useLanguage();
 
   const handleSearchChange = (e) => {
     const val = e.target.value;
@@ -25,15 +28,15 @@ export default function AppTopBar({
 
   const getBreadcrumbLabel = () => {
     switch (activeTab) {
-      case 'database': return 'Land Database';
-      case 'upload': return 'Document Upload';
-      case 'map': return '3D Studio';
+      case 'database': return t('nav_database', 'Land Database');
+      case 'upload': return t('nav_upload', 'Upload & Scan');
+      case 'map': return t('nav_studio', '3D Studio');
       case 'review': return 'Review Queue';
-      case 'scanner': return 'Document Scanner';
-      case 'analytics': return 'Analytics Dashboard';
-      case 'audit': return 'Audit Trail';
-      case 'ailoop': return 'AI Learning Loop';
-      default: return 'Studio';
+      case 'scanner': return t('nav_scanner', 'Document Scanner');
+      case 'analytics': return t('nav_analytics', 'Analytics Dashboard');
+      case 'audit': return t('nav_audit', 'Audit Trail');
+      case 'ailoop': return t('nav_ailoop', 'AI Learning Loop');
+      default: return t('nav_studio', '3D Studio');
     }
   };
 
@@ -46,7 +49,7 @@ export default function AppTopBar({
           <button
             onClick={onToggleMobileMenu}
             className="topbar-menu-btn mobile-only"
-            title="Open Menu"
+            title={t('open_menu', 'Open Menu')}
           >
             <Menu size={18} />
           </button>
@@ -57,7 +60,7 @@ export default function AppTopBar({
           <button
             onClick={onToggleSidebarCollapse}
             className="topbar-icon-btn desktop-only"
-            title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            title={isSidebarCollapsed ? t('expand_sidebar', 'Expand Sidebar') : t('collapse_sidebar', 'Collapse Sidebar')}
             style={{ marginRight: 4 }}
           >
             {isSidebarCollapsed ? <PanelLeftOpen size={16} color="#6366f1" /> : <PanelLeftClose size={16} color="#64748b" />}
@@ -70,7 +73,7 @@ export default function AppTopBar({
           <div className="topbar-location-pill desktop-only">
             <MapPin size={11} color="#6366f1" />
             <span>{metadata.village}, {metadata.tehsil}</span>
-            <span className="pill-stat-tag">{buildingCount} bldgs · {unitCount} units</span>
+            <span className="pill-stat-tag">{buildingCount} {t('buildings', 'bldgs')} · {unitCount} {t('units', 'units')}</span>
           </div>
         )}
       </div>
@@ -81,7 +84,7 @@ export default function AppTopBar({
           <Search size={14} className="search-icon" />
           <input
             type="text"
-            placeholder="Search parcels, survey no, owner..."
+            placeholder={t('search_placeholder', 'Search parcels, survey no, khasra, owner...')}
             value={searchVal}
             onChange={handleSearchChange}
             className="topbar-search-field"
@@ -102,10 +105,12 @@ export default function AppTopBar({
         </div>
       </div>
 
-      {/* Right: Actions & Profile */}
-      <div className="topbar-right-actions">
+      {/* Right: Actions, Language Selector & Camera Reset */}
+      <div className="topbar-right-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <LanguageSelector />
+
         {onResetCamera && (
-          <button onClick={onResetCamera} className="topbar-icon-btn" title="Reset Camera View">
+          <button onClick={onResetCamera} className="topbar-icon-btn" title={t('reset_camera', 'Reset Camera View')}>
             <RefreshCw size={14} color="#64748b" />
           </button>
         )}

@@ -7,6 +7,7 @@ import {
   Compass, Eye, FolderKanban, Sliders, X, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { PRESET_DATASETS } from '../services/dataSource';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AppSidebar({
   activeTab = 'map',
@@ -27,13 +28,15 @@ export default function AppSidebar({
   mobileOpen = false,
   onCloseMobile,
 }) {
+  const { t } = useLanguage();
+
   const mainNavItems = [
-    { id: 'map', label: '3D Studio', icon: Layers, badge: null },
-    { id: 'database', label: 'Land Database', icon: Database, badge: null },
-    { id: 'upload', label: 'Upload & Scan', icon: Upload, badge: null },
-    { id: 'scanner', label: 'Document Scanner', icon: ScanLine, badge: null },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
-    { id: 'ailoop', label: 'AI Feedback Loop', icon: BrainCircuit, badge: null },
+    { id: 'map', label: t('nav_studio', '3D Studio'), icon: Layers, badge: null },
+    { id: 'database', label: t('nav_database', 'Land Database'), icon: Database, badge: null },
+    { id: 'upload', label: t('nav_upload', 'Upload & Scan'), icon: Upload, badge: null },
+    { id: 'scanner', label: t('nav_scanner', 'Document Scanner'), icon: ScanLine, badge: null },
+    { id: 'analytics', label: t('nav_analytics', 'Analytics'), icon: BarChart3, badge: null },
+    { id: 'ailoop', label: t('nav_ailoop', 'AI Feedback Loop'), icon: BrainCircuit, badge: null },
   ];
 
   const handleNavClick = (tabId) => {

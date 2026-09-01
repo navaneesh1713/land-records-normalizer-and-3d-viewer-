@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { storageService } from '../services/storageService';
 import { auditTrailService } from '../services/auditTrailService';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function LandDatabaseDashboard({
   onApplyTo3DMap,
@@ -21,17 +22,20 @@ export default function LandDatabaseDashboard({
   const [toastType, setToastType] = useState('success');
   const [showAddModal, setShowAddModal] = useState(false);
   const [addFormErrors, setAddFormErrors] = useState([]);
+  const { t } = useLanguage();
   const [newRecordForm, setNewRecordForm] = useState({
     building_name: '',
     house_number: '',
     street_name: '',
     locality: '',
     village_city: '',
+    tehsil: '',
     district: '',
     state: 'Karnataka',
     country: 'India',
     pincode: '',
     owner_name: '',
+    khasra_number: '',
     survey_number: '',
     floors: '2',
     size: '1200',
@@ -73,11 +77,13 @@ export default function LandDatabaseDashboard({
         street_name: '',
         locality: '',
         village_city: '',
+        tehsil: '',
         district: '',
         state: 'Karnataka',
         country: 'India',
         pincode: '',
         owner_name: '',
+        khasra_number: '',
         survey_number: '',
         floors: '2',
         size: '1200',

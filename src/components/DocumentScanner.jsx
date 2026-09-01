@@ -18,8 +18,10 @@ import {
   Sparkles, Download, ShieldCheck, AlertTriangle, ArrowRight, Layers, FileCode,
   Wand2, Check, HelpCircle, RefreshCw, Bot, Database
 } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose, onNavigateToUpload }) {
+  const { t } = useLanguage();
   const handleGoToUpload = () => {
     if (onNavigateToUpload) {
       onNavigateToUpload();
@@ -847,21 +849,21 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
                 <div className="record-fields-grid">
                   {[
-                    { key: 'building_name', label: 'Building Name' },
-                    { key: 'house_number', label: 'Building/House Number' },
-                    { key: 'street_name', label: 'Street/Road Name' },
-                    { key: 'locality', label: 'Locality/Area' },
-                    { key: 'village_city', label: 'Village/Town/City' },
-                    { key: 'tehsil', label: 'Tehsil / Taluk / Mandal' },
-                    { key: 'district', label: 'District' },
-                    { key: 'state', label: 'State/Province' },
-                    { key: 'country', label: 'Country' },
-                    { key: 'pincode', label: 'PIN/ZIP Code' },
-                    { key: 'owner_name', label: 'Owner / Khatadar Name' },
-                    { key: 'khasra_number', label: 'Khasra Number' },
-                    { key: 'survey_number', label: 'Survey Number' },
-                    { key: 'floors', label: 'Storeys (Floors)' },
-                    { key: 'size', label: 'Size', isSize: true },
+                    { key: 'building_name', label: t('building_name', 'Building Name') },
+                    { key: 'house_number', label: t('house_number', 'Building/House Number') },
+                    { key: 'street_name', label: t('street_name', 'Street/Road Name') },
+                    { key: 'locality', label: t('locality', 'Locality/Area') },
+                    { key: 'village_city', label: t('village', 'Village/Town/City') },
+                    { key: 'tehsil', label: t('tehsil', 'Tehsil / Taluk / Mandal') },
+                    { key: 'district', label: t('district', 'District') },
+                    { key: 'state', label: t('state', 'State/Province') },
+                    { key: 'country', label: t('country', 'Country') },
+                    { key: 'pincode', label: t('pincode', 'PIN/ZIP Code') },
+                    { key: 'owner_name', label: t('titleholder', 'Owner / Khatadar Name') },
+                    { key: 'khasra_number', label: t('khasra_number', 'Khasra Number') },
+                    { key: 'survey_number', label: t('survey_number', 'Survey Number') },
+                    { key: 'floors', label: t('storeys', 'Storeys (Floors)') },
+                    { key: 'size', label: t('size', 'Size'), isSize: true },
                   ].map(({ key, label, isSize }) => {
                     const hasValue = Boolean(rec[key] && String(rec[key]).trim());
                     const isValidationError = Boolean(validationErrors[rec._idx]?.includes(key));
@@ -979,7 +981,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             title="Save extracted record to local government database (Zero Duplicates)"
           >
             <Database size={14} />
-            <span>Add to Database</span>
+            <span>{t('add_to_database', 'Add to Database')}</span>
           </button>
 
           <button
@@ -988,7 +990,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             title="Normalize & Extrude directly into 3D Map Viewer"
           >
             <Layers size={14} />
-            <span>Apply to 3D Map</span>
+            <span>{t('apply', 'Apply & View in 3D')}</span>
           </button>
         </div>
       )}
