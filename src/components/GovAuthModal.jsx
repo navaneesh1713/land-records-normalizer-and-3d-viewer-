@@ -115,8 +115,7 @@ export default function GovAuthModal({
         return;
       }
 
-      const liveFeatures = await biometricFaceService.extractFacialFeatures(screenshot);
-      const comparison = biometricFaceService.compareFacialBiometrics(liveFeatures, registeredProfile.features);
+      const comparison = await biometricFaceService.compareLiveWithRegistered(screenshot, registeredProfile);
 
       if (comparison.match) {
         setAuthenticating(false);
@@ -126,6 +125,7 @@ export default function GovAuthModal({
         setAuthError(`Biometric Mismatch (${comparison.similarity}% similarity). Only the registered officer (${registeredProfile.officerName}) is permitted.`);
       }
     } catch (err) {
+      console.error('[GovAuthModal] Biometric verification error:', err);
       setAuthenticating(false);
       setAuthError('Biometric processing error. Please try again or use PIN.');
     }
@@ -147,6 +147,7 @@ export default function GovAuthModal({
       setAuthenticating(false);
       completeAuthentication();
     } catch (err) {
+      console.error('[GovAuthModal] Face registration error:', err);
       setAuthenticating(false);
       setAuthError('Failed to capture face biometric template.');
     }
