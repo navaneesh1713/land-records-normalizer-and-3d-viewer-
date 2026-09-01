@@ -6877,13 +6877,43 @@ body {
   .scanner-notification-popup {
     font-size: 12px;
   }
+}
 
-  .scanner-studio-header {
-    padding: 12px 14px;
+/* ─── Reach Citizen Navigation & QR Modal ─── */
+.reach-citizen-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-reach-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+}
+
+.sidebar-reach-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .reach-citizen-modal {
+    width: 96% !important;
+    max-height: 95vh !important;
   }
 
-  .scanner-studio-body {
-    padding: 12px;
+  .reach-citizen-modal > div:nth-child(2) {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 16px !important;
   }
 }
+
+
 

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash, FileDown, Loader2, QrCode } from 'lucide-react';
+import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash, FileDown, Loader2, QrCode, Navigation, MapPin } from 'lucide-react';
 import { formatArea } from '../utils/geoUtils';
 import { CLASSIFICATION_COLORS } from '../utils/colorUtils';
 import { generatePropertyCardPDF } from '../utils/pdfGenerator';
+import ReachCitizenModal from './ReachCitizenModal';
 
 export default function ParcelSidebar({ unit, onClose, metadata }) {
   const [copiedField, setCopiedField] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [showReachModal, setShowReachModal] = useState(false);
 
   if (!unit) return null;
 
@@ -190,8 +192,51 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
           </div>
         </div>
 
-        {/* Action: Generate Official Property Card PDF */}
-        <div style={{ marginTop: '16px' }}>
+        {/* Actions: Reach Citizen & Download Property Card PDF */}
+        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {/* Action 1: Reach Citizen / Live GPS Navigation */}
+          <button
+            className="sidebar-reach-btn"
+            onClick={() => setShowReachModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              width: '100%',
+              padding: '12px 14px',
+              background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '10px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              transition: 'all 0.2s ease',
+            }}
+            title="Launch field route navigation to this citizen's land parcel with QR code and Google Map"
+          >
+            <Navigation size={15} />
+            <span>Reach Citizen</span>
+            <span
+              style={{
+                marginLeft: 'auto',
+                fontSize: '10px',
+                padding: '2px 6px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+              }}
+            >
+              <QrCode size={11} />
+              <span>MAP & QR</span>
+            </span>
+          </button>
+
+          {/* Action 2: Generate Official Property Card PDF */}
           <button
             className="sidebar-pdf-btn"
             onClick={handleDownloadPDF}
@@ -208,6 +253,14 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
           </button>
         </div>
       </div>
+
+      {/* Reach Citizen Modal */}
+      {showReachModal && (
+        <ReachCitizenModal
+          unit={unit}
+          onClose={() => setShowReachModal(false)}
+        />
+      )}
     </aside>
   );
 }
