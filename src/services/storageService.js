@@ -83,6 +83,8 @@ export const INITIAL_LAND_DATABASE = [
   }
 ];
 
+export const INITIAL_REVIEW_QUEUE = [];
+
 export const storageService = {
   // ─── Land Database (Local Memory Persistence) ───
   getDatabaseRecords() {
