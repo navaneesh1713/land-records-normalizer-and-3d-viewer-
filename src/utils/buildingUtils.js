@@ -77,6 +77,14 @@ export function generateBuildingFloorSlices(features = []) {
     const floorHeight = Number(buildingProps.floor_height_m) || 3.5;
     const plotId = buildingProps.plot_id || buildingProps.building_id || 'UNKNOWN-PLOT';
 
+    // GeoJSON Polygon: coordinates = [ outerRing, ...holes ]
+    // outerRing = [[lng, lat], [lng, lat], ...]
+    const baseRing = Array.isArray(rawCoords[0]) && Array.isArray(rawCoords[0][0])
+      ? rawCoords[0]   // standard Polygon outer ring
+      : rawCoords;     // already a flat ring (edge-case safety)
+
+    if (!baseRing || baseRing.length < 3) continue;
+
     // Compute 2D centroid from baseRing coordinates
     let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
     for (const pt of baseRing) {
