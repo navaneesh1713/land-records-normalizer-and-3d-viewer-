@@ -77,8 +77,16 @@ export function generateBuildingFloorSlices(features = []) {
     const floorHeight = Number(buildingProps.floor_height_m) || 3.5;
     const plotId = buildingProps.plot_id || buildingProps.building_id || 'UNKNOWN-PLOT';
 
-    // Base 2D ring
-    const baseRing = rawCoords[0]; // [ [lng, lat], ... ]
+    // Compute 2D centroid from baseRing coordinates
+    let minLng = Infinity, maxLng = -Infinity, minLat = Infinity, maxLat = -Infinity;
+    for (const pt of baseRing) {
+      if (pt[0] < minLng) minLng = pt[0];
+      if (pt[0] > maxLng) maxLng = pt[0];
+      if (pt[1] < minLat) minLat = pt[1];
+      if (pt[1] > maxLat) maxLat = pt[1];
+    }
+    const centerLng = Number(((minLng + maxLng) / 2).toFixed(6));
+    const centerLat = Number(((minLat + maxLat) / 2).toFixed(6));
 
     // Case 1: Target Schema -> building.properties.floors[] -> floor.divisions[]
     if (Array.isArray(buildingProps.floors) && buildingProps.floors.length > 0) {
@@ -118,9 +126,17 @@ export function generateBuildingFloorSlices(features = []) {
             plot_id: plotId,
             building_id: plotId,
             osm_way_id: buildingProps.osm_way_id,
+            building_name: buildingProps.building_name || div.building_name || '',
+            house_number: buildingProps.house_number || div.house_number || '',
+            street_name: buildingProps.street_name || div.street_name || '',
+            locality: buildingProps.locality || div.locality || '',
             village: buildingProps.village,
             tehsil: buildingProps.tehsil,
             district: buildingProps.district,
+            state: buildingProps.state || div.state || '',
+            pincode: buildingProps.pincode || div.pincode || '',
+            latitude: centerLat,
+            longitude: centerLng,
             floor_height_m: floorHeight,
             footprint_area_sqm: buildingProps.footprint_area_sqm,
             total_floors: totalFloors,
@@ -131,8 +147,8 @@ export function generateBuildingFloorSlices(features = []) {
 
             // Division leaf unit attributes
             unit_id: div.unit_id || `${plotId}-F${floorNum}-D${divIndex}`,
-            khasra_number: div.khasra_number,
-            survey_number: div.survey_number,
+            khasra_number: div.khasra_number || div.survey_number || '',
+            survey_number: div.survey_number || div.khasra_number || '',
             owner_name: div.owner_name,
             classification: div.classification,
             status: div.status,

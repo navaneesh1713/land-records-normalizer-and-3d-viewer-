@@ -12,9 +12,63 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
   const [travelMode, setTravelMode] = useState('driving'); // 'driving' | 'bicycling' | 'walking'
   const [mapType, setMapType] = useState('m'); // 'm' (standard) | 'k' (satellite)
 
-  // Calculate destination latitude & longitude
-  const destLat = destinationCoords?.lat || unit?.latitude || (unit?.polygon?.[0]?.[0]?.[1]) || 17.3916;
-  const destLng = destinationCoords?.lng || unit?.longitude || (unit?.polygon?.[0]?.[0]?.[0]) || 78.4410;
+  // Smart fallback lookup if coordinates are not attached directly to unit
+  const lookupCoords = () => {
+    const text = `${unit?.building_name || ''} ${unit?.locality || ''} ${unit?.village || ''} ${unit?.district || ''} ${unit?.pincode || ''}`.toLowerCase();
+    if (text.includes('kadugodi') || text.includes('whitefield') || text.includes('560067')) {
+      return { lat: 12.9982, lng: 77.7607 };
+    }
+    if (text.includes('hafeezpet') || text.includes('hafizpet')) {
+      return { lat: 17.4938, lng: 78.3533 };
+    }
+    if (text.includes('mehdipatnam') || text.includes('500028')) {
+      return { lat: 17.3916, lng: 78.4410 };
+    }
+    if (text.includes('kondapur')) {
+      return { lat: 17.4699, lng: 78.3578 };
+    }
+    if (text.includes('miyapur')) {
+      return { lat: 17.4968, lng: 78.3614 };
+    }
+    if (text.includes('gachibowli')) {
+      return { lat: 17.4401, lng: 78.3489 };
+    }
+    if (text.includes('hitec') || text.includes('madhapur')) {
+      return { lat: 17.4483, lng: 78.3808 };
+    }
+    return null;
+  };
+
+  const resolvedFallback = lookupCoords();
+  const destLat = destinationCoords?.lat || (unit?.latitude && !isNaN(unit.latitude) ? unit.latitude : null) || (unit?.polygon?.[0]?.[0]?.[1]) || resolvedFallback?.lat || 12.9982;
+  const destLng = destinationCoords?.lng || (unit?.longitude && !isNaN(unit.longitude) ? unit.longitude : null) || (unit?.polygon?.[0]?.[0]?.[0]) || resolvedFallback?.lng || 77.7607;
+
+  // Build full formatted address string for Google Maps query
+  const addressParts = [
+    unit?.building_name,
+    unit?.house_number && (unit.house_number.toLowerCase().includes('no') ? unit.house_number : `No. ${unit.house_number}`),
+    unit?.street_name,
+    unit?.locality,
+    unit?.village,
+    unit?.tehsil && unit.tehsil !== unit.village ? `Tehsil ${unit.tehsil}` : null,
+    unit?.district,
+    unit?.state,
+    unit?.pincode,
+    'India',
+  ].filter(Boolean);
+
+  const fullAddress = addressParts.join(', ');
+
+  // Generate universal Google Maps Navigation deep-link URL (instantly opens Google Maps App on Android & iOS)
+  const navigationUrl = officerLocation
+    ? `https://www.google.com/maps/dir/?api=1&origin=${officerLocation.lat},${officerLocation.lng}&destination=${destLat},${destLng}&travelmode=${travelMode}`
+    : `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${travelMode}`;
+
+  // Direct Google Maps location view URL
+  const directMapsUrl = `https://maps.google.com/?q=${destLat},${destLng}`;
+
+  // Embedded Google Map URL
+  const embedMapUrl = `https://maps.google.com/maps?q=${destLat},${destLng}&t=${mapType}&z=17&ie=UTF8&iwloc=&output=embed`;
 
   // Get Patwari / Revenue Officer current device location via browser Geolocation
   useEffect(() => {
@@ -76,14 +130,6 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
 
   const estimatedDuration = getEstimatedDuration(distanceKm, travelMode);
 
-  // Generate universal Google Maps Navigation deep-link URL (works on iOS, Android & Web)
-  const navigationUrl = officerLocation
-    ? `https://www.google.com/maps/dir/?api=1&origin=${officerLocation.lat},${officerLocation.lng}&destination=${destLat},${destLng}&travelmode=${travelMode}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${travelMode}`;
-
-  // Embedded Google Map URL
-  const embedMapUrl = `https://maps.google.com/maps?q=${destLat},${destLng}&t=${mapType}&z=17&ie=UTF8&iwloc=&output=embed`;
-
   const handleCopyLink = () => {
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(navigationUrl);
@@ -91,17 +137,6 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
       setTimeout(() => setCopied(false), 2000);
     }
   };
-
-  const fullAddress = [
-    unit?.building_name,
-    unit?.house_number && `No. ${unit.house_number}`,
-    unit?.street_name,
-    unit?.locality,
-    unit?.village,
-    unit?.district,
-    unit?.state,
-    unit?.pincode,
-  ].filter(Boolean).join(', ') || 'Indian Cadastral Parcel Location';
 
   return (
     <div className="reach-citizen-backdrop animate-fade-in" onClick={onClose}>
@@ -170,7 +205,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 </span>
               </div>
               <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94a3b8' }}>
-                Survey / Plot No. {unit?.survey_number || unit?.khasra_number || '125/A'} • {unit?.owner_name || 'Citizen'}
+                {unit?.khasra_number ? `Khasra: ${unit.khasra_number} • ` : ''}Survey No: {unit?.survey_number || '—'} • {unit?.owner_name || 'Citizen'}
               </p>
             </div>
           </div>
