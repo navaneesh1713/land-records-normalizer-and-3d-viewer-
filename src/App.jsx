@@ -71,23 +71,20 @@ export default function App() {
   });
 
   // Government & SIH Core Workflow States
-  const [showHeroPage, setShowHeroPage] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.location.pathname === '/' || window.location.pathname === '';
-    }
-    return true;
-  });
+  const [showHeroPage, setShowHeroPage] = useState(false);
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
-      if (path.startsWith('/home') || window.location.hash === '#/home') return 'map';
       if (path.startsWith('/database')) return 'database';
       if (path.startsWith('/upload')) return 'upload';
       if (path.startsWith('/analytics')) return 'analytics';
       if (path.startsWith('/audit')) return 'audit';
       if (path.startsWith('/ailoop') || path.startsWith('/ai-learning')) return 'ailoop';
+      if (path.startsWith('/hero')) {
+        return 'hero';
+      }
     }
-    return 'hero';
+    return 'map';
   });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
@@ -107,14 +104,14 @@ export default function App() {
       }
       setShowMobileScanner(false);
       
-      const isHome = path.startsWith('/home') || window.location.hash === '#/home';
       const isDatabase = path.startsWith('/database');
       const isUpload = path.startsWith('/upload');
       const isAnalytics = path.startsWith('/analytics');
       const isAudit = path.startsWith('/audit');
       const isAiLoop = path.startsWith('/ailoop') || path.startsWith('/ai-learning');
+      const isHero = path.startsWith('/hero');
       
-      setShowHeroPage(path === '/' || path === '');
+      setShowHeroPage(isHero);
       if (isDatabase) {
         setActiveTab('database');
       } else if (isUpload) {
@@ -125,10 +122,10 @@ export default function App() {
         setActiveTab('audit');
       } else if (isAiLoop) {
         setActiveTab('ailoop');
-      } else if (isHome) {
-        setActiveTab('map');
-      } else {
+      } else if (isHero) {
         setActiveTab('hero');
+      } else {
+        setActiveTab('map');
       }
     };
     window.addEventListener('popstate', handlePopState);
