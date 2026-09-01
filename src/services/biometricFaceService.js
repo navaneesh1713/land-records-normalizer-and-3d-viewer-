@@ -5,7 +5,7 @@
  * Engine 2: 16-Block Spatial Local Binary Pattern (LBP) + Zonal SSIM Biometric Comparison
  */
 
-import { getGeminiApiKey, getGeminiModel } from './handwrittenOcrService';
+import { getGeminiApiKey, getGeminiModel, getGroqApiKey, getGroqVisionModel } from './handwrittenOcrService';
 
 const BIOMETRIC_STORAGE_KEY = 'landx3d_registered_officer_face';
 
@@ -219,6 +219,76 @@ Rules:
   },
 
   /**
+   * Groq AI Multimodal Vision 1-to-1 Facial Verification Engine (Llama 3.2 Vision)
+   */
+  async verifyWithGroqAI(registeredImageBase64, liveImageBase64) {
+    const groqKey = getGroqApiKey();
+    if (!groqKey || groqKey.trim() === '') return null;
+
+    try {
+      const model = getGroqVisionModel() || 'llama-3.2-11b-vision-preview';
+      const regB64 = registeredImageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+      const liveB64 = liveImageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+
+      const promptText = `You are a high-security government biometric face verification engine.
+Task: Compare Image 1 (Registered Government Officer/Patwari) with Image 2 (Live Webcam Capture).
+Determine if Image 1 and Image 2 show the EXACT SAME HUMAN INDIVIDUAL.
+Respond ONLY with a valid JSON object:
+{
+  "is_same_person": boolean,
+  "similarity_score": number (0-100),
+  "reason": "Clear explanation"
+}`;
+
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${groqKey.trim()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: promptText },
+                {
+                  type: 'image_url',
+                  image_url: { url: `data:image/jpeg;base64,${regB64}` }
+                },
+                {
+                  type: 'image_url',
+                  image_url: { url: `data:image/jpeg;base64,${liveB64}` }
+                }
+              ]
+            }
+          ],
+          temperature: 0.1,
+          response_format: { type: 'json_object' }
+        })
+      });
+
+      if (!response.ok) return null;
+      const result = await response.json();
+      const content = result.choices?.[0]?.message?.content;
+      if (!content) return null;
+
+      const parsed = JSON.parse(content);
+      const isMatch = Boolean(parsed.is_same_person);
+      return {
+        match: isMatch,
+        similarity: Math.round(Number(parsed.similarity_score) || (isMatch ? 97 : 18)),
+        reason: isMatch ? 'Official Biometric Face Match (Groq Vision)' : 'Unauthorized Person Detected',
+        engine: 'groq_llama_vision'
+      };
+    } catch (e) {
+      console.warn('[BiometricFaceService] Groq AI Vision check skipped or failed:', e);
+      return null;
+    }
+  },
+
+  /**
    * Local 16-Block Spatial LBP & Zonal SSIM Biometric Comparison
    */
   compareLocalLBPBiometrics(liveFeatures, registeredFeatures) {
@@ -310,14 +380,14 @@ Rules:
 
   /**
    * Main High-Security 1-to-1 Verification Method
-   * Executes Gemini AI Vision (Primary) with LBP Spatial Matrix Fallback
+   * Executes Gemini AI Vision (Primary) -> Groq Llama 3.2 Vision (Fallback) -> LBP Spatial Matrix (Offline)
    */
   async compareLiveWithRegistered(liveImageDataUrl, registeredProfile) {
     if (!liveImageDataUrl || !registeredProfile) {
       return { match: false, similarity: 0, reason: 'Missing registration profile or camera capture' };
     }
 
-    // Try Gemini Multimodal AI Vision if registered image and API key exist
+    // 1. Try Gemini Multimodal AI Vision
     if (registeredProfile.imageDataUrl && registeredProfile.imageDataUrl.startsWith('data:image')) {
       const geminiResult = await this.verifyWithGeminiAI(registeredProfile.imageDataUrl, liveImageDataUrl);
       if (geminiResult !== null) {
@@ -325,7 +395,15 @@ Rules:
       }
     }
 
-    // High-Precision Local LBP & Zonal SSIM Engine
+    // 2. Try Groq Multimodal Vision AI Fallback (Llama 3.2 Vision)
+    if (registeredProfile.imageDataUrl && registeredProfile.imageDataUrl.startsWith('data:image')) {
+      const groqResult = await this.verifyWithGroqAI(registeredProfile.imageDataUrl, liveImageDataUrl);
+      if (groqResult !== null) {
+        return groqResult;
+      }
+    }
+
+    // 3. High-Precision Local LBP & Zonal SSIM Engine (Offline Fallback)
     const liveFeatures = await this.extractFacialFeatures(liveImageDataUrl);
     return this.compareLocalLBPBiometrics(liveFeatures, registeredProfile.features);
   },
