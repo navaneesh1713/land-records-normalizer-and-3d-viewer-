@@ -245,10 +245,10 @@ export default function LandDatabaseDashboard({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: 8, background: '#4f46e5', borderRadius: 10, color: '#ffffff', display: 'flex' }}>
+            <div style={{ padding: 8, background: '#0052FF', borderRadius: 10, color: '#ffffff', display: 'flex', boxShadow: '0 4px 12px rgba(0, 82, 255, 0.25)' }}>
               <Database size={20} />
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0A0B0D', margin: 0, letterSpacing: '-0.02em' }}>
               Government Land Cadastre Database
             </h1>
           </div>
@@ -261,18 +261,18 @@ export default function LandDatabaseDashboard({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '8px 16px',
-              background: '#4f46e5',
+              padding: '9px 18px',
+              background: '#0052FF',
               color: '#ffffff',
               border: 'none',
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 700,
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
+              boxShadow: '0 4px 14px rgba(0, 82, 255, 0.28)'
             }}
           >
-            <Plus size={14} />
+            <Plus size={15} />
             <span>Add Record</span>
           </button>
 
@@ -282,18 +282,18 @@ export default function LandDatabaseDashboard({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '8px 14px',
+              padding: '9px 16px',
               background: '#ffffff',
-              border: '1px solid #cbd5e1',
-              borderRadius: 8,
-              fontSize: 12,
+              border: '1px solid #ECEFF0',
+              borderRadius: 10,
+              fontSize: 13,
               fontWeight: 600,
-              color: '#334155',
+              color: '#0A0B0D',
               cursor: 'pointer',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
             }}
           >
-            <FileSpreadsheet size={14} color="#10b981" />
+            <FileSpreadsheet size={15} color="#05B169" />
             <span>Export CSV</span>
           </button>
         </div>
@@ -301,47 +301,47 @@ export default function LandDatabaseDashboard({
 
       {/* KPI Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#ffffff', padding: '16px 20px', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>TOTAL LAND PARCELS</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a' }}>{records.length}</div>
-          <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginTop: 4 }}>
+        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>TOTAL LAND PARCELS</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#0A0B0D' }}>{records.length}</div>
+          <div style={{ fontSize: 11.5, color: '#05B169', fontWeight: 700, marginTop: 4 }}>
             100% Unique (Zero Duplicates)
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', padding: '16px 20px', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>TOTAL CADASTRE EXTENT</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a' }}>
+        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>TOTAL CADASTRE EXTENT</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#0A0B0D' }}>
             {totalArea.toLocaleString()} <span style={{ fontSize: 14, fontWeight: 500 }}>sq.m</span>
           </div>
-          <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 600, marginTop: 4 }}>
+          <div style={{ fontSize: 11.5, color: '#0052FF', fontWeight: 700, marginTop: 4 }}>
             ≈ {(totalArea / 4046.86).toFixed(2)} Acres
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', padding: '16px 20px', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>LAND USE DISTRIBUTION</div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>
+        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>LAND USE DISTRIBUTION</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#0A0B0D' }}>
             {residentialCount} Res · {commercialCount} Comm
           </div>
-          <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500, marginTop: 4 }}>
+          <div style={{ fontSize: 11.5, color: '#8A919E', fontWeight: 500, marginTop: 4 }}>
             {records.length - residentialCount - commercialCount} Agricultural / Other
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', padding: '16px 20px', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginBottom: 6 }}>AVERAGE AI CONFIDENCE</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: '#059669' }}>{avgConfidence}%</div>
-          <div style={{ fontSize: 11, color: '#059669', fontWeight: 600, marginTop: 4 }}>
+        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>AVERAGE AI CONFIDENCE</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#05B169' }}>{avgConfidence}%</div>
+          <div style={{ fontSize: 11.5, color: '#05B169', fontWeight: 700, marginTop: 4 }}>
             Certified SVAMITVA Standard
           </div>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 18, background: '#ffffff', padding: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 18, background: '#ffffff', padding: 12, borderRadius: 14, border: '1px solid #ECEFF0', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
         <div style={{ flex: 1, position: 'relative' }}>
-          <Search size={15} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
+          <Search size={16} color="#8A919E" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
           <input
             type="text"
             placeholder="Search by Survey No, Building, Owner Name, Street, Locality, District..."
@@ -349,9 +349,9 @@ export default function LandDatabaseDashboard({
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px 8px 36px',
-              borderRadius: 6,
-              border: '1px solid #cbd5e1',
+              padding: '9px 14px 9px 40px',
+              borderRadius: 8,
+              border: '1px solid #E2E8F0',
               fontSize: 13,
               outline: 'none',
               boxSizing: 'border-box'
@@ -365,15 +365,15 @@ export default function LandDatabaseDashboard({
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            padding: '8px 16px',
-            background: '#4f46e5',
+            padding: '9px 18px',
+            background: '#0052FF',
             color: '#ffffff',
             border: 'none',
-            borderRadius: 6,
+            borderRadius: 8,
             fontSize: 13,
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer',
-            boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)',
+            boxShadow: '0 2px 8px rgba(0, 82, 255, 0.25)',
           }}
         >
           <Plus size={15} />
@@ -387,13 +387,13 @@ export default function LandDatabaseDashboard({
               display: 'flex',
               alignItems: 'center',
               gap: 6,
-              padding: '8px 16px',
-              background: '#059669',
+              padding: '9px 18px',
+              background: '#05B169',
               color: '#ffffff',
               border: 'none',
-              borderRadius: 6,
+              borderRadius: 8,
               fontSize: 13,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: 'pointer',
             }}
           >
@@ -510,17 +510,17 @@ export default function LandDatabaseDashboard({
                       <button
                         onClick={() => handleApplySingleToMap(rec)}
                         style={{
-                          padding: '4px 10px',
-                          background: '#e0e7ff',
-                          color: '#4338ca',
-                          border: 'none',
-                          borderRadius: 6,
-                          fontSize: 11,
-                          fontWeight: 600,
+                          padding: '5px 12px',
+                          background: '#EDF2FE',
+                          color: '#0052FF',
+                          border: '1px solid rgba(0, 82, 255, 0.15)',
+                          borderRadius: 8,
+                          fontSize: 11.5,
+                          fontWeight: 700,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 4
+                          gap: 5
                         }}
                         title="Extrude and view this parcel in 3D Map Studio"
                       >
@@ -531,12 +531,12 @@ export default function LandDatabaseDashboard({
                       <button
                         onClick={() => handleDelete(rec.id, rec.survey_number || rec.khasra_number)}
                         style={{
-                          padding: '4px 8px',
-                          background: '#fee2e2',
-                          color: '#b91c1c',
-                          border: 'none',
-                          borderRadius: 6,
-                          fontSize: 11,
+                          padding: '5px 10px',
+                          background: '#FDE8E8',
+                          color: '#DF1525',
+                          border: '1px solid rgba(223, 21, 37, 0.2)',
+                          borderRadius: 8,
+                          fontSize: 11.5,
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center'
@@ -561,8 +561,8 @@ export default function LandDatabaseDashboard({
             position: 'fixed',
             inset: 0,
             zIndex: 9999,
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
+            background: 'rgba(10, 11, 13, 0.65)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -575,13 +575,13 @@ export default function LandDatabaseDashboard({
           <div
             style={{
               background: '#ffffff',
-              borderRadius: 16,
+              borderRadius: 20,
               width: '100%',
               maxWidth: 680,
               maxHeight: '90vh',
               overflowY: 'auto',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
-              border: '1px solid #e2e8f0',
+              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.25)',
+              border: '1px solid #ECEFF0',
               display: 'flex',
               flexDirection: 'column',
               animation: 'fadeInUp 0.25s ease',
@@ -591,31 +591,31 @@ export default function LandDatabaseDashboard({
             <div
               style={{
                 padding: '18px 24px',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid #ECEFF0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: '#f8fafc',
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
+                background: '#F8FAFC',
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ padding: 8, background: '#4f46e5', borderRadius: 10, color: '#fff', display: 'flex' }}>
+                <div style={{ padding: 8, background: '#0052FF', borderRadius: 10, color: '#fff', display: 'flex', boxShadow: '0 4px 12px rgba(0, 82, 255, 0.25)' }}>
                   <Plus size={18} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0A0B0D', margin: 0 }}>
                     Add Certified Land Record
                   </h2>
-                  <p style={{ fontSize: 11, color: '#64748b', margin: 0 }}>
+                  <p style={{ fontSize: 11.5, color: '#5B616E', margin: 0 }}>
                     All blank fields must be completed. System enforces 100% database uniqueness.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#5B616E', padding: 4 }}
               >
                 <X size={18} />
               </button>
@@ -627,18 +627,18 @@ export default function LandDatabaseDashboard({
                 style={{
                   margin: '16px 24px 0',
                   padding: '10px 14px',
-                  background: '#fef2f2',
-                  border: '1px solid #f87171',
-                  borderRadius: 8,
+                  background: '#FDE8E8',
+                  border: '1px solid #F87171',
+                  borderRadius: 10,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  color: '#991b1b',
+                  color: '#991B1B',
                   fontSize: 12,
                   fontWeight: 600,
                 }}
               >
-                <AlertCircle size={16} color="#dc2626" style={{ flexShrink: 0 }} />
+                <AlertCircle size={16} color="#DF1525" style={{ flexShrink: 0 }} />
                 <span>
                   <strong>All blanks required:</strong> Please fill in the missing fields: {addFormErrors.join(', ')}.
                 </span>
@@ -677,7 +677,7 @@ export default function LandDatabaseDashboard({
                           display: 'block',
                           fontSize: 12,
                           fontWeight: 600,
-                          color: isMissing ? '#dc2626' : '#334155',
+                          color: isMissing ? '#DF1525' : '#5B616E',
                           marginBottom: 4,
                         }}
                       >
@@ -695,8 +695,8 @@ export default function LandDatabaseDashboard({
                           width: '100%',
                           padding: '8px 12px',
                           borderRadius: 8,
-                          border: `1.5px solid ${isMissing ? '#ef4444' : '#cbd5e1'}`,
-                          background: isMissing ? '#fff5f5' : '#ffffff',
+                          border: `1.5px solid ${isMissing ? '#DF1525' : '#E2E8F0'}`,
+                          background: isMissing ? '#FFF5F5' : '#FFFFFF',
                           fontSize: 13,
                           outline: 'none',
                           boxSizing: 'border-box',
@@ -707,7 +707,7 @@ export default function LandDatabaseDashboard({
                 })}
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#334155', marginBottom: 4 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5B616E', marginBottom: 4 }}>
                     Size (Area) *
                   </label>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -720,8 +720,8 @@ export default function LandDatabaseDashboard({
                         flex: 1,
                         padding: '8px 12px',
                         borderRadius: 8,
-                        border: '1.5px solid #cbd5e1',
-                        background: '#ffffff',
+                        border: '1.5px solid #E2E8F0',
+                        background: '#FFFFFF',
                         fontSize: 13,
                         outline: 'none',
                         boxSizing: 'border-box',
@@ -733,8 +733,8 @@ export default function LandDatabaseDashboard({
                       style={{
                         padding: '8px 12px',
                         borderRadius: 8,
-                        border: '1.5px solid #cbd5e1',
-                        background: '#f8fafc',
+                        border: '1.5px solid #E2E8F0',
+                        background: '#F8FAFC',
                         fontSize: 13,
                         fontWeight: 600,
                         outline: 'none',
@@ -756,7 +756,7 @@ export default function LandDatabaseDashboard({
                   justifyContent: 'flex-end',
                   gap: 12,
                   paddingTop: 16,
-                  borderTop: '1px solid #f1f5f9',
+                  borderTop: '1px solid #ECEFF0',
                 }}
               >
                 <button
@@ -764,10 +764,10 @@ export default function LandDatabaseDashboard({
                   onClick={() => setShowAddModal(false)}
                   style={{
                     padding: '9px 18px',
-                    borderRadius: 8,
-                    border: '1px solid #cbd5e1',
-                    background: '#ffffff',
-                    color: '#475569',
+                    borderRadius: 10,
+                    border: '1px solid #ECEFF0',
+                    background: '#FFFFFF',
+                    color: '#5B616E',
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -780,14 +780,14 @@ export default function LandDatabaseDashboard({
                   type="submit"
                   style={{
                     padding: '9px 20px',
-                    borderRadius: 8,
+                    borderRadius: 10,
                     border: 'none',
-                    background: '#4f46e5',
+                    background: '#0052FF',
                     color: '#ffffff',
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
+                    boxShadow: '0 4px 14px rgba(0, 82, 255, 0.28)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6,

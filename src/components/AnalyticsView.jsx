@@ -103,7 +103,7 @@ export default function AnalyticsView() {
   // Dynamic realtime discrepancy breakdown
   const errorCategories = [
     { label: 'Unverified / Pending Tax Receipts', count: Math.max(1, dbRecords.length - paidTaxCount), percentage: Math.round(((dbRecords.length - paidTaxCount + 1) / (dbRecords.length + 5)) * 100), color: '#f59e0b' },
-    { label: 'Mortgaged / Encumbered Land Titles', count: Math.max(1, dbRecords.filter(r => r.encumbrance_status === 'MORTGAGED').length), percentage: 24, color: '#6366f1' },
+    { label: 'Mortgaged / Encumbered Land Titles', count: Math.max(1, dbRecords.filter(r => r.encumbrance_status === 'MORTGAGED').length), percentage: 24, color: '#0052FF' },
     { label: 'Missing / Short Khatauni Numbers', count: Math.max(1, dbRecords.filter(r => !r.khata_number).length), percentage: 19, color: '#ec4899' },
     { label: 'Multi-Storey Vertical Floor Demarcations', count: Math.max(1, dbRecords.filter(r => Number(r.floors) >= 3).length), percentage: 14, color: '#8b5cf6' },
     { label: 'Low-Confidence Scan Review Flags', count: Math.max(1, pendingCount), percentage: 8, color: '#ef4444' },
@@ -178,7 +178,7 @@ export default function AnalyticsView() {
             }}
             title="Refresh realtime metrics"
           >
-            <RefreshCw size={13} color="#4f46e5" />
+            <RefreshCw size={13} color="#0052FF" />
             <span>Sync Live Data</span>
           </button>
 
@@ -239,7 +239,7 @@ export default function AnalyticsView() {
             Active Land DB Parcels
           </div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', marginTop: 2 }}>
-            {totalParcelsCount} <span style={{ fontSize: 13, fontWeight: 500, color: '#c7d2fe' }}>verified</span>
+            {totalParcelsCount} <span style={{ fontSize: 13, fontWeight: 500, color: '#EDF2FE' }}>verified</span>
           </div>
           <div style={{ fontSize: 11, color: '#86efac', marginTop: 2, fontWeight: 600 }}>
             100% Deduplicated
@@ -251,7 +251,7 @@ export default function AnalyticsView() {
             Registered Cadastre Area
           </div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#ffffff', marginTop: 2 }}>
-            {totalExtentSqm.toLocaleString()} <span style={{ fontSize: 13, fontWeight: 500, color: '#c7d2fe' }}>m²</span>
+            {totalExtentSqm.toLocaleString()} <span style={{ fontSize: 13, fontWeight: 500, color: '#EDF2FE' }}>m²</span>
           </div>
           <div style={{ fontSize: 11, color: '#cbd5e1', marginTop: 2 }}>
             ≈ {totalExtentAcres} Acres
@@ -386,7 +386,7 @@ export default function AnalyticsView() {
                         <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px' }}>{row.percentage}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 18px', color: '#6366f1', fontWeight: 700 }}>
+                    <td style={{ padding: '14px 18px', color: '#0052FF', fontWeight: 700 }}>
                       {row.buildings3d.toLocaleString()}
                     </td>
                     <td style={{ padding: '14px 18px' }}>

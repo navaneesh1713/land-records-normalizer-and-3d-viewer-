@@ -117,7 +117,7 @@ export default function AiFeedbackLoopView() {
         <ArrowRight size={16} color="#cbd5e1" />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#e0e7ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>3</div>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#EDF2FE', color: '#0052FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>3</div>
           <div>
             <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>Patwari Ground Truth</div>
             <div style={{ fontSize: '11.5px', color: '#64748b' }}>Verified human input</div>

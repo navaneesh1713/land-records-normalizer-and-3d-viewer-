@@ -112,7 +112,7 @@ export default function AppSidebar({
                     {!isCollapsed && <span className="nav-label">{item.label}</span>}
                   </div>
                   {!isCollapsed && item.badge && (
-                    <span className="nav-badge" style={{ backgroundColor: item.badgeColor || '#6366f1' }}>
+                    <span className="nav-badge" style={{ backgroundColor: item.badgeColor || '#0052FF' }}>
                       {item.badge}
                     </span>
                   )}
@@ -162,7 +162,7 @@ export default function AppSidebar({
             style={{ cursor: 'pointer', margin: '0 auto' }}
             title={`Role: ${userRole.toUpperCase()} — Click for DSC Token SSO Auth`}
           >
-            <UserCheck size={16} color="#4f46e5" />
+            <UserCheck size={16} color="#0052FF" />
           </div>
         ) : (
           <div className="profile-role-box">
@@ -172,7 +172,7 @@ export default function AppSidebar({
               style={{ cursor: 'pointer' }}
               title="Open GovPass SSO Digital Authentication"
             >
-              <UserCheck size={14} color="#4f46e5" />
+              <UserCheck size={14} color="#0052FF" />
             </div>
             <div className="role-details">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -180,7 +180,7 @@ export default function AppSidebar({
                 {onOpenAuth && (
                   <button
                     onClick={onOpenAuth}
-                    style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                    style={{ background: 'none', border: 'none', color: '#0052FF', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
                     title="Verify DSC Token & PIN"
                   >
                     SSO Auth ↗

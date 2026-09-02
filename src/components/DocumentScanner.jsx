@@ -440,7 +440,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       <div className="scanner-studio-header">
         <div className="scanner-header-left">
           <div className="scanner-icon-pill">
-            <ScanLine size={16} color="#4f46e5" />
+            <ScanLine size={16} color="#0052FF" />
           </div>
           <div>
             <div className="scanner-title-text">Document OCR Scanner & AI Normalizer</div>
@@ -485,7 +485,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
               gap: 10,
               width: '100%',
               padding: '14px 20px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)',
+              background: 'linear-gradient(135deg, #0052FF 0%, #0045D8 100%)',
               color: '#ffffff',
               border: 'none',
               borderRadius: 10,
@@ -570,7 +570,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             }}
           >
             {/* Ambient subtle glowing top border */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #4f46e5, #06b6d4, #10b981)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #0052FF, #06b6d4, #10b981)' }} />
 
             {/* Top info bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -579,12 +579,12 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                   style={{
                     width: 32,
                     height: 32,
-                    borderRadius: 8,
-                    background: '#e0e7ff',
+                    background: '#EDF2FE',
+                    borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#4f46e5'
+                    color: '#0052FF'
                   }}
                 >
                   <Bot size={18} className="spin-animate" />
@@ -596,16 +596,16 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                   <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>{getGeminiModel() || 'Gemini 2.5 Flash'}</span>
                     <span>•</span>
-                    <span style={{ color: '#4f46e5', fontWeight: 600 }}>⚡ {elapsedSec}s elapsed</span>
+                    <span style={{ color: '#0052FF', fontWeight: 600 }}>⚡ {elapsedSec}s elapsed</span>
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                <span style={{ fontSize: 24, fontWeight: 800, color: '#4f46e5', letterSpacing: '-0.02em' }}>
+                <span style={{ fontSize: 24, fontWeight: 800, color: '#0052FF', letterSpacing: '-0.02em' }}>
                   {ocrProgress}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#6366f1' }}>%</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0052FF' }}>%</span>
               </div>
             </div>
 
@@ -626,7 +626,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                 style={{
                   width: `${Math.max(8, ocrProgress)}%`,
                   height: '100%',
-                  background: 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 50%, #10b981 100%)',
+                  background: 'linear-gradient(90deg, #0052FF 0%, #06b6d4 50%, #10b981 100%)',
                   borderRadius: 20,
                   transition: 'width 0.35s ease',
                   boxShadow: '0 0 12px rgba(6, 182, 212, 0.5)',
@@ -671,7 +671,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                       {isDone ? (
                         <CheckCircle2 size={12} color="#059669" />
                       ) : isActive ? (
-                        <Loader2 size={12} color="#4f46e5" className="spin-animate" />
+                        <Loader2 size={12} color="#0052FF" className="spin-animate" />
                       ) : (
                         <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#cbd5e1' }} />
                       )}
@@ -683,7 +683,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                         {step.label}
                       </span>
                     </div>
-                    <div style={{ fontSize: 9, color: isDone ? '#047857' : isActive ? '#6366f1' : '#94a3b8', paddingLeft: 17 }}>
+                    <div style={{ fontSize: 9, color: isDone ? '#047857' : isActive ? '#0052FF' : '#94a3b8', paddingLeft: 17 }}>
                       {step.desc}
                     </div>
                   </div>
@@ -693,7 +693,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
 
             {/* Current Realtime Status Note */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: '#334155', fontWeight: 500 }}>
-              <Sparkles size={14} color="#4f46e5" />
+              <Sparkles size={14} color="#0052FF" />
               <span>{ocrStatus || 'Deciphering handwritten deed with Gemini AI...'}</span>
             </div>
           </div>
@@ -704,7 +704,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           <div className="scanner-image-preview-card">
             <div className="preview-card-header">
               <div className="preview-header-title">
-                <ImageIcon size={13} color="#4f46e5" />
+                <ImageIcon size={13} color="#0052FF" />
                 <span>Source Scan Document</span>
               </div>
               {sourceFileName && <span className="preview-filename-badge">{sourceFileName}</span>}
@@ -795,10 +795,12 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           <div className="scanner-records-container">
             <div className="records-header-strip">
               <div className="records-title-group">
-                <Edit3 size={14} color="#4f46e5" />
-                <span>Extracted Cadastral Schema</span>
+                <Edit3 size={14} color="#0052FF" />
               </div>
-              {modelInfo && <span style={{ fontSize: 11, color: '#6366f1', fontWeight: 600 }}>{modelInfo}</span>}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>AI Extracted Fields</span>
+                {modelInfo && <span style={{ fontSize: 11, color: '#0052FF', fontWeight: 600 }}>{modelInfo}</span>}
+              </div>
               <span className="records-count-pill">{extractedRecords.length} Record</span>
             </div>
 
@@ -968,7 +970,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
               alignItems: 'center',
               gap: 6,
               padding: '10px 18px',
-              background: '#4f46e5',
+              background: '#0052FF',
               color: '#ffffff',
               border: 'none',
               borderRadius: 8,

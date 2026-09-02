@@ -178,7 +178,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 width: '38px',
                 height: '38px',
                 borderRadius: '10px',
-                background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
+                background: 'linear-gradient(135deg, #0052FF 0%, #06b6d4 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -287,7 +287,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                   color: '#1e293b',
                 }}
               >
-                <QrCode size={13} color="#4f46e5" />
+                <QrCode size={13} color="#0052FF" />
                 <span>{t('scan_with_mobile', 'SCAN WITH MOBILE CAMERA')}</span>
               </div>
             </div>
@@ -324,7 +324,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                       padding: '8px 4px',
                       borderRadius: '7px',
                       border: 'none',
-                      background: travelMode === mode ? '#4f46e5' : 'transparent',
+                      background: travelMode === mode ? '#0052FF' : 'transparent',
                       color: travelMode === mode ? '#ffffff' : '#94a3b8',
                       fontSize: '12px',
                       fontWeight: 600,
@@ -377,7 +377,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                   justifyContent: 'center',
                   gap: '8px',
                   padding: '12px',
-                  background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #0052FF 100%)',
                   color: '#ffffff',
                   borderRadius: '10px',
                   fontSize: '13px',
@@ -471,7 +471,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                     padding: '4px 8px',
                     borderRadius: '6px',
                     border: 'none',
-                    background: mapType === 'm' ? '#4f46e5' : 'transparent',
+                    background: mapType === 'm' ? '#0052FF' : 'transparent',
                     color: mapType === 'm' ? '#ffffff' : '#94a3b8',
                     fontSize: '11px',
                     fontWeight: 700,
@@ -486,7 +486,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                     padding: '4px 8px',
                     borderRadius: '6px',
                     border: 'none',
-                    background: mapType === 'k' ? '#4f46e5' : 'transparent',
+                    background: mapType === 'k' ? '#0052FF' : 'transparent',
                     color: mapType === 'k' ? '#ffffff' : '#94a3b8',
                     fontSize: '11px',
                     fontWeight: 700,
@@ -557,7 +557,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 padding: '0 4px',
               }}
             >
-              <LocateFixed size={13} color="#4f46e5" />
+              <LocateFixed size={13} color="#0052FF" />
               <span>
                 {locationStatus === 'ready'
                   ? t('gps_connected', 'Your live field coordinates are connected for turn-by-turn routing.')

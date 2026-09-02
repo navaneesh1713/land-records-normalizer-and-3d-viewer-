@@ -30,7 +30,7 @@ export default function GovAuthModal({
       title: 'Patwari / Village Field Officer',
       badge: 'Tier-1',
       icon: UserCheck,
-      color: '#4f46e5',
+      color: '#0052FF',
       officerName: 'K. Suresh (Patwari ID: BLR-PAT-4029)',
       defaultPin: '1234',
     },
@@ -39,7 +39,7 @@ export default function GovAuthModal({
       title: 'Revenue Officer / Tehsildar',
       badge: 'Tier-2',
       icon: ShieldCheck,
-      color: '#d97706',
+      color: '#05B169',
       officerName: 'M. Ananth (Tehsildar Code: TEH-KA-092)',
       defaultPin: '1234',
     }

@@ -283,7 +283,7 @@ export default function VerificationQueueModal({
                 <div className="hitl-source-document-pane">
                   <div className="hitl-subpane-header">
                     <div className="hitl-subpane-title">
-                      <FileText size={15} color="#4f46e5" />
+                      <FileText size={15} color="#0052FF" />
                       <span>Source Document Transcript</span>
                     </div>
                     <span className="hitl-state-pill">{selectedItem.state}</span>
@@ -313,7 +313,7 @@ export default function VerificationQueueModal({
 
                   {/* AI Extraction Warning Callout */}
                   <div className="hitl-ai-callout-box">
-                    <Sparkles size={16} color="#6366f1" style={{ flexShrink: 0, marginTop: '2px' }} />
+                    <Sparkles size={16} color="#0052FF" style={{ flexShrink: 0, marginTop: '2px' }} />
                     <div>
                       <div className="hitl-ai-callout-title">AI Extraction Note</div>
                       <div className="hitl-ai-callout-msg">
@@ -327,7 +327,7 @@ export default function VerificationQueueModal({
                 <div className="hitl-attributes-editor-pane">
                   <div className="hitl-subpane-header">
                     <div className="hitl-subpane-title">
-                      <Edit3 size={15} color="#10b981" />
+                      <Edit3 size={15} color="#05B169" />
                       <span>Editable Extracted Attributes (Field-by-Field)</span>
                     </div>
                   </div>
@@ -377,7 +377,7 @@ export default function VerificationQueueModal({
 
                           {isUncertain && reason && (
                             <div className="hitl-field-warning-row">
-                              <AlertTriangle size={12} color="#d97706" style={{ flexShrink: 0 }} />
+                              <AlertTriangle size={12} color="#F59E0B" style={{ flexShrink: 0 }} />
                               <span>{reason}</span>
                             </div>
                           )}
@@ -418,7 +418,7 @@ export default function VerificationQueueModal({
               <div className="hitl-workstation-bottom-bar">
                 <div className="hitl-bottom-actor-info">
                   <div className="hitl-actor-avatar">
-                    <User size={14} color="#4f46e5" />
+                    <User size={14} color="#0052FF" />
                   </div>
                   <div>
                     <span style={{ fontSize: '11px', color: '#64748b' }}>Acting as: </span>

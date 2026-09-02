@@ -276,7 +276,7 @@ export default function OfficialFaceAuthModal({
               border: '1px solid #e2e8f0'
             }}
           >
-            <UserCheck size={14} color="#4f46e5" />
+            <UserCheck size={14} color="#0052FF" />
             <span>
               {registeredOfficer?.officerName || `${activeOfficer.title} (${activeOfficer.id})`}
             </span>
@@ -285,13 +285,13 @@ export default function OfficialFaceAuthModal({
           {/* NO ENROLLMENT STATE */}
           {authStatus === 'NO_ENROLLMENT' && (
             <div className="animate-fade-in" style={{ padding: '10px 0' }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '2px solid #bfdbfe' }}>
-                <UserX size={28} color="#2563eb" />
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#EDF2FE', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', border: '1px solid rgba(0, 82, 255, 0.2)' }}>
+                <UserX size={28} color="#0052FF" />
               </div>
-              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '0 0 8px 0' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0A0B0D', margin: '0 0 8px 0' }}>
                 No Enrolled Biometric Face Found
               </h3>
-              <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.5, marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: '#5B616E', lineHeight: 1.5, marginBottom: 20 }}>
                 The Government Cadastre Database is strictly restricted to verified officials. You must enroll your biometric face template to verify your identity.
               </p>
               
@@ -300,18 +300,18 @@ export default function OfficialFaceAuthModal({
                 style={{
                   width: '100%',
                   padding: '12px 16px',
-                  background: '#4f46e5',
+                  background: '#0052FF',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: 10,
-                  fontWeight: 600,
+                  borderRadius: 12,
+                  fontWeight: 700,
                   fontSize: 13,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+                  boxShadow: '0 4px 14px rgba(0, 82, 255, 0.25)'
                 }}
               >
                 <Key size={16} /> Enroll Official Face Profile
@@ -324,13 +324,13 @@ export default function OfficialFaceAuthModal({
             <div className="animate-fade-in" style={{ padding: '6px 0' }}>
               {enrollingStep === 'PIN' ? (
                 <form onSubmit={handleEnrollPinSubmit}>
-                  <Key size={32} color="#4f46e5" style={{ margin: '0 auto 12px' }} />
-                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 16px' }}>
+                  <Key size={32} color="#0052FF" style={{ margin: '0 auto 12px' }} />
+                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0A0B0D', margin: '0 0 16px' }}>
                     Enter Master Officer PIN
                   </h4>
                   
                   {errorMessage && (
-                    <div style={{ color: '#dc2626', fontSize: 12, background: '#fef2f2', padding: '6px 10px', borderRadius: 6, marginBottom: 12 }}>
+                    <div style={{ color: '#DF1525', fontSize: 12, background: '#FDE8E8', padding: '6px 10px', borderRadius: 6, marginBottom: 12 }}>
                       {errorMessage}
                     </div>
                   )}
@@ -340,25 +340,25 @@ export default function OfficialFaceAuthModal({
                     placeholder="****"
                     value={enrollingPin}
                     onChange={(e) => setEnrollingPin(e.target.value)}
-                    style={{ width: '100%', padding: '12px', textAlign: 'center', fontSize: '20px', letterSpacing: '6px', border: '2px solid #e2e8f0', borderRadius: '8px', marginBottom: '16px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '12px', textAlign: 'center', fontSize: '20px', letterSpacing: '6px', border: '1.5px solid #E2E8F0', borderRadius: '10px', marginBottom: '16px', boxSizing: 'border-box' }}
                     autoFocus
                   />
                   <button
                     type="submit"
-                    style={{ width: '100%', padding: '12px', background: '#4f46e5', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '12px', background: '#0052FF', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(0, 82, 255, 0.25)' }}
                   >
                     Proceed to Face Capture
                   </button>
                 </form>
               ) : (
                 <div>
-                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>
+                  <h4 style={{ fontSize: 15, fontWeight: 700, color: '#0A0B0D', margin: '0 0 6px' }}>
                     Look Directly into the Camera
                   </h4>
-                  <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
+                  <p style={{ fontSize: 12, color: '#5B616E', marginBottom: 16 }}>
                     Position your face inside the frame to store your biometric nodal template.
                   </p>
-                  <div style={{ position: 'relative', width: '220px', height: '220px', margin: '0 auto 16px', borderRadius: '50%', overflow: 'hidden', background: '#0f172a', border: '3px solid #4f46e5' }}>
+                  <div style={{ position: 'relative', width: '220px', height: '220px', margin: '0 auto 16px', borderRadius: '50%', overflow: 'hidden', background: '#0A0B0D', border: '3px solid #0052FF' }}>
                     <Webcam
                       ref={webcamRef}
                       audio={false}
@@ -369,7 +369,7 @@ export default function OfficialFaceAuthModal({
                   </div>
                   <button
                     onClick={handleCaptureAndEnroll}
-                    style={{ width: '100%', padding: '12px', background: '#10b981', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ width: '100%', padding: '12px', background: '#05B169', color: '#ffffff', border: 'none', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
                   >
                     Capture & Register Official Face
                   </button>
@@ -390,12 +390,12 @@ export default function OfficialFaceAuthModal({
                   margin: '0 auto 18px',
                   borderRadius: '50%',
                   overflow: 'hidden',
-                  background: '#0f172a',
+                  background: '#0A0B0D',
                   boxShadow: authStatus === 'SUCCESS'
-                    ? '0 0 0 4px #10b981, 0 10px 25px rgba(16, 185, 129, 0.3)'
+                    ? '0 0 0 4px #05B169, 0 10px 25px rgba(5, 177, 105, 0.3)'
                     : authStatus === 'MISMATCH'
-                    ? '0 0 0 4px #ef4444, 0 10px 25px rgba(239, 68, 68, 0.3)'
-                    : '0 0 0 4px #4f46e5, 0 10px 25px rgba(79, 70, 229, 0.3)',
+                    ? '0 0 0 4px #DF1525, 0 10px 25px rgba(223, 21, 37, 0.3)'
+                    : '0 0 0 4px #0052FF, 0 10px 25px rgba(0, 82, 255, 0.25)',
                   transition: 'all 0.3s ease'
                 }}
               >

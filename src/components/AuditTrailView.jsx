@@ -62,7 +62,7 @@ CERTIFIED GENUINE & UNMODIFIED BY DIGITAL REVENUE REGISTRAR.`;
       case 'HUMAN_VERIFICATION_REJECTED':
         return <span style={{ background: '#fee2e2', color: '#b91c1c', padding: '3px 9px', borderRadius: '9999px', fontSize: '11px', fontWeight: 700 }}>FLAGGED RE-SURVEY</span>;
       case 'USER_AUTHENTICATED_ROLE':
-        return <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '3px 9px', borderRadius: '9999px', fontSize: '11px', fontWeight: 700 }}>SSO AUTHENTICATION</span>;
+        return <span style={{ background: '#EDF2FE', color: '#0052FF', padding: '3px 9px', borderRadius: '9999px', fontSize: '11px', fontWeight: 700 }}>SSO AUTHENTICATION</span>;
       case 'HANDWRITTEN_AI_VISION_EXTRACT':
         return <span style={{ background: '#f3e8ff', color: '#7e22ce', padding: '3px 9px', borderRadius: '9999px', fontSize: '11px', fontWeight: 700 }}>AI VISION EXTRACT</span>;
       default:
@@ -125,7 +125,7 @@ CERTIFIED GENUINE & UNMODIFIED BY DIGITAL REVENUE REGISTRAR.`;
 
         <div style={{ background: '#ffffff', padding: '14px 18px', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
           <div style={{ padding: '8px', borderRadius: '8px', background: '#eef2ff' }}>
-            <Key size={18} color="#4f46e5" />
+            <Key size={18} color="#0052FF" />
           </div>
           <div>
             <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Digital Signature Standard</div>
@@ -197,7 +197,7 @@ CERTIFIED GENUINE & UNMODIFIED BY DIGITAL REVENUE REGISTRAR.`;
                   </td>
                   <td style={{ padding: '14px 18px' }}>
                     <div style={{ fontFamily: 'monospace', fontWeight: 700, color: '#0f172a', fontSize: '12px' }}>{log.id}</div>
-                    <div style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6366f1' }}>{log.digitalSeal || 'SHA256:4f8e...9a21'}</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '11px', color: '#0052FF' }}>{log.digitalSeal || 'SHA256:4f8e...9a21'}</div>
                   </td>
                   <td style={{ padding: '14px 18px' }}>
                     {getActionPill(log.action)}

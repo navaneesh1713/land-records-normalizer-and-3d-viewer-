@@ -63,7 +63,7 @@ export default function AppTopBar({
             title={isSidebarCollapsed ? t('expand_sidebar', 'Expand Sidebar') : t('collapse_sidebar', 'Collapse Sidebar')}
             style={{ marginRight: 4 }}
           >
-            {isSidebarCollapsed ? <PanelLeftOpen size={16} color="#6366f1" /> : <PanelLeftClose size={16} color="#64748b" />}
+            {isSidebarCollapsed ? <PanelLeftOpen size={16} color="#0052FF" /> : <PanelLeftClose size={16} color="#5B616E" />}
           </button>
         )}
 
@@ -71,7 +71,7 @@ export default function AppTopBar({
 
         {metadata?.village && (
           <div className="topbar-location-pill desktop-only">
-            <MapPin size={11} color="#6366f1" />
+            <MapPin size={11} color="#0052FF" />
             <span>{metadata.village}, {metadata.tehsil}</span>
             <span className="pill-stat-tag">{buildingCount} {t('buildings', 'bldgs')} · {unitCount} {t('units', 'units')}</span>
           </div>

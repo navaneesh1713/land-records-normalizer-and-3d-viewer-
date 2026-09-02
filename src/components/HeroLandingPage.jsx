@@ -54,7 +54,7 @@ export default function HeroLandingPage({
 
           ctx.beginPath();
           ctx.arc(x, y, radius, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(15, 23, 42, ${alpha})`;
+          ctx.fillStyle = `rgba(0, 82, 255, ${alpha * 0.4})`;
           ctx.fill();
         }
       }
@@ -92,7 +92,7 @@ export default function HeroLandingPage({
       <main className="hero-main-center-wrapper">
         {/* Pill Tag */}
         <div className="hero-kicker-pill animate-fade-in">
-          <Sparkles size={13} color="#4f46e5" />
+          <Sparkles size={13} color="#0052FF" />
           <span>Next-Gen 3D Cadastral Normalizer & Spatial Engine</span>
         </div>
 

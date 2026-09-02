@@ -170,14 +170,14 @@ export default function UploadDashboard({ onFileReady }) {
       
       {/* Header */}
       <div style={{ marginBottom: '40px' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: '#eef2ff', borderRadius: '20px', border: '1px solid #c7d2fe', marginBottom: '16px' }}>
-          <Sparkles size={14} color="#4f46e5" />
-          <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#4338ca' }}>Multi-Modal Cadastre Ingestion</span>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: '#EDF2FE', borderRadius: '20px', border: '1px solid rgba(0, 82, 255, 0.2)', marginBottom: '16px' }}>
+          <Sparkles size={14} color="#0052FF" />
+          <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0052FF' }}>Multi-Modal Cadastre Ingestion</span>
         </div>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#0A0B0D', margin: '0 0 10px 0', letterSpacing: '-0.02em' }}>
           Document Ingestion Portal
         </h2>
-        <p style={{ color: '#64748b', fontSize: '15px', maxWidth: '560px', margin: '0 auto', lineHeight: 1.5 }}>
+        <p style={{ color: '#5B616E', fontSize: '15px', maxWidth: '560px', margin: '0 auto', lineHeight: 1.5 }}>
           Upload digital records or live-scan physical deeds using your mobile device camera for automated 3D spatial extraction.
         </p>
       </div>
@@ -195,22 +195,22 @@ export default function UploadDashboard({ onFileReady }) {
             padding: '44px 28px',
             background: '#ffffff',
             border: '2px dashed #cbd5e1',
-            borderRadius: '18px',
+            borderRadius: '20px',
             cursor: 'pointer',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             gap: '16px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+            boxShadow: '0 4px 14px rgba(0,0,0,0.03)'
           }}
         >
-          <div style={{ background: '#eff6ff', padding: '18px', borderRadius: '50%', border: '1px solid #dbeafe' }}>
-            <UploadCloud size={34} color="#2563eb" />
+          <div style={{ background: '#EDF2FE', padding: '18px', borderRadius: '50%', border: '1px solid rgba(0, 82, 255, 0.15)' }}>
+            <UploadCloud size={34} color="#0052FF" />
           </div>
           <div>
-            <div style={{ fontSize: '19px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>Upload Document</div>
-            <div style={{ color: '#64748b', fontSize: '13.5px' }}>PDF, JPG, PNG, Excel or CSV records</div>
+            <div style={{ fontSize: '19px', fontWeight: 700, color: '#0A0B0D', marginBottom: '4px' }}>Upload Document</div>
+            <div style={{ color: '#5B616E', fontSize: '13.5px' }}>PDF, JPG, PNG, Excel or CSV records</div>
           </div>
         </button>
 
@@ -303,21 +303,21 @@ export default function UploadDashboard({ onFileReady }) {
             {/* State 1: Waiting for QR Scan */}
             {connectionStatus === 'waiting' && (
               <div>
-                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#eef2ff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                  <ScanLine size={24} color="#4f46e5" />
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EDF2FE', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                  <ScanLine size={24} color="#0052FF" />
                 </div>
-                <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '21px', fontWeight: 700 }}>Scan with Mobile Device</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px', lineHeight: 1.45 }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#0A0B0D', fontSize: '21px', fontWeight: 800 }}>Scan with Mobile Device</h3>
+                <p style={{ color: '#5B616E', fontSize: '14px', marginBottom: '24px', lineHeight: 1.45 }}>
                   Point your phone's camera at this QR code to capture and stream land deeds directly to this workstation.
                 </p>
                 {peerId ? (
-                  <div style={{ background: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'inline-block' }}>
+                  <div style={{ background: '#F8FAFC', padding: '20px', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'inline-block' }}>
                     <QRCode value={`${window.location.protocol}//${window.location.host}/scan-mobile?peerId=${peerId}`} size={210} />
                   </div>
                 ) : (
                   <div style={{ height: '240px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
-                    <Loader2 className="spinner" size={36} color="#3b82f6" />
-                    <span style={{ fontSize: '13px', color: '#64748b' }}>Generating peer pairing token...</span>
+                    <Loader2 className="spinner" size={36} color="#0052FF" />
+                    <span style={{ fontSize: '13px', color: '#5B616E' }}>Generating peer pairing token...</span>
                   </div>
                 )}
               </div>
@@ -326,16 +326,16 @@ export default function UploadDashboard({ onFileReady }) {
             {/* State 2: Mobile Connected, Waiting for Photos */}
             {connectionStatus === 'connected' && (
               <div style={{ padding: '32px 16px' }}>
-                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#eff6ff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-                  <Smartphone size={32} color="#2563eb" className="animate-bounce" />
+                <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: '#EDF2FE', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                  <Smartphone size={32} color="#0052FF" className="animate-bounce" />
                 </div>
-                <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '20px', fontWeight: 700 }}>Mobile Device Connected!</h3>
-                <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '340px', margin: '0 auto 20px auto' }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#0A0B0D', fontSize: '20px', fontWeight: 800 }}>Mobile Device Connected!</h3>
+                <p style={{ color: '#5B616E', fontSize: '14px', maxWidth: '340px', margin: '0 auto 20px auto' }}>
                   Your phone is currently connected. Align document pages and tap <strong>Send</strong> on your phone.
                 </p>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: '#ecfdf5', borderRadius: '20px', border: '1px solid #a7f3d0' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-                  <span style={{ fontSize: '12.5px', fontWeight: 600, color: '#065f46' }}>Awaiting Camera Snapshots</span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: '#E6F8F0', borderRadius: '20px', border: '1px solid rgba(5, 177, 105, 0.3)' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#05B169' }} />
+                  <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#047857' }}>Awaiting Camera Snapshots</span>
                 </div>
               </div>
             )}
@@ -348,31 +348,31 @@ export default function UploadDashboard({ onFileReady }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', paddingRight: '24px' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle2 size={20} color="#10b981" />
-                      <h3 style={{ margin: 0, color: '#0f172a', fontSize: '18px', fontWeight: 700 }}>
+                      <CheckCircle2 size={20} color="#05B169" />
+                      <h3 style={{ margin: 0, color: '#0A0B0D', fontSize: '18px', fontWeight: 800 }}>
                         Scanned Document(s) Received
                       </h3>
                     </div>
-                    <p style={{ margin: '2px 0 0 0', color: '#64748b', fontSize: '13px' }}>
+                    <p style={{ margin: '2px 0 0 0', color: '#5B616E', fontSize: '13px' }}>
                       Review uploaded mobile scans before extracting attributes via AI normalizer.
                     </p>
                   </div>
-                  <span style={{ background: '#e0e7ff', color: '#4338ca', fontSize: '12px', fontWeight: 700, padding: '4px 12px', borderRadius: '9999px' }}>
+                  <span style={{ background: '#EDF2FE', color: '#0052FF', fontSize: '12px', fontWeight: 800, padding: '4px 12px', borderRadius: '9999px' }}>
                     {receivedPhotos.length} {receivedPhotos.length === 1 ? 'Page' : 'Pages'}
                   </span>
                 </div>
 
                 {/* Main Large Image Preview Box */}
                 <div style={{
-                  background: '#0f172a',
-                  borderRadius: '14px',
+                  background: '#0A0B0D',
+                  borderRadius: '16px',
                   overflow: 'hidden',
                   height: '320px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   position: 'relative',
-                  border: '1px solid #334155',
+                  border: '1px solid #E2E8F0',
                   marginBottom: '16px'
                 }}>
                   {receivedPhotos[activePhotoIdx]?.dataUrl && (
@@ -410,7 +410,7 @@ export default function UploadDashboard({ onFileReady }) {
                           height: '80px',
                           borderRadius: '8px',
                           overflow: 'hidden',
-                          border: activePhotoIdx === idx ? '2px solid #4f46e5' : '1px solid #cbd5e1',
+                          border: activePhotoIdx === idx ? '2px solid #0052FF' : '1px solid #CBD5E1',
                           cursor: 'pointer',
                           flexShrink: 0
                         }}
@@ -428,7 +428,7 @@ export default function UploadDashboard({ onFileReady }) {
                             width: '18px',
                             height: '18px',
                             borderRadius: '50%',
-                            background: '#ef4444',
+                            background: '#DF1525',
                             color: 'white',
                             border: 'none',
                             display: 'flex',
@@ -452,7 +452,7 @@ export default function UploadDashboard({ onFileReady }) {
                   justifyContent: 'space-between',
                   gap: '12px',
                   paddingTop: '12px',
-                  borderTop: '1px solid #e2e8f0',
+                  borderTop: '1px solid #ECEFF0',
                   flexWrap: 'wrap'
                 }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
@@ -461,10 +461,10 @@ export default function UploadDashboard({ onFileReady }) {
                       onClick={handleRejectAll}
                       style={{
                         padding: '10px 16px',
-                        background: '#ffffff',
-                        color: '#dc2626',
-                        border: '1.5px solid #fca5a5',
-                        borderRadius: '10px',
+                        background: '#FFFFFF',
+                        color: '#DF1525',
+                        border: '1.5px solid #FCA5A5',
+                        borderRadius: '12px',
                         fontSize: '13px',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -481,10 +481,10 @@ export default function UploadDashboard({ onFileReady }) {
                       onClick={() => setConnectionStatus('connected')}
                       style={{
                         padding: '10px 16px',
-                        background: '#f8fafc',
-                        color: '#475569',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '10px',
+                        background: '#F8FAFC',
+                        color: '#5B616E',
+                        border: '1px solid #CBD5E1',
+                        borderRadius: '12px',
                         fontSize: '13px',
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -502,24 +502,24 @@ export default function UploadDashboard({ onFileReady }) {
                     onClick={handleConfirmAndExtract}
                     style={{
                       padding: '11px 22px',
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
+                      background: '#0052FF',
                       color: '#ffffff',
                       border: 'none',
-                      borderRadius: '10px',
+                      borderRadius: '12px',
                       fontSize: '13.5px',
-                      fontWeight: 600,
+                      fontWeight: 700,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '8px',
-                      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)'
+                      boxShadow: '0 4px 14px rgba(0, 82, 255, 0.3)'
                     }}
                   >
                     <Sparkles size={16} /> Send to Document OCR Scanner & AI Normalizer
                   </button>
                 </div>
 
-                <div style={{ fontSize: '11.5px', color: '#64748b', textAlign: 'center', marginTop: '12px' }}>
+                <div style={{ fontSize: '11.5px', color: '#8A919E', textAlign: 'center', marginTop: '12px' }}>
                   Multimodal Handwritten HTR • Confidence Scoring • HITL Pipeline
                 </div>
 
@@ -532,9 +532,9 @@ export default function UploadDashboard({ onFileReady }) {
 
       <style>{`
         .upload-action-card:hover {
-          border-color: #3b82f6 !important;
+          border-color: #0052FF !important;
           transform: translateY(-4px);
-          box-shadow: 0 12px 28px -6px rgba(0,0,0,0.1) !important;
+          box-shadow: 0 12px 28px -6px rgba(0, 82, 255, 0.15) !important;
         }
       `}</style>
     </div>
