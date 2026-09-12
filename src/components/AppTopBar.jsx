@@ -206,7 +206,6 @@ export default function AppTopBar({
       {/* Center: Dual-Mode Smart Search with Pinterest-style Two-Column Dropdown */}
       <div className="topbar-center-search" ref={dropdownRef} style={{ position: 'relative' }}>
         <div className="search-input-wrapper">
-          <Search size={14} className="search-icon" />
           <input
             ref={searchInputRef}
             type="text"
@@ -228,23 +227,14 @@ export default function AppTopBar({
                 setSearchResults([]);
                 if (onSearchQuery) onSearchQuery('');
               }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94a3b8', display: 'flex' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', color: '#94a3b8', fontSize: '15px', lineHeight: 1 }}
+              title="Clear"
             >
-              <X size={13} />
+              ✕
             </button>
           ) : (
-            <span className="search-shortcut-badge desktop-only" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              {searchMode === 'aadhaar' ? (
-                <>
-                  <CreditCard size={12} color="#0052FF" />
-                  <span>Aadhaar Mode</span>
-                </>
-              ) : (
-                <>
-                  <Globe size={12} color="#059669" />
-                  <span>ULPIN Mode</span>
-                </>
-              )}
+            <span className="search-shortcut-badge desktop-only">
+              {searchMode === 'aadhaar' ? 'Aadhaar Mode' : 'ULPIN Mode'}
             </span>
           )}
         </div>
