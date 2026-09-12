@@ -2527,8 +2527,7 @@ button, input, select, textarea {
   transform: translateX(-50%);
   width: 680px;
   max-width: 96vw;
-  min-height: 380px;
-  max-height: 520px;
+  height: 440px;
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 16px;
@@ -2546,7 +2545,7 @@ button, input, select, textarea {
     left: 0;
     transform: none;
     grid-template-columns: 1fr;
-    max-height: 480px;
+    height: 480px;
   }
 }
 
@@ -2569,6 +2568,8 @@ button, input, select, textarea {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .split-col-heading {
@@ -2685,6 +2686,8 @@ button, input, select, textarea {
   background: #FFFFFF;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .split-right-header {

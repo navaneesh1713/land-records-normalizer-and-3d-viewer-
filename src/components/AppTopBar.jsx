@@ -31,9 +31,10 @@ export default function AppTopBar({
 
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const hoverTimeoutRef = useRef(null);
   const { t } = useLanguage();
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click and cleanup hover timer
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -41,23 +42,38 @@ export default function AppTopBar({
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
   }, []);
 
-  // Dual-mode search: debounced execution
+  const handleTabHover = (tab) => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setActiveMenuTab(tab);
+    }, 150);
+  };
+
+  const handleTabHoverLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+  };
+
+  // Dual-mode search: debounced execution with 250ms delay
   useEffect(() => {
     let cancelled = false;
 
-    async function performSearch() {
+    if (!searchVal.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+
+    const debounceTimer = setTimeout(async () => {
       const q = searchVal.trim();
       const allRecords = storageService.getDatabaseRecords() || [];
-
-      if (!q) {
-        setSearchResults([]);
-        return;
-      }
-
-      setIsSearching(true);
 
       try {
         if (searchMode === 'aadhaar') {
@@ -101,12 +117,11 @@ export default function AppTopBar({
       } finally {
         if (!cancelled) setIsSearching(false);
       }
-    }
-
-    performSearch();
+    }, 250);
 
     return () => {
       cancelled = true;
+      clearTimeout(debounceTimer);
     };
   }, [searchVal, searchMode]);
 
@@ -250,8 +265,10 @@ export default function AppTopBar({
                 {/* Option 1: By Owner Aadhaar */}
                 <div
                   className={`split-menu-item ${activeMenuTab === 'aadhaar' ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveMenuTab('aadhaar')}
+                  onMouseEnter={() => handleTabHover('aadhaar')}
+                  onMouseLeave={handleTabHoverLeave}
                   onClick={() => {
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
                     setActiveMenuTab('aadhaar');
                     setSearchMode('aadhaar');
                     if (searchInputRef.current) searchInputRef.current.focus();
@@ -274,8 +291,10 @@ export default function AppTopBar({
                 {/* Option 2: By 14-Digit ULPIN */}
                 <div
                   className={`split-menu-item ${activeMenuTab === 'ulpin' ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveMenuTab('ulpin')}
+                  onMouseEnter={() => handleTabHover('ulpin')}
+                  onMouseLeave={handleTabHoverLeave}
                   onClick={() => {
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
                     setActiveMenuTab('ulpin');
                     setSearchMode('ulpin');
                     if (searchInputRef.current) searchInputRef.current.focus();
@@ -298,8 +317,10 @@ export default function AppTopBar({
                 {/* Option 3: Verified Citizens Registry */}
                 <div
                   className={`split-menu-item ${activeMenuTab === 'registry' ? 'active' : ''}`}
-                  onMouseEnter={() => setActiveMenuTab('registry')}
+                  onMouseEnter={() => handleTabHover('registry')}
+                  onMouseLeave={handleTabHoverLeave}
                   onClick={() => {
+                    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
                     setActiveMenuTab('registry');
                     setSearchMode('aadhaar');
                   }}
