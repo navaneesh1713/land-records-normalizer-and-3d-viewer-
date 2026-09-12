@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash, FileDown, Loader2, QrCode, Navigation, MapPin } from 'lucide-react';
+import { X, User, CheckCircle2, AlertTriangle, HelpCircle, Sparkles, Building2, Layers, Copy, Check, Hash, FileDown, Loader2, QrCode, Navigation, MapPin, ShieldCheck, Fingerprint, RefreshCw, ExternalLink } from 'lucide-react';
 import { formatArea } from '../utils/geoUtils';
 import { CLASSIFICATION_COLORS } from '../utils/colorUtils';
 import { generatePropertyCardPDF } from '../utils/pdfGenerator';
+import { generateULPIN, getMaskedAadhaar, verifyAadhaarWithUIDAI } from '../utils/ulpinService';
 import ReachCitizenModal from './ReachCitizenModal';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -10,9 +11,36 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
   const [copiedField, setCopiedField] = useState(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [showReachModal, setShowReachModal] = useState(false);
+  const [isVerifyingAadhaar, setIsVerifyingAadhaar] = useState(false);
+  const [aadhaarState, setAadhaarState] = useState(() => ({
+    isVerified: unit?.aadhaar_verified || unit?.status === 'verified',
+    number: unit?.aadhaar_number || getMaskedAadhaar(unit?.owner_name || 'Citizen'),
+    txnId: unit?.aadhaar_auth_txnid || (unit?.status === 'verified' ? 'UIDAI-KYC-940182' : null),
+  }));
   const { t } = useLanguage();
 
   if (!unit) return null;
+
+  // Derive 14-digit ULPIN (Bhu-Aadhaar)
+  const ulpinNumber = unit.ulpin || generateULPIN(unit.longitude || 77.728, unit.latitude || 12.985, unit.state || 'Karnataka', unit.survey_number || unit.khasra_number || '1');
+  const dilrmpStatus = unit.dilrmp_sync_status || (unit.status === 'verified' ? 'synced' : 'pending');
+  const dilrmpTxnId = unit.dilrmp_txn_id || (dilrmpStatus === 'synced' ? 'DILRMP-MIS-2026-891024' : null);
+
+  const handleVerifyAadhaar = async () => {
+    try {
+      setIsVerifyingAadhaar(true);
+      const res = await verifyAadhaarWithUIDAI(aadhaarState.number, unit.owner_name);
+      setAadhaarState({
+        isVerified: true,
+        number: res.maskedAadhaar,
+        txnId: res.authTransactionId,
+      });
+    } catch (err) {
+      console.error('Aadhaar verification error:', err);
+    } finally {
+      setIsVerifyingAadhaar(false);
+    }
+  };
 
   const classificationMeta = CLASSIFICATION_COLORS[unit.classification?.toLowerCase()] || CLASSIFICATION_COLORS.vacant;
 
@@ -78,7 +106,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
       </div>
 
       {/* Badges strip */}
-      <div className="sidebar-badges-strip">
+      <div className="sidebar-badges-strip" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
         {getStatusBadge(unit.status)}
         {unit.is_synthetic && (
           <span className="status-badge status-synthetic">
@@ -86,10 +114,159 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
             <span>{t('simulated_floor', 'Simulated Floor')}</span>
           </span>
         )}
+        <span
+          className="status-badge"
+          style={{
+            background: dilrmpStatus === 'synced' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+            color: dilrmpStatus === 'synced' ? '#34d399' : '#fbbf24',
+            border: `1px solid ${dilrmpStatus === 'synced' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+            fontSize: '11px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            fontWeight: 600,
+          }}
+        >
+          <RefreshCw size={11} className={dilrmpStatus === 'synced' ? '' : 'animate-spin-slow'} />
+          <span>{dilrmpStatus === 'synced' ? 'DILRMP-MIS Synced' : 'DILRMP Sync Pending'}</span>
+        </span>
       </div>
 
       {/* Unit Properties List */}
       <div className="sidebar-body">
+        {/* National Spatial Identifier (ULPIN / Bhu-Aadhaar) */}
+        <div
+          className="ulpin-highlight-card"
+          style={{
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '12px',
+            padding: '12px 14px',
+            marginBottom: '14px',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <ShieldCheck size={13} color="#38bdf8" />
+              <span>ULPIN (Bhu-Aadhaar)</span>
+            </div>
+            <span style={{ fontSize: '10px', color: '#94a3b8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+              14-Digit Standard
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 800, color: '#f8fafc', letterSpacing: '0.12em' }}>
+              {ulpinNumber}
+            </span>
+            <button
+              onClick={() => handleCopy(ulpinNumber, 'ulpin')}
+              style={{
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                color: '#38bdf8',
+                borderRadius: '6px',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '11px',
+                fontWeight: 600,
+              }}
+              title="Copy 14-Digit ULPIN Code"
+            >
+              {copiedField === 'ulpin' ? <Check size={12} color="#34d399" /> : <Copy size={12} />}
+              <span>{copiedField === 'ulpin' ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+          {dilrmpTxnId && (
+            <div style={{ marginTop: '8px', fontSize: '10.5px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>DILRMP Txn:</span>
+              <code style={{ color: '#cbd5e1', fontSize: '10px' }}>{dilrmpTxnId}</code>
+            </div>
+          )}
+        </div>
+
+        {/* Citizen Aadhaar e-KYC Verification Card */}
+        <div
+          className="aadhaar-verification-card"
+          style={{
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: `1px solid ${aadhaarState.isVerified ? 'rgba(52, 211, 153, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+            borderRadius: '12px',
+            padding: '12px 14px',
+            marginBottom: '16px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: 700, color: aadhaarState.isVerified ? '#34d399' : '#fbbf24', textTransform: 'uppercase' }}>
+              <Fingerprint size={13} />
+              <span>Aadhaar e-KYC Link</span>
+            </div>
+            {aadhaarState.isVerified ? (
+              <span style={{ fontSize: '10px', color: '#34d399', background: 'rgba(52, 211, 153, 0.15)', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '3px' }}>
+                <CheckCircle2 size={10} /> UIDAI Certified
+              </span>
+            ) : (
+              <span style={{ fontSize: '10px', color: '#fbbf24', background: 'rgba(245, 158, 11, 0.15)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                Pending Verification
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <div>
+              <div style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: 700, color: '#e2e8f0', letterSpacing: '0.08em' }}>
+                {aadhaarState.number}
+              </div>
+              <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '2px' }}>
+                Linked to: <strong>{unit.owner_name || 'Land Titleholder'}</strong>
+              </div>
+            </div>
+
+            {!aadhaarState.isVerified ? (
+              <button
+                onClick={handleVerifyAadhaar}
+                disabled={isVerifyingAadhaar}
+                style={{
+                  background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  cursor: isVerifyingAadhaar ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.3)',
+                }}
+              >
+                {isVerifyingAadhaar ? (
+                  <>
+                    <Loader2 size={12} className="spinner" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={12} />
+                    <span>Verify e-KYC</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 600, display: 'block' }}>Auth OK</span>
+                <span style={{ fontSize: '9px', color: '#64748b', fontFamily: 'monospace' }}>{aadhaarState.txnId || 'UIDAI-2026-OK'}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="prop-section-title">{t('floor_unit_attributes', 'Floor Unit Attributes')}</div>
 
         <div className="prop-grid">

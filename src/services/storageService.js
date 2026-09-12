@@ -1,3 +1,5 @@
+import { generateULPIN, getMaskedAadhaar } from '../utils/ulpinService';
+
 /**
  * storageService.js — Client-side persistence and PostGIS/GeoJSON export bridge.
  * Stores verified records, pending review queues, audit logs, and AI training feedback.
@@ -13,7 +15,7 @@ const STORAGE_KEYS = {
   DISTRICT_STATS: 'sih_cadastre_district_stats',
 };
 
-// Initial Seed Records for the Land Database
+// Initial Seed Records for the Land Database with ULPIN & Aadhaar metadata
 export const INITIAL_LAND_DATABASE = [
   {
     id: 'REC-KA-2026-0891',
@@ -36,6 +38,40 @@ export const INITIAL_LAND_DATABASE = [
     size_unit: 'sft',
     area_sqm: 134.7,
     confidence: 96,
+    ulpin: '29841029471024',
+    aadhaar_number: 'XXXX-XXXX-8492',
+    aadhaar_verified: true,
+    dilrmp_sync_status: 'SYNCED',
+    dilrmp_txn_id: 'DILRMP-MIS-2026-891024',
+    dilrmp_sync_timestamp: '2026-08-30T10:18:00.000Z',
+  },
+  {
+    id: 'REC-KA-2026-0892',
+    createdAt: '2026-08-30T10:20:00.000Z',
+    sourceType: 'Bhoomi RTC Mutation Extract',
+    fileName: 'kadugodi_commercial_annex_48_2b.png',
+    building_name: 'Shree Sai Commercial Wing',
+    house_number: 'Shop G-04, Ground Floor',
+    street_name: 'Kadugodi Main Road',
+    locality: 'Whitefield Zone',
+    village_city: 'Kadugodi, Bengaluru',
+    district: 'Bengaluru Urban',
+    state: 'Karnataka',
+    country: 'India',
+    pincode: '560067',
+    owner_name: 'Ramesh Kumar Sharma',
+    survey_number: '48/2B',
+    floors: '1',
+    size: '950',
+    size_unit: 'sft',
+    area_sqm: 88.5,
+    confidence: 98,
+    ulpin: '29841029471025',
+    aadhaar_number: 'XXXX-XXXX-8492',
+    aadhaar_verified: true,
+    dilrmp_sync_status: 'SYNCED',
+    dilrmp_txn_id: 'DILRMP-MIS-2026-891025',
+    dilrmp_sync_timestamp: '2026-08-30T10:22:00.000Z',
   },
   {
     id: 'REC-UP-2026-4102',
@@ -58,6 +94,12 @@ export const INITIAL_LAND_DATABASE = [
     size_unit: 'sqy',
     area_sqm: 2424.8,
     confidence: 94,
+    ulpin: '09712048912048',
+    aadhaar_number: 'XXXX-XXXX-3829',
+    aadhaar_verified: true,
+    dilrmp_sync_status: 'SYNCED',
+    dilrmp_txn_id: 'DILRMP-MIS-2026-410291',
+    dilrmp_sync_timestamp: '2026-08-30T09:44:00.000Z',
   },
   {
     id: 'REC-MH-2026-9311',
@@ -80,6 +122,12 @@ export const INITIAL_LAND_DATABASE = [
     size_unit: 'acr',
     area_sqm: 4856.2,
     confidence: 95,
+    ulpin: '27649102849102',
+    aadhaar_number: 'XXXX-XXXX-9104',
+    aadhaar_verified: false,
+    dilrmp_sync_status: 'PENDING',
+    dilrmp_txn_id: null,
+    dilrmp_sync_timestamp: null,
   }
 ];
 
@@ -90,7 +138,24 @@ export const storageService = {
   getDatabaseRecords() {
     try {
       const data = localStorage.getItem(STORAGE_KEYS.LAND_DATABASE);
-      if (data) return JSON.parse(data);
+      if (data) {
+        let parsed = JSON.parse(data);
+        if (Array.isArray(parsed)) {
+          // Guarantee all seed records (e.g. both Ramesh Sharma records 48/2A and 48/2B) are present
+          const existingKeys = new Set(parsed.map((r) => r.id || r.ulpin));
+          let changed = false;
+          INITIAL_LAND_DATABASE.forEach((seed) => {
+            if (!existingKeys.has(seed.id) && !existingKeys.has(seed.ulpin)) {
+              parsed.push(seed);
+              changed = true;
+            }
+          });
+          if (changed) {
+            localStorage.setItem(STORAGE_KEYS.LAND_DATABASE, JSON.stringify(parsed));
+          }
+          return parsed;
+        }
+      }
       localStorage.setItem(STORAGE_KEYS.LAND_DATABASE, JSON.stringify(INITIAL_LAND_DATABASE));
       return INITIAL_LAND_DATABASE;
     } catch {
@@ -123,6 +188,7 @@ export const storageService = {
       { key: 'country', label: 'Country' },
       { key: 'pincode', label: 'PIN/ZIP Code' },
       { key: 'owner_name', label: 'Owner / Khatadar Name' },
+      { key: 'aadhaar_number', label: 'Aadhaar Number (UIDAI)' },
       { key: 'survey_number', label: 'Survey / Hissa No' },
       { key: 'floors', label: 'Storeys (Floors)' },
       { key: 'size', label: 'Size' },
@@ -211,7 +277,14 @@ export const storageService = {
           size: String(rec.size || existingRec.size || '1200').trim(),
           size_unit: String(rec.size_unit || existingRec.size_unit || 'sft').toLowerCase().trim(),
           area_sqm: calculatedSqm,
-          confidence: rec.confidence || rec._confidence || existingRec.confidence || 95,
+          ulpin: rec.ulpin || existingRec.ulpin || generateULPIN(77.728, 12.985, rec.state || existingRec.state, rec.survey_number || existingRec.survey_number),
+          aadhaar_number: rec.aadhaar_number || existingRec.aadhaar_number || getMaskedAadhaar(rec.owner_name || existingRec.owner_name),
+          aadhaar_verified: rec.aadhaar_verified !== undefined ? rec.aadhaar_verified : (existingRec.aadhaar_verified !== undefined ? existingRec.aadhaar_verified : false),
+          verification_mode: rec.verification_mode || existingRec.verification_mode || 'PENDING',
+          digilocker_txn_id: rec.digilocker_txn_id || existingRec.digilocker_txn_id || null,
+          dilrmp_sync_status: rec.dilrmp_sync_status || existingRec.dilrmp_sync_status || 'PENDING',
+          dilrmp_txn_id: rec.dilrmp_txn_id || existingRec.dilrmp_txn_id || null,
+          dilrmp_sync_timestamp: rec.dilrmp_sync_timestamp || existingRec.dilrmp_sync_timestamp || null,
         };
         updatedList[matchIndex] = merged;
         updatedCount++;
@@ -247,6 +320,14 @@ export const storageService = {
           size_unit: String(rec.size_unit || 'sft').toLowerCase().trim(),
           area_sqm: calculatedSqm,
           confidence: rec.confidence || rec._confidence || 95,
+          ulpin: rec.ulpin || generateULPIN(77.728, 12.985, rec.state, rec.survey_number),
+          aadhaar_number: rec.aadhaar_number || getMaskedAadhaar(rec.owner_name || rec.survey_number),
+          aadhaar_verified: rec.aadhaar_verified !== undefined ? rec.aadhaar_verified : false,
+          verification_mode: rec.verification_mode || 'PENDING',
+          digilocker_txn_id: rec.digilocker_txn_id || null,
+          dilrmp_sync_status: rec.dilrmp_sync_status || 'PENDING',
+          dilrmp_txn_id: rec.dilrmp_txn_id || null,
+          dilrmp_sync_timestamp: rec.dilrmp_sync_timestamp || null,
         };
         updatedList.unshift(newEntry);
         addedCount++;
@@ -290,6 +371,38 @@ export const storageService = {
     const filtered = records.filter(r => r.id !== id);
     this.saveDatabaseRecords(filtered);
     return filtered;
+  },
+
+  updateAadhaarVerification(recordId, verificationData) {
+    const records = this.getDatabaseRecords();
+    const updated = records.map((r) => {
+      if (r.id === recordId || r.survey_number === recordId) {
+        return {
+          ...r,
+          aadhaar_number: verificationData.maskedAadhaar || r.aadhaar_number,
+          aadhaar_verified: true,
+          aadhaar_auth_txnid: verificationData.authTransactionId,
+          aadhaar_verified_at: verificationData.verifiedAt,
+        };
+      }
+      return r;
+    });
+    this.saveDatabaseRecords(updated);
+    return updated;
+  },
+
+  syncAllRecordsToDilrmp(txnId = null) {
+    const records = this.getDatabaseRecords();
+    const resolvedTxnId = txnId || `DILRMP-MIS-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+    const timestamp = new Date().toISOString();
+    const updated = records.map((r) => ({
+      ...r,
+      dilrmp_sync_status: 'SYNCED',
+      dilrmp_txn_id: resolvedTxnId,
+      dilrmp_sync_timestamp: timestamp,
+    }));
+    this.saveDatabaseRecords(updated);
+    return { updatedRecords: updated, txnId: resolvedTxnId, timestamp };
   },
 
   getReviewQueue() {

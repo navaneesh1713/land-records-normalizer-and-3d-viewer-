@@ -10,6 +10,8 @@
  * Also retains backward-compatibility with flat units[] array if present.
  */
 
+import { generateULPIN, getMaskedAadhaar } from './ulpinService.js';
+
 function lerpPoint(p1, p2, t) {
   return [
     p1[0] + (p2[0] - p1[0]) * t,
@@ -155,6 +157,11 @@ export function generateBuildingFloorSlices(features = []) {
 
             // Division leaf unit attributes
             unit_id: div.unit_id || `${plotId}-F${floorNum}-D${divIndex}`,
+            ulpin: div.ulpin || generateULPIN(centerLng, centerLat, buildingProps.state || 'Karnataka', div.survey_number || div.khasra_number || '1'),
+            aadhaar_number: div.aadhaar_number || getMaskedAadhaar(div.owner_name || `${plotId}-${floorNum}`),
+            aadhaar_verified: div.aadhaar_verified !== undefined ? div.aadhaar_verified : (div.status === 'verified'),
+            dilrmp_sync_status: div.dilrmp_sync_status || (div.status === 'verified' ? 'synced' : 'pending'),
+            dilrmp_txn_id: div.dilrmp_txn_id || `DILRMP-MIS-2026-${Math.floor(100000 + Math.random() * 900000)}`,
             khasra_number: div.khasra_number || div.survey_number || '',
             survey_number: div.survey_number || div.khasra_number || '',
             owner_name: div.owner_name,
@@ -189,11 +196,19 @@ export function generateBuildingFloorSlices(features = []) {
         village: buildingProps.village,
         tehsil: buildingProps.tehsil,
         district: buildingProps.district,
+        state: buildingProps.state || 'Karnataka',
+        latitude: centerLat,
+        longitude: centerLng,
         floor_height_m: floorHeight,
         footprint_area_sqm: buildingProps.footprint_area_sqm,
         total_floors: units.length,
 
         unit_id: unit.unit_id || `${plotId}-F${floorNum}`,
+        ulpin: unit.ulpin || generateULPIN(centerLng, centerLat, buildingProps.state || 'Karnataka', unit.survey_number || unit.khasra_number || '1'),
+        aadhaar_number: unit.aadhaar_number || getMaskedAadhaar(unit.owner_name || `${plotId}-${floorNum}`),
+        aadhaar_verified: unit.aadhaar_verified !== undefined ? unit.aadhaar_verified : (unit.status === 'verified'),
+        dilrmp_sync_status: unit.dilrmp_sync_status || (unit.status === 'verified' ? 'synced' : 'pending'),
+        dilrmp_txn_id: unit.dilrmp_txn_id || `DILRMP-MIS-2026-${Math.floor(100000 + Math.random() * 900000)}`,
         khasra_number: unit.khasra_number,
         survey_number: unit.survey_number,
         owner_name: unit.owner_name,

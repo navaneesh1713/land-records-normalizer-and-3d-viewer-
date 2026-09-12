@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export function CreepyButton({
@@ -9,126 +9,107 @@ export function CreepyButton({
   ...props
 }) {
   const eyesRef = useRef(null);
+  const buttonRef = useRef(null);
   const [eyeCoords, setEyeCoords] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
 
-  const updateEyes = (e) => {
-    const userEvent =
-      "touches" in e ? e.touches[0] : e;
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (!eyesRef.current) return;
+      const eyesRect = eyesRef.current.getBoundingClientRect();
+      const eyesCenter = {
+        x: eyesRect.left + eyesRect.width / 2,
+        y: eyesRect.top + eyesRect.height / 2,
+      };
 
-    if (!eyesRef.current) return;
+      const dx = e.clientX - eyesCenter.x;
+      const dy = e.clientY - eyesCenter.y;
+      const angle = Math.atan2(-dy, dx) + Math.PI / 2;
 
-    // get the center of the eyes container
-    const eyesRect = eyesRef.current.getBoundingClientRect();
-    const eyesCenter = {
-      x: eyesRect.left + eyesRect.width / 2,
-      y: eyesRect.top + eyesRect.height / 2,
+      const visionRangeX = 250;
+      const visionRangeY = 120;
+      const distance = Math.hypot(dx, dy);
+
+      const x = (Math.sin(angle) * Math.min(distance, visionRangeX)) / visionRangeX;
+      const y = (Math.cos(angle) * Math.min(distance, visionRangeY)) / visionRangeY;
+
+      setEyeCoords({ x, y });
     };
 
-    // cursor position
-    const cursor = {
-      x: userEvent.clientX,
-      y: userEvent.clientY,
-    };
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
+  }, []);
 
-    // calculate the eye angle
-    const dx = cursor.x - eyesCenter.x;
-    const dy = cursor.y - eyesCenter.y;
-    const angle = Math.atan2(-dy, dx) + Math.PI / 2;
-
-    // pupil distance from the eye center
-    const visionRangeX = 180; // Max distance to look horizontally
-    const visionRangeY = 75; // Max distance to look vertically
-    const distance = Math.hypot(dx, dy);
-
-    // Limit the movement so pupils don't go too far
-    const x = (Math.sin(angle) * Math.min(distance, visionRangeX)) / visionRangeX;
-    const y = (Math.cos(angle) * Math.min(distance, visionRangeY)) / visionRangeY;
-
-    setEyeCoords({ x, y });
-  };
-
-  // Reset eyes when mouse leaves
-  const resetEyes = () => {
-    setEyeCoords({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
-
-  const pupilStyle = {
-    transform: `translate(calc(-50% + ${eyeCoords.x * 50}%), calc(-50% + ${eyeCoords.y * 50}%))`,
-  };
+  const pupilTransform = `translate(calc(-50% + ${eyeCoords.x * 6}px), calc(-50% + ${eyeCoords.y * 4.5}px))`;
 
   return (
     <button
+      ref={buttonRef}
       className={`creepy-btn-root ${className}`}
       onClick={onClick}
-      onMouseMove={(e) => {
-        updateEyes(e);
-        setIsHovered(true);
-      }}
-      onTouchMove={updateEyes}
-      onMouseLeave={resetEyes}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
+      type="button"
       {...props}
     >
-      {/* Eyes Container */}
-      <span
-        ref={eyesRef}
-        className="creepy-eyes-container"
-      >
+      {/* Eyes Container (revealed when cover rotates) */}
+      <span ref={eyesRef} className="creepy-eyes-container" aria-hidden="true">
         {/* Left Eye */}
         <motion.span
           className="creepy-eye"
-          animate={{ height: ["0.75em", "0.75em", "0em", "0.75em"] }}
+          animate={{ scaleY: [1, 1, 0.08, 1] }}
           transition={{
-            duration: 3,
-            times: [0, 0.92, 0.96, 1],
+            duration: 3.6,
+            times: [0, 0.9, 0.94, 1],
             repeat: Infinity,
-            ease: "linear",
+            ease: "easeInOut",
           }}
         >
           <span
             className="creepy-pupil"
-            style={pupilStyle}
+            style={{ transform: pupilTransform }}
           />
         </motion.span>
+
         {/* Right Eye */}
         <motion.span
           className="creepy-eye"
-          animate={{ height: ["0.75em", "0.75em", "0em", "0.75em"] }}
+          animate={{ scaleY: [1, 1, 0.08, 1] }}
           transition={{
-            duration: 3,
-            times: [0, 0.92, 0.96, 1],
+            duration: 3.6,
+            times: [0, 0.9, 0.94, 1],
             repeat: Infinity,
-            ease: "linear",
+            ease: "easeInOut",
           }}
         >
           <span
             className="creepy-pupil"
-            style={pupilStyle}
+            style={{ transform: pupilTransform }}
           />
         </motion.span>
       </span>
 
-      {/* Button Cover */}
+      {/* Interactive Top Cover */}
       <motion.span
         className={`creepy-btn-cover ${coverClassName}`}
         animate={{
-          rotate: isHovered ? -12 : 0,
+          rotate: isHovered ? -14 : 0,
+          y: isHovered ? -3 : 0,
         }}
         transition={{
           type: "spring",
-          stiffness: 300,
-          damping: 20,
-          mass: 0.8,
+          stiffness: 380,
+          damping: 22,
+          mass: 0.7,
         }}
       >
         {children}
       </motion.span>
 
-      {/* Invisible placeholder to maintain size since cover is absolute */}
-      <span className="creepy-btn-placeholder">
+      {/* Invisible placeholder to define button footprint */}
+      <span className="creepy-btn-placeholder" aria-hidden="true">
         {children}
       </span>
     </button>

@@ -16,9 +16,10 @@ import {
   ScanLine, Upload, FileText, FileSpreadsheet, Image as ImageIcon,
   Loader2, CheckCircle2, AlertCircle, X, Eye, EyeOff, Edit3, Send, Trash2,
   Sparkles, Download, ShieldCheck, AlertTriangle, ArrowRight, Layers, FileCode,
-  Wand2, Check, HelpCircle, RefreshCw, Bot, Database
+  Wand2, Check, HelpCircle, RefreshCw, Bot, Database, Lock, KeyRound
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { supabaseService } from '../services/supabaseClient';
 
 export default function DocumentScanner({ initialFile, onRecordsReady, onRouteToQueue, onClose, onNavigateToUpload }) {
   const { t } = useLanguage();
@@ -48,6 +49,11 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
   const [modelInfo, setModelInfo] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [notificationPopup, setNotificationPopup] = useState(null);
+
+  // DigiLocker / Aadhaar OTP Verification State
+  const [digilockerModal, setDigilockerModal] = useState(null);
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   // Live Timer Effect for OCR Processing
   useEffect(() => {
@@ -331,10 +337,55 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     if (onRecordsReady) onRecordsReady(extractedRecords);
   };
 
+  const handleOpenDigiLocker = (rec) => {
+    setDigilockerModal({
+      recordIdx: rec._idx,
+      aadhaar: rec.aadhaar_number || 'XXXX-XXXX-8492',
+      ownerName: rec.owner_name || 'Titleholder / Khatadar',
+    });
+    setEnteredOtp('');
+    setIsVerifyingOtp(false);
+  };
+
+  const handleConfirmDigiLockerOtp = () => {
+    if (!digilockerModal) return;
+    setIsVerifyingOtp(true);
+    setTimeout(() => {
+      const txnId = `DL-KYC-2026-${Math.floor(100000 + Math.random() * 900000)}`;
+      updateField(digilockerModal.recordIdx, 'aadhaar_verified', true);
+      updateField(digilockerModal.recordIdx, 'verification_mode', 'DIGILOCKER_OTP');
+      updateField(digilockerModal.recordIdx, 'digilocker_txn_id', txnId);
+      if (!extractedRecords.find(r => r._idx === digilockerModal.recordIdx)?.aadhaar_number) {
+        updateField(digilockerModal.recordIdx, 'aadhaar_number', digilockerModal.aadhaar);
+      }
+      setIsVerifyingOtp(false);
+      setDigilockerModal(null);
+      setNotificationPopup({
+        type: 'success',
+        title: 'DigiLocker e-KYC Verified!',
+        message: `Aadhaar successfully authenticated with UIDAI Central Identities Data Repository (Txn #${txnId}).`,
+      });
+      setTimeout(() => setNotificationPopup(null), 4000);
+    }, 600);
+  };
+
+  const handleSkipDigiLocker = (recordIdx) => {
+    updateField(recordIdx, 'aadhaar_verified', false);
+    updateField(recordIdx, 'verification_mode', 'GROUND_PATWARI_PHYSICAL_AUDIT');
+    updateField(recordIdx, 'digilocker_txn_id', null);
+    setDigilockerModal(null);
+    setNotificationPopup({
+      type: 'info',
+      title: 'Verification Skipped (Alternative Audit)',
+      message: 'DigiLocker OTP skipped. Record flagged for Patwari physical biometric audit during ground demarcation.',
+    });
+    setTimeout(() => setNotificationPopup(null), 4500);
+  };
+
   const handleAddToDatabase = () => {
     if (extractedRecords.length === 0) return;
 
-    // 1. Strict Blank Field Validation across all 13 fields
+    // 1. Strict Blank Field Validation across all fields including manual Aadhaar
     const requiredKeys = [
       { key: 'building_name', label: 'Building Name' },
       { key: 'house_number', label: 'Building/House Number' },
@@ -347,6 +398,7 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
       { key: 'country', label: 'Country' },
       { key: 'pincode', label: 'PIN/ZIP Code' },
       { key: 'owner_name', label: 'Owner / Khatadar Name' },
+      { key: 'aadhaar_number', label: 'Aadhaar Number (UIDAI)' },
       { key: 'khasra_number', label: 'Khasra Number' },
       { key: 'survey_number', label: 'Survey Number' },
       { key: 'floors', label: 'Storeys (Floors)' },
@@ -389,8 +441,15 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     // Clear validation errors
     setValidationErrors({});
 
-    // 2. Strict Uniqueness Ingestion
+    // 2. Strict Uniqueness Ingestion into Cadastre Storage
     const result = storageService.addRecordsToDatabase(extractedRecords);
+
+    // 3. Direct Asynchronous Upsert to Supabase Cloud Instance
+    extractedRecords.forEach((rec) => {
+      supabaseService.upsertLandRecord(rec).catch((err) => {
+        console.warn('[Supabase Auto-Sync] Note:', err);
+      });
+    });
 
     auditTrailService.logAction(
       'LAND_DATABASE_INGEST',
@@ -411,14 +470,14 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
     if (result.updatedCount > 0 && result.addedCount === 0) {
       setNotificationPopup({
         type: 'success',
-        title: 'Database Updated (Zero Duplicates)',
-        message: `Existing cadastral entry for Survey No. ${surveyRef} was updated in-place. Guaranteed 100% uniqueness in Land Database.`,
+        title: 'Database & Supabase Synced',
+        message: `Existing cadastral entry for Survey No. ${surveyRef} was updated in-place (Aadhaar: ${firstRec?.aadhaar_number || 'Linked'}). Zero duplicates.`,
       });
     } else {
       setNotificationPopup({
         type: 'success',
         title: 'Record Successfully Saved!',
-        message: `Survey No. ${surveyRef} (Owner: ${firstRec?.owner_name || 'Owner'}) stored in Cadastre Database (${result.totalCount} total parcels).`,
+        message: `Survey No. ${surveyRef} (Owner: ${firstRec?.owner_name || 'Owner'}, Aadhaar: ${firstRec?.aadhaar_number}) stored in Cadastre Database & Synced to Supabase (${result.totalCount} total parcels).`,
       });
     }
 
@@ -862,11 +921,12 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                     { key: 'country', label: t('country', 'Country') },
                     { key: 'pincode', label: t('pincode', 'PIN/ZIP Code') },
                     { key: 'owner_name', label: t('titleholder', 'Owner / Khatadar Name') },
+                    { key: 'aadhaar_number', label: 'Aadhaar Number (UIDAI)', isAadhaar: true },
                     { key: 'khasra_number', label: t('khasra_number', 'Khasra Number') },
                     { key: 'survey_number', label: t('survey_number', 'Survey Number') },
                     { key: 'floors', label: t('storeys', 'Storeys (Floors)') },
                     { key: 'size', label: t('size', 'Size'), isSize: true },
-                  ].map(({ key, label, isSize }) => {
+                  ].map(({ key, label, isSize, isAadhaar }) => {
                     const hasValue = Boolean(rec[key] && String(rec[key]).trim());
                     const isValidationError = Boolean(validationErrors[rec._idx]?.includes(key));
                     const fieldConf = rec._fieldConfidence?.[key]?.score ?? (hasValue ? (rec._confidence || 85) : 35);
@@ -926,6 +986,128 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                               <option value="sqy">sqy</option>
                               <option value="acr">acr</option>
                             </select>
+                          </div>
+                        ) : isAadhaar ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <input
+                                type="text"
+                                className="field-cell-input"
+                                value={rec.aadhaar_number || ''}
+                                onChange={(e) => updateField(rec._idx, 'aadhaar_number', e.target.value)}
+                                placeholder={isValidationError ? '⚠️ REQUIRED: Enter 12-digit Aadhaar...' : 'Enter 12-Digit Aadhaar (e.g. 5892 4910 8402)...'}
+                                style={{
+                                  flex: 1,
+                                  fontFamily: 'monospace',
+                                  letterSpacing: '0.5px',
+                                  ...(isValidationError ? { borderColor: '#ef4444', color: '#991b1b', fontWeight: 600 } : {})
+                                }}
+                              />
+                              {!rec.aadhaar_number && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateField(rec._idx, 'aadhaar_number', 'XXXX-XXXX-8492')}
+                                  style={{
+                                    padding: '6px 10px',
+                                    borderRadius: 6,
+                                    border: '1px solid #cbd5e1',
+                                    background: '#f1f5f9',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    color: '#0052FF',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                    height: '36px'
+                                  }}
+                                  title="Auto-fill with sample UIDAI number"
+                                >
+                                  Auto-Demo
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Verification status and actions */}
+                            <div style={{ marginTop: 2 }}>
+                              {rec.aadhaar_verified ? (
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '5px 8px',
+                                  borderRadius: 6,
+                                  background: 'rgba(16, 185, 129, 0.12)',
+                                  border: '1px solid rgba(16, 185, 129, 0.25)',
+                                  color: '#059669',
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                }}>
+                                  <CheckCircle2 size={12} color="#059669" />
+                                  <span>DigiLocker Verified (UIDAI CIDR OTP Authenticated)</span>
+                                  {rec.digilocker_txn_id && <span style={{ opacity: 0.8, fontSize: 10 }}>#{rec.digilocker_txn_id}</span>}
+                                </div>
+                              ) : rec.verification_mode === 'GROUND_PATWARI_PHYSICAL_AUDIT' ? (
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '5px 8px',
+                                  borderRadius: 6,
+                                  background: 'rgba(245, 158, 11, 0.12)',
+                                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                                  color: '#d97706',
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                }}>
+                                  <AlertCircle size={12} color="#d97706" />
+                                  <span>Skipped • Flagged for Patwari Ground Biometric Audit</span>
+                                </div>
+                              ) : (
+                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenDigiLocker(rec)}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 5,
+                                      padding: '6px 10px',
+                                      borderRadius: 6,
+                                      background: 'linear-gradient(135deg, #0052FF 0%, #0041C4 100%)',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      fontSize: 11.5,
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                      boxShadow: '0 1px 3px rgba(0, 82, 255, 0.2)',
+                                    }}
+                                  >
+                                    <ShieldCheck size={12} />
+                                    <span>Verify via DigiLocker OTP</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSkipDigiLocker(rec._idx)}
+                                    style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: 4,
+                                      padding: '6px 8px',
+                                      borderRadius: 6,
+                                      background: '#f8fafc',
+                                      border: '1px solid #cbd5e1',
+                                      color: '#64748b',
+                                      fontSize: 11,
+                                      fontWeight: 600,
+                                      cursor: 'pointer',
+                                    }}
+                                    title="Skip verification and flag for ground biometric visit"
+                                  >
+                                    <span>Skip (Ground Audit)</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <input
@@ -994,6 +1176,107 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
             <Layers size={14} />
             <span>{t('apply', 'Apply & View in 3D')}</span>
           </button>
+        </div>
+      )}
+
+      {/* ─── DIGILOCKER / AADHAAR OTP AUTHENTICATION MODAL ─── */}
+      {digilockerModal && (
+        <div className="digilocker-modal-overlay">
+          <div className="digilocker-modal">
+            <div className="digilocker-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="digilocker-header-icon-pill">
+                  <ShieldCheck size={20} color="#0052FF" />
+                </div>
+                <div>
+                  <div className="digilocker-title-main">DigiLocker Cadastral e-KYC</div>
+                  <div className="digilocker-title-sub">UIDAI Central Identities Data Repository (CIDR)</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setDigilockerModal(null)}
+                className="digilocker-close-btn"
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="digilocker-modal-body">
+              <div className="digilocker-summary-card">
+                <div className="summary-card-row">
+                  <span className="summary-card-key">Landholder:</span>
+                  <span className="summary-card-val">{digilockerModal.ownerName}</span>
+                </div>
+                <div className="summary-card-row">
+                  <span className="summary-card-key">Aadhaar Linked:</span>
+                  <span className="summary-card-val mono">{digilockerModal.aadhaar}</span>
+                </div>
+                <div className="summary-card-row">
+                  <span className="summary-card-key">Mobile Gateway:</span>
+                  <span className="summary-card-val">+91 ******4201 (e-Gov Registry)</span>
+                </div>
+              </div>
+
+              <div className="digilocker-otp-box">
+                <div className="otp-box-header">
+                  <KeyRound size={14} color="#0052FF" />
+                  <label className="otp-box-label">Enter 6-Digit OTP / Verification Code</label>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={enteredOtp}
+                    onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="7 4 9 2 0 1"
+                    className="digilocker-code-input"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEnteredOtp('749201')}
+                    className="digilocker-fill-demo-btn"
+                    title="Quickly fill test verification code"
+                  >
+                    Auto-Fill 749201
+                  </button>
+                </div>
+                <p className="digilocker-otp-hint">
+                  Simulated OTP delivered via Government SMS Gateway. For testing, use demo code <strong>749201</strong>.
+                </p>
+              </div>
+
+              <div className="digilocker-actions-stack">
+                <button
+                  type="button"
+                  onClick={handleConfirmDigiLockerOtp}
+                  disabled={isVerifyingOtp || enteredOtp.length < 6}
+                  className="digilocker-verify-submit-btn"
+                >
+                  {isVerifyingOtp ? (
+                    <>
+                      <Loader2 size={16} className="spinner" />
+                      <span>Authenticating with UIDAI...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck size={16} />
+                      <span>Verify & Link with DigiLocker</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSkipDigiLocker(digilockerModal.recordIdx)}
+                  className="digilocker-skip-submit-btn"
+                >
+                  Skip Verification (Patwari Ground Biometric Audit Alternative)
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -28,8 +28,10 @@ export default function CrowdCanvas({ src = "/images/peeps/all-peeps.png", rows 
     // TWEEN FACTORIES
     const resetPeep = ({ stage, peep }) => {
       const direction = Math.random() > 0.5 ? 1 : -1;
-      const offsetY = 100 - 250 * gsap.parseEase("power2.in")(Math.random());
-      const startY = stage.height - peep.height + offsetY;
+      // Ensure startY never causes heads to clip above the canvas top boundary
+      const safeDepth = Math.max(0, Math.min(stage.height - peep.height - 15, 60));
+      const depthVariation = safeDepth * gsap.parseEase("power1.out")(Math.random());
+      const startY = Math.max(20, stage.height - peep.height + (25 - depthVariation));
       let startX;
       let endX;
 
@@ -231,13 +233,18 @@ export default function CrowdCanvas({ src = "/images/peeps/all-peeps.png", rows 
       gsap.ticker.add(render);
     };
 
-    img.onload = init;
     img.src = config.src;
+    if (img.complete && img.naturalWidth > 0) {
+      init();
+    } else {
+      img.onload = init;
+    }
 
     const handleResize = () => resize();
     window.addEventListener("resize", handleResize);
 
     return () => {
+      img.onload = null;
       window.removeEventListener("resize", handleResize);
       gsap.ticker.remove(render);
       crowd.forEach((peep) => {

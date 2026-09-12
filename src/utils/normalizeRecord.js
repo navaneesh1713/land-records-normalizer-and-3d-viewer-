@@ -158,5 +158,14 @@ export function normalizeRecord(raw = {}) {
     area_sqm:        calculatedSqm,
     classification:  normalizeClassification(raw.classification),
     status:          normalizeStatus(raw.status || raw.tax_status || 'verified'),
+    latitude:        raw.latitude != null ? Number(raw.latitude) : (raw.lat != null ? Number(raw.lat) : null),
+    longitude:       raw.longitude != null ? Number(raw.longitude) : (raw.lng != null ? Number(raw.lng) : null),
+    ulpin:           raw.ulpin || null,
+    aadhaar_number:  raw.aadhaar_number || null,
+    aadhaar_verified: raw.aadhaar_verified !== undefined ? raw.aadhaar_verified : null,
+    dilrmp_sync_status: raw.dilrmp_sync_status || null,
+    dilrmp_txn_id:   raw.dilrmp_txn_id || null,
+    id:              raw.id || null,
+    plot_id:         raw.plot_id || raw.id || null,
   };
 }

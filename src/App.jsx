@@ -77,6 +77,7 @@ export default function App() {
       const path = window.location.pathname;
       if (path.startsWith('/database')) return 'database';
       if (path.startsWith('/upload')) return 'upload';
+      if (path.startsWith('/scanner')) return 'scanner';
       if (path.startsWith('/analytics')) return 'analytics';
       if (path.startsWith('/audit')) return 'audit';
       if (path.startsWith('/ailoop') || path.startsWith('/ai-learning')) return 'ailoop';
@@ -106,6 +107,7 @@ export default function App() {
       
       const isDatabase = path.startsWith('/database');
       const isUpload = path.startsWith('/upload');
+      const isScanner = path.startsWith('/scanner');
       const isAnalytics = path.startsWith('/analytics');
       const isAudit = path.startsWith('/audit');
       const isAiLoop = path.startsWith('/ailoop') || path.startsWith('/ai-learning');
@@ -116,6 +118,8 @@ export default function App() {
         setActiveTab('database');
       } else if (isUpload) {
         setActiveTab('upload');
+      } else if (isScanner) {
+        setActiveTab('scanner');
       } else if (isAnalytics) {
         setActiveTab('analytics');
       } else if (isAudit) {
@@ -160,6 +164,8 @@ export default function App() {
         if (window.location.pathname !== '/database') window.history.pushState({}, '', '/database');
       } else if (tabId === 'upload') {
         if (window.location.pathname !== '/upload') window.history.pushState({}, '', '/upload');
+      } else if (tabId === 'scanner') {
+        if (window.location.pathname !== '/scanner') window.history.pushState({}, '', '/scanner');
       } else if (tabId === 'analytics') {
         if (window.location.pathname !== '/analytics') window.history.pushState({}, '', '/analytics');
       } else if (tabId === 'audit') {
@@ -616,10 +622,26 @@ export default function App() {
         {pipelineRunning && (
           <div className="pipeline-overlay">
             <div className="pipeline-modal glass-panel">
-              <Loader2 className="spinner" size={36} color="#818cf8" />
+              <Loader2 className="spinner" size={36} color="#0052FF" />
               <h3 className="pipeline-title">Processing Land Records</h3>
               <p className="pipeline-status">{pipelineStatus}</p>
-              <p className="pipeline-hint">Geocoding involves real network calls — this may take a moment.</p>
+              <p className="pipeline-hint">Normalizing cadastral parcel geometry and spatial coordinates...</p>
+              <button
+                onClick={() => setPipelineRunning(false)}
+                style={{
+                  marginTop: 8,
+                  padding: '6px 16px',
+                  borderRadius: 8,
+                  border: '1px solid #CBD5E1',
+                  background: '#F8FAFC',
+                  color: '#475569',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Dismiss / Continue in Background
+              </button>
             </div>
           </div>
         )}
@@ -663,10 +685,26 @@ export default function App() {
       {pipelineRunning && (
         <div className="pipeline-overlay">
           <div className="pipeline-modal glass-panel">
-            <Loader2 className="spinner" size={36} color="#818cf8" />
+            <Loader2 className="spinner" size={36} color="#0052FF" />
             <h3 className="pipeline-title">Processing Land Records</h3>
             <p className="pipeline-status">{pipelineStatus}</p>
-            <p className="pipeline-hint">Geocoding involves real network calls — this may take a moment.</p>
+            <p className="pipeline-hint">Normalizing cadastral parcel geometry and spatial coordinates...</p>
+            <button
+              onClick={() => setPipelineRunning(false)}
+              style={{
+                marginTop: 8,
+                padding: '6px 16px',
+                borderRadius: 8,
+                border: '1px solid #CBD5E1',
+                background: '#F8FAFC',
+                color: '#475569',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Dismiss / Continue in Background
+            </button>
           </div>
         </div>
       )}
@@ -726,7 +764,26 @@ export default function App() {
               f.properties?.plot_id?.toLowerCase().includes(q.toLowerCase())
             );
             if (match) {
-              handleSelectBuilding(match.properties.plot_id);
+              handleSelectBuilding(match);
+            }
+          }}
+          onSelectLandRecord={(rec) => {
+            if (!rec) return;
+            setActiveTab('map');
+            const survey = rec.survey_number || rec.khasra_number || '';
+            const match = data?.features?.find(f => {
+              const p = f.properties || {};
+              const td = p.title_details || {};
+              return (
+                (survey && (td.survey_number === survey || td.khasra_number === survey || p.plot_id?.includes(survey))) ||
+                (rec.ulpin && (p.ulpin === rec.ulpin || td.ulpin === rec.ulpin)) ||
+                (rec.owner_name && (td.owner_name?.toLowerCase().includes(rec.owner_name.toLowerCase()) || p.owner_name?.toLowerCase().includes(rec.owner_name.toLowerCase())))
+              );
+            });
+            if (match) {
+              handleSelectBuilding(match);
+            } else if (data?.features?.length > 0) {
+              handleSelectBuilding(data.features[0]);
             }
           }}
         />
@@ -751,9 +808,33 @@ export default function App() {
             <UploadDashboard 
               onFileReady={(file) => {
                 setScannerInitialFile(file);
-                setShowScanner(true);
-                setActiveTab('scanner');
+                handleSelectTab('scanner');
               }} 
+            />
+          </div>
+        )}
+
+        {activeTab === 'scanner' && (
+          <div style={{ flex: 1, background: '#f8fafc', overflowY: 'auto', height: 'calc(100vh - 56px)', display: 'flex', flexDirection: 'column' }}>
+            <DocumentScanner
+              initialFile={scannerInitialFile}
+              onRecordsReady={(records) => {
+                handleScannerRecords(records);
+                handleSelectTab('map');
+              }}
+              onNavigateToUpload={() => {
+                setScannerInitialFile(null);
+                handleSelectTab('upload');
+              }}
+              onRouteToQueue={() => {
+                setScannerInitialFile(null);
+                setShowReviewQueue(true);
+                handleSelectTab('map');
+              }}
+              onClose={() => {
+                setScannerInitialFile(null);
+                handleSelectTab('map');
+              }}
             />
           </div>
         )}
@@ -771,7 +852,7 @@ export default function App() {
         )}
 
         {/* ─── 3D MAP & EXPLODED STUDIO WORKSPACE CANVAS ─── */}
-        {activeTab !== 'database' && activeTab !== 'upload' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
+        {activeTab !== 'database' && activeTab !== 'upload' && activeTab !== 'scanner' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
           <div className="eleven-view-container">
 
             {/* Unplaced Records Badge */}
@@ -862,7 +943,7 @@ export default function App() {
             />
 
             {/* 3D Floor Exploded View & Isolator Controls */}
-            {data?.features && data.features.length > 0 && !showScanner && (
+            {data?.features && data.features.length > 0 && (
               <FloorControlPanel
                 explosionFactor={explosionFactor}
                 onExplosionChange={setExplosionFactor}
@@ -888,30 +969,6 @@ export default function App() {
                 unit={selectedUnit}
                 metadata={data?.metadata}
                 onClose={handleCloseSidebar}
-              />
-            )}
-
-            {/* Document Scanner / OCR / CSV Importer */}
-            {showScanner && (
-              <DocumentScanner
-                initialFile={scannerInitialFile}
-                onRecordsReady={handleScannerRecords}
-                onNavigateToUpload={() => {
-                  setShowScanner(false);
-                  setScannerInitialFile(null);
-                  handleSelectTab('upload');
-                }}
-                onRouteToQueue={() => {
-                  setShowScanner(false);
-                  setScannerInitialFile(null);
-                  setShowReviewQueue(true);
-                  setActiveTab('review');
-                }}
-                onClose={() => {
-                  setShowScanner(false);
-                  setScannerInitialFile(null);
-                  setActiveTab('map');
-                }}
               />
             )}
 

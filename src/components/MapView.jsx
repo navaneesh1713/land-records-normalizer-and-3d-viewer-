@@ -282,17 +282,34 @@ export default function MapView({
       {/* Hover Tooltip showing specific Floor & Unit Details */}
       {hoverInfo && hoverInfo.object && (
         <div
-          className="map-tooltip glass-panel"
+          className="map-tooltip"
           style={{
-            left: hoverInfo.x + 14,
-            top: hoverInfo.y + 14,
+            position: 'absolute',
+            left: `${hoverInfo.x + 14}px`,
+            top: `${hoverInfo.y + 14}px`,
+            pointerEvents: 'none',
+            zIndex: 1000,
           }}
         >
           <div className="tooltip-id">Floor {hoverInfo.object.floor_number} • {hoverInfo.object.unit_id}</div>
+          {hoverInfo.object.ulpin && (
+            <div className="tooltip-detail" style={{ color: '#38bdf8', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.04em' }}>
+              <span>ULPIN:</span>
+              <strong>{hoverInfo.object.ulpin}</strong>
+            </div>
+          )}
           <div className="tooltip-detail">
             <span>Owner:</span>
             <strong>{hoverInfo.object.owner_name}</strong>
           </div>
+          {hoverInfo.object.aadhaar_number && (
+            <div className="tooltip-detail">
+              <span>Aadhaar:</span>
+              <span style={{ fontFamily: 'monospace', fontSize: '11px', color: hoverInfo.object.aadhaar_verified ? '#34d399' : '#fbbf24' }}>
+                {hoverInfo.object.aadhaar_number} {hoverInfo.object.aadhaar_verified ? '✓' : '(Pending)'}
+              </span>
+            </div>
+          )}
           <div className="tooltip-detail">
             <span>Classification:</span>
             <span className="capitalize">{hoverInfo.object.classification}</span>

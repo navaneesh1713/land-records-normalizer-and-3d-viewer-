@@ -79,6 +79,7 @@ async function queryNominatim(queryString) {
         'User-Agent': 'LandParcel3DViewer/1.0 (geocoding module)',
         'Accept': 'application/json',
       },
+      signal: AbortSignal.timeout(2200),
     });
 
     if (!resp.ok) {
@@ -358,6 +359,27 @@ function buildCandidates(normalized) {
  * @returns {Promise<object>}       – { tier, chosen_source, lat, lng, boundary_polygon, ladder_rung_used }
  */
 export async function geocodeRecord(normalizedRecord, mapplsApiKey) {
+  // If record already has valid spatial coordinates, use immediately (zero latency)
+  if (normalizedRecord.latitude != null && normalizedRecord.longitude != null && !isNaN(normalizedRecord.latitude) && !isNaN(normalizedRecord.longitude)) {
+    return {
+      tier: 'A',
+      chosen_source: 'provided_coordinates',
+      lat: Number(normalizedRecord.latitude),
+      lng: Number(normalizedRecord.longitude),
+      bboxSizeDeg: 0.001,
+      placeType: 'cadastral_parcel',
+      boundary_polygon: null,
+      ladder_rung_used: 0,
+      mappls_confirmed: true,
+      hierarchy: {
+        locality: normalizedRecord.locality || '',
+        village: normalizedRecord.village || '',
+        district: normalizedRecord.district || '',
+        state: normalizedRecord.state || '',
+      }
+    };
+  }
+
   const candidates = buildCandidates(normalizedRecord);
 
   let bestResult = null;

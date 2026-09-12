@@ -345,56 +345,56 @@ export default function AnalyticsView() {
       </div>
 
       {/* Main Grid: District Digitization Table & Error Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', alignItems: 'start' }}>
+      <div className="analytics-main-grid">
         
         {/* District Progress Table */}
-        <div style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
-          <div style={{ padding: '18px 22px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+        <div className="analytics-district-card" style={{ background: '#ffffff', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>
               District-Wise Cadastral Digitization ({filteredDistricts.length})
             </h3>
             <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>● Live Synced</span>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', color: '#475569', borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>State & District</th>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>Total Parcels</th>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>Digitization</th>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>3D Buildings</th>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>Avg Fidelity</th>
-                  <th style={{ padding: '12px 18px', fontWeight: 700 }}>Status</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700, whiteSpace: 'normal', minWidth: '160px' }}>State & District</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Total Parcels</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700, minWidth: '140px' }}>Digitization</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>3D Buildings</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Avg Fidelity</th>
+                  <th style={{ padding: '12px 14px', fontWeight: 700 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredDistricts.map((row, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s ease' }}>
-                    <td style={{ padding: '14px 18px' }}>
+                    <td style={{ padding: '12px 14px', whiteSpace: 'normal' }}>
                       <div style={{ fontWeight: 700, color: '#0f172a' }}>{row.district}</div>
-                      <div style={{ fontSize: '11.5px', color: '#64748b' }}>{row.state}</div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>{row.state}</div>
                     </td>
-                    <td style={{ padding: '14px 18px', color: '#334155', fontWeight: 600 }}>
+                    <td style={{ padding: '12px 14px', color: '#334155', fontWeight: 600 }}>
                       {row.totalParcels.toLocaleString()}
                     </td>
-                    <td style={{ padding: '14px 18px' }}>
+                    <td style={{ padding: '12px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ flex: 1, background: '#e2e8f0', height: '6px', borderRadius: '3px', overflow: 'hidden', width: '80px' }}>
+                        <div style={{ flex: 1, background: '#e2e8f0', height: '6px', borderRadius: '3px', overflow: 'hidden', minWidth: '60px' }}>
                           <div style={{ width: `${row.percentage}%`, background: row.percentage > 85 ? '#10b981' : '#3b82f6', height: '100%' }} />
                         </div>
                         <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px' }}>{row.percentage}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: '14px 18px', color: '#0052FF', fontWeight: 700 }}>
+                    <td style={{ padding: '12px 14px', color: '#0052FF', fontWeight: 700 }}>
                       {row.buildings3d.toLocaleString()}
                     </td>
-                    <td style={{ padding: '14px 18px' }}>
-                      <span style={{ background: '#ecfdf5', color: '#065f46', padding: '3px 8px', borderRadius: '6px', fontWeight: 700, fontSize: '11.5px' }}>
+                    <td style={{ padding: '12px 14px' }}>
+                      <span style={{ background: '#ecfdf5', color: '#065f46', padding: '3px 8px', borderRadius: '6px', fontWeight: 700, fontSize: '11px' }}>
                         {row.avgConf}%
                       </span>
                     </td>
-                    <td style={{ padding: '14px 18px' }}>
+                    <td style={{ padding: '12px 14px' }}>
                       <span style={{
                         padding: '3px 9px',
                         borderRadius: '9999px',
