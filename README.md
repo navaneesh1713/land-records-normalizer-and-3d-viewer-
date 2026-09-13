@@ -29,7 +29,13 @@ The application includes sample SVAMITVA drone-cadastre and Bhoomi-style dataset
 ## Demo
 
 <p align="center">
-  <img src="./public/hero_hands_stipple.jpg" alt="LANDX3D land records workspace" width="90%" />
+  <img src="./public/Screenshot 2026-09-13 at 3.14.25 PM.png" alt="LANDX3D land database" width="48%" />
+  <img src="./public/Screenshot 2026-09-13 at 3.14.44 PM.png" alt="LANDX3D 3D building directory" width="48%" />
+</p>
+
+<p align="center">
+  <img src="./public/Screenshot 2026-09-13 at 3.14.55 PM.png" alt="LANDX3D floor and unit inspection" width="48%" />
+  <img src="./public/Screenshot 2026-09-13 at 3.15.40 PM.png" alt="LANDX3D full village 3D viewer" width="48%" />
 </p>
 
 <b>Core workflow:</b>
@@ -205,7 +211,10 @@ npm run generate-data
 ```text
 land-records-normalizer-and-3d-viewer-/
 ├── public/
-│   ├── hero_hands_stipple.jpg
+│   ├── Screenshot 2026-09-13 at 3.14.25 PM.png
+│   ├── Screenshot 2026-09-13 at 3.14.44 PM.png
+│   ├── Screenshot 2026-09-13 at 3.14.55 PM.png
+│   ├── Screenshot 2026-09-13 at 3.15.40 PM.png
 │   ├── sample-bhoomi-deed.png
 │   ├── sample-svamitva-property-card.png
 │   └── sample-land-records.csv
