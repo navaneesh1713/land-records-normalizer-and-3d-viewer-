@@ -70,9 +70,10 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
       // Show hero page when at root or /hero
-      if (path === '/' || path.startsWith('/hero')) return true;
+      // Only show hero page when at root or /hero path
+      return path === '/' || path.startsWith('/hero');
     }
-    return true; // default to hero page
+    return false; // don't default to hero on unknown path
   });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -86,7 +87,7 @@ export default function App() {
         return 'hero';
       }
     }
-    return 'hero';
+    return 'map'; // fallback to map view, not hero
   });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
