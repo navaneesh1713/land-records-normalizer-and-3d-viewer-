@@ -7,15 +7,10 @@ import BuildingListPanel from './components/BuildingListPanel';
 import FloorControlPanel from './components/FloorControlPanel';
 import DocumentScanner from './components/DocumentScanner';
 import VerificationQueueModal from './components/VerificationQueueModal';
-import AiImprovementLogModal from './components/AiImprovementLogModal';
-import AuditTrailModal from './components/AuditTrailModal';
-import AnalyticsDashboardModal from './components/AnalyticsDashboardModal';
-import AnalyticsView from './components/AnalyticsView';
 import AuditTrailView from './components/AuditTrailView';
 import AiFeedbackLoopView from './components/AiFeedbackLoopView';
 import HeroLandingPage from './components/HeroLandingPage';
 import GovAuthModal from './components/GovAuthModal';
-import OfficialFaceAuthModal from './components/OfficialFaceAuthModal';
 import LandDatabaseDashboard from './components/LandDatabaseDashboard';
 import AppSidebar from './components/AppSidebar';
 import AppTopBar from './components/AppTopBar';
@@ -71,25 +66,30 @@ export default function App() {
   });
 
   // Government & SIH Core Workflow States
-  const [showHeroPage, setShowHeroPage] = useState(false);
+  const [showHeroPage, setShowHeroPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      // Show hero page when at root or /hero
+      if (path === '/' || path.startsWith('/hero')) return true;
+    }
+    return true; // default to hero page
+  });
   const [activeTab, setActiveTab] = useState(() => {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
       if (path.startsWith('/database')) return 'database';
       if (path.startsWith('/upload')) return 'upload';
       if (path.startsWith('/scanner')) return 'scanner';
-      if (path.startsWith('/analytics')) return 'analytics';
       if (path.startsWith('/audit')) return 'audit';
       if (path.startsWith('/ailoop') || path.startsWith('/ai-learning')) return 'ailoop';
-      if (path.startsWith('/hero')) {
+      if (path.startsWith('/hero') || path === '/') {
         return 'hero';
       }
     }
-    return 'map';
+    return 'hero';
   });
   const [userRole, setUserRole] = useState(() => storageService.getActiveRole());
   const [showGovAuth, setShowGovAuth] = useState(false);
-  const [showFaceAuthForDatabase, setShowFaceAuthForDatabase] = useState(false);
   const [showReviewQueue, setShowReviewQueue] = useState(false);
   const [reviewQueue, setReviewQueue] = useState(() => storageService.getReviewQueue());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -108,10 +108,9 @@ export default function App() {
       const isDatabase = path.startsWith('/database');
       const isUpload = path.startsWith('/upload');
       const isScanner = path.startsWith('/scanner');
-      const isAnalytics = path.startsWith('/analytics');
       const isAudit = path.startsWith('/audit');
       const isAiLoop = path.startsWith('/ailoop') || path.startsWith('/ai-learning');
-      const isHero = path.startsWith('/hero');
+      const isHero = path === '/' || path.startsWith('/hero');
       
       setShowHeroPage(isHero);
       if (isDatabase) {
@@ -120,8 +119,6 @@ export default function App() {
         setActiveTab('upload');
       } else if (isScanner) {
         setActiveTab('scanner');
-      } else if (isAnalytics) {
-        setActiveTab('analytics');
       } else if (isAudit) {
         setActiveTab('audit');
       } else if (isAiLoop) {
@@ -136,21 +133,8 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const handleFaceAuthVerified = useCallback(() => {
-    setShowFaceAuthForDatabase(false);
-    setActiveTab('database');
-    setShowHeroPage(false);
-    if (window.location.pathname !== '/database') {
-      window.history.pushState({}, '', '/database');
-    }
-  }, []);
-
   const handleSelectTab = useCallback((tabId) => {
     setMobileSidebarOpen(false);
-    if (tabId === 'database') {
-      setShowFaceAuthForDatabase(true);
-      return;
-    }
 
     setActiveTab(tabId);
     if (tabId === 'hero') {
@@ -166,8 +150,6 @@ export default function App() {
         if (window.location.pathname !== '/upload') window.history.pushState({}, '', '/upload');
       } else if (tabId === 'scanner') {
         if (window.location.pathname !== '/scanner') window.history.pushState({}, '', '/scanner');
-      } else if (tabId === 'analytics') {
-        if (window.location.pathname !== '/analytics') window.history.pushState({}, '', '/analytics');
       } else if (tabId === 'audit') {
         if (window.location.pathname !== '/audit') window.history.pushState({}, '', '/audit');
       } else if (tabId === 'ailoop') {
@@ -839,9 +821,7 @@ export default function App() {
           </div>
         )}
 
-        {activeTab === 'analytics' && (
-          <AnalyticsView />
-        )}
+        {/* Analytics view removed */}
 
         {activeTab === 'audit' && (
           <AuditTrailView />
@@ -852,7 +832,7 @@ export default function App() {
         )}
 
         {/* ─── 3D MAP & EXPLODED STUDIO WORKSPACE CANVAS ─── */}
-        {activeTab !== 'database' && activeTab !== 'upload' && activeTab !== 'scanner' && activeTab !== 'analytics' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
+        {activeTab !== 'database' && activeTab !== 'upload' && activeTab !== 'scanner' && activeTab !== 'audit' && activeTab !== 'ailoop' && (
           <div className="eleven-view-container">
 
             {/* Unplaced Records Badge */}
@@ -990,10 +970,6 @@ export default function App() {
       {/* ─── GOVERNMENT ROLE-BASED AUTH MODAL ─── */}
       {showGovAuth && (
         <GovAuthModal
-          currentRole={userRole}
-          onSelectRole={(newRole) => {
-            handleRoleChange(newRole);
-          }}
           onAuthSuccess={() => {
             setShowGovAuth(false);
             setShowHeroPage(false);
@@ -1003,13 +979,7 @@ export default function App() {
         />
       )}
 
-      {/* ─── BIOMETRIC FACE VERIFICATION GATE FOR LAND DATABASE ─── */}
-      <OfficialFaceAuthModal
-        isOpen={showFaceAuthForDatabase}
-        officialRole={userRole}
-        onClose={() => setShowFaceAuthForDatabase(false)}
-        onVerified={handleFaceAuthVerified}
-      />
+      {/* Face verification removed — direct access to Land Database */}
 
       {/* ─── HERO LANDING OVERVIEW PAGE (PIN DESIGN) ─── */}
       {showHeroPage && !showMobileScanner && (

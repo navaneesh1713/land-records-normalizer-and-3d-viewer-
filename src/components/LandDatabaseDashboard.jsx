@@ -427,54 +427,7 @@ export default function LandDatabaseDashboard({
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
-        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>TOTAL LAND PARCELS</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#0A0B0D' }}>{records.length}</div>
-          <div style={{ fontSize: 11.5, color: '#05B169', fontWeight: 700, marginTop: 4 }}>
-            100% Unique (Zero Duplicates)
-          </div>
-        </div>
 
-        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>DILRMP-MIS CENTRAL SYNC</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: syncedCount === records.length ? '#05B169' : '#0052FF' }}>
-            {syncedCount} / {records.length}
-          </div>
-          <div style={{ fontSize: 11.5, color: '#05B169', fontWeight: 700, marginTop: 4 }}>
-            14-Digit ULPIN Enabled
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>AADHAAR VERIFIED</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#0A0B0D' }}>
-            {aadhaarVerifiedCount} <span style={{ fontSize: 14, fontWeight: 500, color: '#64748b' }}>/ {records.length}</span>
-          </div>
-          <div style={{ fontSize: 11.5, color: '#0052FF', fontWeight: 700, marginTop: 4 }}>
-            UIDAI CIDR Standard
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>TOTAL CADASTRE EXTENT</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#0A0B0D' }}>
-            {totalArea.toLocaleString()} <span style={{ fontSize: 14, fontWeight: 500 }}>sq.m</span>
-          </div>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 600, marginTop: 4 }}>
-            ≈ {(totalArea / 4046.86).toFixed(2)} Acres
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', padding: '18px 22px', borderRadius: 16, border: '1px solid #ECEFF0', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: 11.5, color: '#5B616E', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>AVERAGE AI MATCH</div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: '#05B169' }}>{avgConfidence}%</div>
-          <div style={{ fontSize: 11.5, color: '#05B169', fontWeight: 700, marginTop: 4 }}>
-            SVAMITVA Compliant
-          </div>
-        </div>
-      </div>
 
       {/* Filter Chips Strip */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, overflowX: 'auto', paddingBottom: 4 }}>
@@ -607,7 +560,6 @@ export default function LandDatabaseDashboard({
                 <th style={{ padding: '12px 16px' }}>OWNER & AADHAAR e-KYC</th>
                 <th style={{ padding: '12px 16px' }}>LOCALITY & STATE</th>
                 <th style={{ padding: '12px 16px' }}>DILRMP-MIS SYNC</th>
-                <th style={{ padding: '12px 16px' }}>CONFIDENCE</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right' }}>ACTIONS</th>
               </tr>
             </thead>
@@ -685,54 +637,7 @@ export default function LandDatabaseDashboard({
                         <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#475569' }}>
                           {rec.aadhaar_number || 'XXXX-XXXX-8492'}
                         </span>
-                        {isAadhaarVerified ? (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 3,
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: '#166534',
-                              background: '#DCFCE7',
-                              padding: '1px 6px',
-                              borderRadius: 10,
-                            }}
-                          >
-                            <CheckCircle2 size={10} /> UIDAI Verified
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() => handleVerifyAadhaarForRecord(rec)}
-                            disabled={verifyingAadhaarId === rec.id}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 3,
-                              fontSize: 10,
-                              fontWeight: 700,
-                              color: '#92400E',
-                              background: '#FEF3C7',
-                              border: '1px solid #FDE68A',
-                              padding: '1px 7px',
-                              borderRadius: 10,
-                              cursor: verifyingAadhaarId === rec.id ? 'not-allowed' : 'pointer',
-                            }}
-                            title="Verify citizen via simulated UIDAI e-KYC CIDR"
-                          >
-                            {verifyingAadhaarId === rec.id ? (
-                              <>
-                                <Loader2 size={10} className="spinner" />
-                                <span>Verifying...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Fingerprint size={10} />
-                                <span>Verify e-KYC</span>
-                              </>
-                            )}
-                          </button>
-                        )}
+
                       </div>
                     </td>
 
@@ -792,21 +697,7 @@ export default function LandDatabaseDashboard({
                       )}
                     </td>
 
-                    {/* AI Confidence */}
-                    <td style={{ padding: '12px 16px' }}>
-                      <span
-                        style={{
-                          padding: '2px 8px',
-                          borderRadius: 10,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          background: (rec.confidence || 90) >= 80 ? '#ECFDF5' : '#FEF3C7',
-                          color: (rec.confidence || 90) >= 80 ? '#059669' : '#92400e',
-                        }}
-                      >
-                        {rec.confidence || 90}% Match
-                      </span>
-                    </td>
+
 
                     {/* Actions */}
                     <td style={{ padding: '12px 16px', textAlign: 'right' }}>
@@ -1009,24 +900,6 @@ export default function LandDatabaseDashboard({
                         >
                           {label}
                         </label>
-                        {isAadhaar && (
-                          <button
-                            type="button"
-                            onClick={() => setNewRecordForm((prev) => ({ ...prev, aadhaar_number: 'XXXX-XXXX-8492' }))}
-                            style={{
-                              background: '#EDF2FE',
-                              border: '1px solid rgba(0, 82, 255, 0.25)',
-                              color: '#0052FF',
-                              fontSize: 10.5,
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: 6,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Auto-Demo UIDAI
-                          </button>
-                        )}
                       </div>
                       <input
                         type="text"

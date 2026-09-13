@@ -503,7 +503,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           </div>
           <div>
             <div className="scanner-title-text">Document OCR Scanner & AI Normalizer</div>
-            <div className="scanner-subtitle-text">Multimodal Handwritten HTR • Confidence Scoring • HITL Pipeline</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -560,39 +559,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
           </button>
         </div>
 
-        <div className="scanner-dropzone-wrapper">
-
-          {/* Quick 1-Click Sample Card */}
-          <div className="scanner-sample-card">
-            <div className="sample-card-info">
-              <div className="sample-card-title">
-                <Sparkles size={13} color="#eab308" />
-                <span>Test Demo Document</span>
-              </div>
-              <p className="sample-card-desc">
-                Instant test with certified SVAMITVA Drone Cadastre Property Card.
-              </p>
-            </div>
-            <div className="sample-card-actions">
-              <button
-                className="sample-load-btn"
-                onClick={handleLoadSample}
-                disabled={ocrRunning}
-              >
-                <span>Run Demo OCR</span>
-                <ArrowRight size={13} />
-              </button>
-              <a
-                href="/sample-svamitva-property-card.png"
-                download="sample-svamitva-property-card.png"
-                className="sample-download-link"
-                title="Download sample image"
-              >
-                <Download size={12} />
-              </a>
-            </div>
-          </div>
-        </div>
 
         {/* Success Toast */}
         {queueSuccessMsg && (
@@ -1003,27 +969,6 @@ export default function DocumentScanner({ initialFile, onRecordsReady, onRouteTo
                                   ...(isValidationError ? { borderColor: '#ef4444', color: '#991b1b', fontWeight: 600 } : {})
                                 }}
                               />
-                              {!rec.aadhaar_number && (
-                                <button
-                                  type="button"
-                                  onClick={() => updateField(rec._idx, 'aadhaar_number', 'XXXX-XXXX-8492')}
-                                  style={{
-                                    padding: '6px 10px',
-                                    borderRadius: 6,
-                                    border: '1px solid #cbd5e1',
-                                    background: '#f1f5f9',
-                                    fontSize: 11,
-                                    fontWeight: 600,
-                                    color: '#0052FF',
-                                    cursor: 'pointer',
-                                    whiteSpace: 'nowrap',
-                                    height: '36px'
-                                  }}
-                                  title="Auto-fill with sample UIDAI number"
-                                >
-                                  Auto-Demo
-                                </button>
-                              )}
                             </div>
 
                             {/* Verification status and actions */}

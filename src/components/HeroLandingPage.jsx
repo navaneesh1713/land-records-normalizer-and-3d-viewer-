@@ -123,10 +123,6 @@ export default function HeroLandingPage({
       {/* Gov Auth Modal */}
       {showAuthModal && (
         <GovAuthModal
-          currentRole={userRole}
-          onSelectRole={(newRole) => {
-            if (onChangeRole) onChangeRole(newRole);
-          }}
           onAuthSuccess={() => {
             setShowAuthModal(false);
             if (onAuthSuccess) {

@@ -33,26 +33,7 @@ export default function AiFeedbackLoopView() {
           </div>
         </div>
 
-        {/* Export JSONL Button */}
-        <button
-          onClick={handleExportJSONL}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '10px',
-            padding: '10px 18px',
-            fontSize: '13px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)'
-          }}
-        >
-          <Download size={15} /> Export Training JSONL (LoRA / DoTR)
-        </button>
+
       </div>
 
       {/* Metrics Cards Strip */}

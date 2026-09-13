@@ -35,7 +35,6 @@ export default function AppSidebar({
     { id: 'database', label: t('nav_database', 'Land Database'), icon: Database, badge: null },
     { id: 'upload', label: t('nav_upload', 'Upload & Scan'), icon: Upload, badge: null },
     { id: 'scanner', label: t('nav_scanner', 'Document Scanner'), icon: ScanLine, badge: null },
-    { id: 'analytics', label: t('nav_analytics', 'Analytics'), icon: BarChart3, badge: null },
     { id: 'ailoop', label: t('nav_ailoop', 'AI Feedback Loop'), icon: BrainCircuit, badge: null },
   ];
 
@@ -153,50 +152,42 @@ export default function AppSidebar({
         </div>
       </div>
 
-      {/* User Role & Quick Actions Profile Footer */}
+      {/* Login as Official Footer Button */}
       <div className="sidebar-footer-profile">
         {isCollapsed ? (
           <div
             className="role-avatar-circle collapsed-avatar"
             onClick={onOpenAuth}
             style={{ cursor: 'pointer', margin: '0 auto' }}
-            title={`Role: ${userRole.toUpperCase()} — Click for DSC Token SSO Auth`}
+            title="Login as Official"
           >
             <UserCheck size={16} color="#0052FF" />
           </div>
         ) : (
           <div className="profile-role-box">
-            <div
-              className="role-avatar-circle"
+            <button
               onClick={onOpenAuth}
-              style={{ cursor: 'pointer' }}
-              title="Open GovPass SSO Digital Authentication"
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '10px 16px',
+                background: 'linear-gradient(135deg, #0052FF 0%, #0045D8 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0,82,255,0.3)',
+              }}
             >
-              <UserCheck size={14} color="#0052FF" />
-            </div>
-            <div className="role-details">
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="role-title-sub">Active Role</span>
-                {onOpenAuth && (
-                  <button
-                    onClick={onOpenAuth}
-                    style={{ background: 'none', border: 'none', color: '#0052FF', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
-                    title="Verify DSC Token & PIN"
-                  >
-                    SSO Auth ↗
-                  </button>
-                )}
-              </div>
-              <select
-                value={userRole}
-                onChange={(e) => onChangeRole(e.target.value)}
-                className="role-selector-eleven"
-              >
-                <option value="patwari">Patwari (Field Verifier)</option>
-                <option value="officer">Revenue Officer (Tehsildar)</option>
-                <option value="admin">District Collector / Admin</option>
-              </select>
-            </div>
+              <UserCheck size={14} />
+              Login as Official
+            </button>
           </div>
         )}
       </div>
