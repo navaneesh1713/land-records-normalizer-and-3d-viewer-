@@ -5,6 +5,7 @@ import { CLASSIFICATION_COLORS } from '../utils/colorUtils';
 import { generatePropertyCardPDF } from '../utils/pdfGenerator';
 import { generateULPIN, getMaskedAadhaar, verifyAadhaarWithUIDAI } from '../utils/ulpinService';
 import ReachCitizenModal from './ReachCitizenModal';
+import { handleReachCitizenClick } from '../utils/reachCitizenUtils';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function ParcelSidebar({ unit, onClose, metadata }) {
@@ -376,7 +377,7 @@ export default function ParcelSidebar({ unit, onClose, metadata }) {
           {/* Action 1: Reach Citizen / Live GPS Navigation */}
           <button
             className="sidebar-reach-btn"
-            onClick={() => setShowReachModal(true)}
+            onClick={() => handleReachCitizenClick(unit, () => setShowReachModal(true))}
             style={{
               display: 'flex',
               alignItems: 'center',

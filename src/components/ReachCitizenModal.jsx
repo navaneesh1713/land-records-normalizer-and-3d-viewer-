@@ -6,53 +6,33 @@ import {
 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { useLanguage } from '../context/LanguageContext';
+import { resolveDestination, buildNavigationUrl } from '../utils/reachCitizenUtils';
 
 export default function ReachCitizenModal({ unit, onClose, destinationCoords }) {
   const [copied, setCopied] = useState(false);
   const [officerLocation, setOfficerLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('locating'); // 'locating' | 'ready' | 'denied'
   const [travelMode, setTravelMode] = useState('driving'); // 'driving' | 'bicycling' | 'walking'
-  const [mapType, setMapType] = useState('m'); // 'm' (standard) | 'k' (satellite)
+  const [mapType, setMapType] = useState('standard'); // 'standard' | 'satellite'
+  const [mapLoadError, setMapLoadError] = useState(false);
   const { t } = useLanguage();
 
-  // Smart fallback lookup if coordinates are not attached directly to unit
-  const lookupCoords = () => {
-    const text = `${unit?.building_name || ''} ${unit?.locality || ''} ${unit?.village || ''} ${unit?.district || ''} ${unit?.pincode || ''}`.toLowerCase();
-    if (text.includes('kadugodi') || text.includes('whitefield') || text.includes('560067')) {
-      return { lat: 12.9982, lng: 77.7607 };
-    }
-    if (text.includes('hafeezpet') || text.includes('hafizpet')) {
-      return { lat: 17.4938, lng: 78.3533 };
-    }
-    if (text.includes('mehdipatnam') || text.includes('500028')) {
-      return { lat: 17.3916, lng: 78.4410 };
-    }
-    if (text.includes('kondapur')) {
-      return { lat: 17.4699, lng: 78.3578 };
-    }
-    if (text.includes('miyapur')) {
-      return { lat: 17.4968, lng: 78.3614 };
-    }
-    if (text.includes('gachibowli')) {
-      return { lat: 17.4401, lng: 78.3489 };
-    }
-    if (text.includes('hitec') || text.includes('madhapur')) {
-      return { lat: 17.4483, lng: 78.3808 };
-    }
-    return null;
-  };
-
-  const resolvedFallback = lookupCoords();
-  const destLat = destinationCoords?.lat || (unit?.latitude && !isNaN(unit.latitude) ? unit.latitude : null) || (unit?.polygon?.[0]?.[0]?.[1]) || resolvedFallback?.lat || 12.9982;
-  const destLng = destinationCoords?.lng || (unit?.longitude && !isNaN(unit.longitude) ? unit.longitude : null) || (unit?.polygon?.[0]?.[0]?.[0]) || resolvedFallback?.lng || 77.7607;
+  // Resolve coordinates using unified resolver with fallbacks
+  const resolvedCoords = resolveDestination(unit);
+  const destLat = destinationCoords?.lat != null && !isNaN(Number(destinationCoords.lat))
+    ? Number(destinationCoords.lat)
+    : resolvedCoords.lat;
+  const destLng = destinationCoords?.lng != null && !isNaN(Number(destinationCoords.lng))
+    ? Number(destinationCoords.lng)
+    : resolvedCoords.lng;
 
   // Build full formatted address string for Google Maps query
   const addressParts = [
     unit?.building_name,
-    unit?.house_number && (unit.house_number.toLowerCase().includes('no') ? unit.house_number : `No. ${unit.house_number}`),
+    unit?.house_number && (String(unit.house_number).toLowerCase().includes('no') ? unit.house_number : `No. ${unit.house_number}`),
     unit?.street_name,
     unit?.locality,
-    unit?.village,
+    unit?.village || unit?.village_city,
     unit?.tehsil && unit.tehsil !== unit.village ? `Tehsil ${unit.tehsil}` : null,
     unit?.district,
     unit?.state,
@@ -62,16 +42,23 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
 
   const fullAddress = addressParts.join(', ');
 
-  // Generate universal Google Maps Navigation deep-link URL (instantly opens Google Maps App on Android & iOS)
-  const navigationUrl = officerLocation
-    ? `https://www.google.com/maps/dir/?api=1&origin=${officerLocation.lat},${officerLocation.lng}&destination=${destLat},${destLng}&travelmode=${travelMode}`
-    : `https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${travelMode}`;
+  // Universal Google Maps Navigation deep-link URL (starts from device's live GPS, perfect for mobile scanning)
+  // If we have a full address, we prefer it over fallback coordinates for Google Maps routing precision
+  const hasExactCoords = (unit?.latitude != null || unit?.lat != null || unit?.polygon != null || unit?.coordinates != null);
+  const destinationQuery = hasExactCoords ? `${destLat},${destLng}` : encodeURIComponent(fullAddress || `${destLat},${destLng}`);
+  const navigationUrl = `https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}&travelmode=${travelMode}`;
 
   // Direct Google Maps location view URL
-  const directMapsUrl = `https://maps.google.com/?q=${destLat},${destLng}`;
+  const directMapsUrl = `https://maps.google.com/?q=${destinationQuery}`;
 
-  // Embedded Google Map URL
-  const embedMapUrl = `https://maps.google.com/maps?q=${destLat},${destLng}&t=${mapType}&z=17&ie=UTF8&iwloc=&output=embed`;
+  // OpenStreetMap embed URLs (free, no API key required)
+  // Ensure strict numeric addition so strings never cause concatenation bugs
+  const numLat = Number(destLat);
+  const numLng = Number(destLng);
+  const embedMapUrl = mapType === 'satellite'
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${(numLng - 0.005).toFixed(6)},${(numLat - 0.004).toFixed(6)},${(numLng + 0.005).toFixed(6)},${(numLat + 0.004).toFixed(6)}&layer=hot&marker=${numLat},${numLng}`
+    : `https://www.openstreetmap.org/export/embed.html?bbox=${(numLng - 0.005).toFixed(6)},${(numLat - 0.004).toFixed(6)},${(numLng + 0.005).toFixed(6)},${(numLat + 0.004).toFixed(6)}&layer=mapnik&marker=${numLat},${numLng}`;
+
 
   // Get Patwari / Revenue Officer current device location via browser Geolocation
   useEffect(() => {
@@ -133,6 +120,15 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
 
   const estimatedDuration = getEstimatedDuration(distanceKm, travelMode);
 
+  // Close modal on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose?.();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const handleCopyLink = () => {
     if (navigator?.clipboard) {
       navigator.clipboard.writeText(navigationUrl);
@@ -142,16 +138,34 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
   };
 
   const modalJSX = (
-    <div className="reach-citizen-backdrop animate-fade-in" onClick={onClose}>
+    <div
+      className="reach-citizen-backdrop animate-fade-in"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100050,
+        background: 'rgba(2, 6, 23, 0.84)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+      }}
+    >
       <div
         className="reach-citizen-modal glass-panel animate-scale-up"
         onClick={(e) => e.stopPropagation()}
         style={{
+          position: 'relative',
+          zIndex: 100051,
           width: '94%',
           maxWidth: '920px',
           maxHeight: '90vh',
           background: 'rgba(15, 23, 42, 0.96)',
           backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(99, 102, 241, 0.35)',
           borderRadius: '20px',
           boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 35px rgba(99, 102, 241, 0.2)',
@@ -161,6 +175,7 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
           color: '#f8fafc',
         }}
       >
+
         {/* Modal Header */}
         <div
           style={{
@@ -466,13 +481,13 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 }}
               >
                 <button
-                  onClick={() => setMapType('m')}
+                  onClick={() => { setMapType('standard'); setMapLoadError(false); }}
                   style={{
                     padding: '4px 8px',
                     borderRadius: '6px',
                     border: 'none',
-                    background: mapType === 'm' ? '#0052FF' : 'transparent',
-                    color: mapType === 'm' ? '#ffffff' : '#94a3b8',
+                    background: mapType === 'standard' ? '#0052FF' : 'transparent',
+                    color: mapType === 'standard' ? '#ffffff' : '#94a3b8',
                     fontSize: '11px',
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -481,13 +496,13 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                   {t('roadmap', 'Roadmap')}
                 </button>
                 <button
-                  onClick={() => setMapType('k')}
+                  onClick={() => { setMapType('satellite'); setMapLoadError(false); }}
                   style={{
                     padding: '4px 8px',
                     borderRadius: '6px',
                     border: 'none',
-                    background: mapType === 'k' ? '#0052FF' : 'transparent',
-                    color: mapType === 'k' ? '#ffffff' : '#94a3b8',
+                    background: mapType === 'satellite' ? '#0052FF' : 'transparent',
+                    color: mapType === 'satellite' ? '#ffffff' : '#94a3b8',
                     fontSize: '11px',
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -511,15 +526,63 @@ export default function ReachCitizenModal({ unit, onClose, destinationCoords }) 
                 boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5)',
               }}
             >
-              <iframe
-                title="Google Maps Location"
-                width="100%"
-                height="100%"
-                style={{ border: 0, minHeight: '380px' }}
-                loading="lazy"
-                allowFullScreen
-                src={embedMapUrl}
-              />
+              {mapLoadError ? (
+                // Graceful fallback when iframe is blocked by browser/CSP
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    minHeight: '380px',
+                    gap: '14px',
+                    background: 'rgba(15,23,42,0.95)',
+                    color: '#94a3b8',
+                    textAlign: 'center',
+                    padding: '24px',
+                  }}
+                >
+                  <MapPin size={36} color="#4f46e5" />
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
+                      Map preview blocked by browser
+                    </div>
+                    <div style={{ fontSize: '12px', lineHeight: 1.6 }}>
+                      Your browser content policy is blocking the map embed.<br />
+                      Use the <strong style={{ color: '#60a5fa' }}>Open in Google Maps</strong> button below to navigate.
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#38bdf8', fontWeight: 600 }}>
+                    📍 GPS: {Number(destLat).toFixed(5)}° N, {Number(destLng).toFixed(5)}° E
+                  </div>
+                  <a
+                    href={directMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '8px 16px', background: '#2563eb', color: '#fff',
+                      borderRadius: '8px', fontSize: '12px', fontWeight: 700,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <ExternalLink size={13} />
+                    View on Google Maps
+                  </a>
+                </div>
+              ) : (
+                <iframe
+                  title="OpenStreetMap Location"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, minHeight: '380px' }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={embedMapUrl}
+                  onError={() => setMapLoadError(true)}
+                />
+              )}
 
               {/* Floating Coordinates Pill */}
               <div

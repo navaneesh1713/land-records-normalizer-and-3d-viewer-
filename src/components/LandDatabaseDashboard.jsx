@@ -4,8 +4,10 @@ import {
   CheckCircle2, AlertTriangle, ArrowUpRight, FileText,
   MapPin, UserCheck, ShieldCheck, Sparkles, Plus,
   Building, RefreshCw, Upload, FileSpreadsheet, Eye, X, AlertCircle,
-  Fingerprint, Copy, Check, ExternalLink, Loader2
+  Fingerprint, Copy, Check, ExternalLink, Loader2, Navigation
 } from 'lucide-react';
+import ReachCitizenModal from './ReachCitizenModal';
+import { handleReachCitizenClick } from '../utils/reachCitizenUtils';
 import { storageService } from '../services/storageService';
 import { auditTrailService } from '../services/auditTrailService';
 import { useLanguage } from '../context/LanguageContext';
@@ -30,6 +32,8 @@ export default function LandDatabaseDashboard({
   const [syncResultModal, setSyncResultModal] = useState(null);
   const [verifyingAadhaarId, setVerifyingAadhaarId] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
+  const [showReachModal, setShowReachModal] = useState(false);
+  const [reachTargetRecord, setReachTargetRecord] = useState(null);
   const { t } = useLanguage();
   const [newRecordForm, setNewRecordForm] = useState({
     building_name: '',
@@ -724,6 +728,34 @@ export default function LandDatabaseDashboard({
                         </button>
 
                         <button
+                          onClick={() => {
+                            setReachTargetRecord(rec);
+                            handleReachCitizenClick(rec, () => {
+                              setReachTargetRecord(rec);
+                              setShowReachModal(true);
+                            });
+                          }}
+                          style={{
+                            padding: '5px 10px',
+                            background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: 8,
+                            fontSize: 11.5,
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)',
+                          }}
+                          title="Reach Citizen: Open live Google Maps navigation & QR code"
+                        >
+                          <Navigation size={12} />
+                          <span>Reach</span>
+                        </button>
+
+                        <button
                           onClick={() => handleApplySingleToMap(rec)}
                           style={{
                             padding: '5px 10px',
@@ -1250,7 +1282,7 @@ export default function LandDatabaseDashboard({
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 10, flexWrap: 'wrap' }}>
                 <button
                   onClick={() => setSelectedRecord(null)}
                   style={{
@@ -1265,6 +1297,34 @@ export default function LandDatabaseDashboard({
                   }}
                 >
                   Close
+                </button>
+
+                <button
+                  onClick={() => {
+                    setReachTargetRecord(selectedRecord);
+                    handleReachCitizenClick(selectedRecord, () => {
+                      setReachTargetRecord(selectedRecord);
+                      setShowReachModal(true);
+                    });
+                  }}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #4f46e5 100%)',
+                    color: '#ffffff',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    boxShadow: '0 2px 10px rgba(79, 70, 229, 0.35)',
+                  }}
+                  title="Open live GPS navigation and QR code to reach this citizen's land parcel"
+                >
+                  <Navigation size={14} />
+                  <span>Reach Citizen</span>
                 </button>
 
                 <button
@@ -1294,6 +1354,17 @@ export default function LandDatabaseDashboard({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── Reach Citizen GPS Navigation Modal ─── */}
+      {showReachModal && (reachTargetRecord || selectedRecord) && (
+        <ReachCitizenModal
+          unit={reachTargetRecord || selectedRecord}
+          onClose={() => {
+            setShowReachModal(false);
+            setReachTargetRecord(null);
+          }}
+        />
       )}
 
       {/* ─── DILRMP Sync Success Modal ─── */}

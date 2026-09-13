@@ -3342,4 +3342,43 @@ button, input, select, textarea {
   color: #0F172A;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   REACH CITIZEN GPS NAVIGATION & QR MODAL
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reach-citizen-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 100050 !important;
+  background: rgba(2, 6, 23, 0.84) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+}
+
+.sidebar-reach-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5) !important;
+}
+
+.sidebar-reach-btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .reach-citizen-modal {
+    width: 96% !important;
+    max-height: 95vh !important;
+  }
+
+  .reach-citizen-modal > div:nth-child(2) {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    padding: 16px !important;
+  }
+}
+
+
 
